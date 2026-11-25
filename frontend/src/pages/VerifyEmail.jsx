@@ -13,7 +13,7 @@ export default function VerifyEmail() {
   const handleResend = async () => {
     setResending(true)
     try {
-      await authApi.signup(email, '________') // triggers resend
+      await authApi.resendVerification(email)
     } catch (e) {}
     setResent(true)
     setResending(false)

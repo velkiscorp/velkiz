@@ -20,6 +20,10 @@ export const signupBody = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters').max(72),
 })
 
+export const resendVerificationBody = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+})
+
 // ---- profiles ----
 export const GENDERS = ['male', 'female', 'non_binary', 'other']
 export const ORIENTATIONS = ['heterosexual', 'bisexual', 'pansexual', 'gay', 'lesbian']

@@ -49,3 +49,13 @@ Covers the risky rules: 18+ from date of birth, input checks, who can see photos
 - All data goes through the backend (`/api/...`), which checks the login and validates input (`backend/src/validation/schemas.js`).
 - Photos sit in a private bucket and only load through `/api/photos/...`, which checks who's asking.
 - Ages come from the date of birth on the server. Usernames are lowercase.
+
+## Email (signup verification, password reset)
+
+Supabase sends these through Resend (custom SMTP), from `no-reply@support.velkiz.com` (Resend domain: `support.velkiz.com`).
+
+- Supabase > Authentication > Sign In / Providers > Email: **Confirm email** on. Signup then sends a verification link and the account can't sign in until it's clicked.
+- Authentication > Emails > SMTP Settings: host `smtp.resend.com`, port `465`, username `resend`, password = Resend API key.
+- Authentication > Emails > Templates: paste `supabase/email-templates/confirm-signup.html` and `reset-password.html` (subject line is at the top of each file).
+- Authentication > URL Configuration: Site URL is the live app, and `<site>/auth/callback` plus `<site>/reset-password` are allowed redirect URLs.
+- `FRONTEND_URL` in `backend/.env` decides where verification links send people back to.
