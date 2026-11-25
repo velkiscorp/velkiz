@@ -69,6 +69,13 @@ export const createProfile = async (req, res) => {
   }
 }
 
+// Where the links in signup emails send people back to
+const callbackUrl = () => `${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')}/auth/callback`
+
+// Signup sends a verification email (when "Confirm email" is on in Supabase).
+// The account can't sign in until the link in that email is clicked.
+// The reply is the same whether or not the email already has an account,
+// so nobody can use signup to find out who is on Velkiz.
 export const signUp = async (req, res) => {
   try {
     const { email, password } = req.body
@@ -77,39 +84,49 @@ export const signUp = async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' })
     }
 
-    const { data, error } = await supabase.auth.admin.createUser({
+    // Throwaway anon client, never the shared service-role client
+    const { data, error } = await createAuthClient().auth.signUp({
       email,
       password,
-      email_confirm: true
+      options: { emailRedirectTo: callbackUrl() }
     })
 
     if (error) {
-      console.error('Signup error:', error)
-      if (error.message.includes('already registered')) {
+      console.error('Signup error:', error.message)
+      if (error.code === 'user_already_exists' || /already registered/i.test(error.message)) {
         return res.status(400).json({ error: 'Email already in use' })
+      }
+      if (error.code === 'over_email_send_rate_limit' || error.status === 429) {
+        return res.status(429).json({ error: 'Too many sign-ups right now, try again in a bit' })
       }
       return res.status(500).json({ error: 'Failed to create account' })
     }
 
-    // Sign in on a throwaway anon client, not the shared service-role client
-    const { data: signInData, error: signInError } = await createAuthClient().auth.signInWithPassword({
-      email,
-      password
-    })
-
-    if (signInError) {
-      return res.status(500).json({ error: 'Account created but login failed' })
+    // "Confirm email" is off in Supabase: signed in straight away
+    if (data.session) {
+      return res.status(201).json({ session: data.session, user: data.user })
     }
 
-    res.status(201).json({
-      session: signInData.session,
-      user: signInData.user
-    })
-
+    res.status(201).json({ needsVerification: true })
   } catch (error) {
     console.error('Signup error:', error)
     res.status(500).json({ error: 'Signup failed' })
   }
+}
+
+// Sends the verification email again. Always answers the same way.
+export const resendVerification = async (req, res) => {
+  try {
+    const { error } = await createAuthClient().auth.resend({
+      type: 'signup',
+      email: req.body.email,
+      options: { emailRedirectTo: callbackUrl() }
+    })
+    if (error) console.error('Resend verification error:', error.message)
+  } catch (error) {
+    console.error('Resend verification error:', error)
+  }
+  res.json({ success: true })
 }
 
 export const updateLastSeen = async (req, res) => {

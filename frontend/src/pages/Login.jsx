@@ -49,6 +49,10 @@ export default function Login() {
       }
     } catch (err) {
       if (mode === 'login') {
+        if (err?.code === 'email_not_confirmed' || /not confirmed/i.test(err?.message || '')) {
+          navigate('/verify-email', { state: { email } })
+          return
+        }
         setError('Invalid email or password')
       } else if (mode === 'signup') {
         setError('Could not create account. Please try again.')

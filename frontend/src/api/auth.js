@@ -2,7 +2,8 @@ import { supabase } from '@/lib/supabase'
 import apiClient from './client'
 
 export const authApi = {
-  // Signup goes through our backend which uses admin API
+  // Signup goes through our backend. Usually it sends a verification email
+  // and returns no session; the link in the email signs the person in.
   signup: async (email, password) => {
     const response = await apiClient.post('/api/auth/signup', { email, password })
     
@@ -15,6 +16,10 @@ export const authApi = {
     }
     
     return response
+  },
+
+  resendVerification: async (email) => {
+    await apiClient.post('/api/auth/resend-verification', { email })
   },
 
   // Login still uses Supabase directly

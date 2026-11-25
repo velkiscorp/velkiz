@@ -1,14 +1,15 @@
 import express from 'express'
-import { getMe, createProfile, updateLastSeen, signUp, deleteAccount } from '../controllers/authController.js'
+import { getMe, createProfile, updateLastSeen, signUp, resendVerification, deleteAccount } from '../controllers/authController.js'
 import { requireAuth } from '../middleware/auth.js'
 import { validate } from '../middleware/validate.js'
 import { signupLimiter, profileWriteLimiter } from '../middleware/rateLimits.js'
-import { signupBody, deleteAccountBody } from '../validation/schemas.js'
+import { signupBody, resendVerificationBody, deleteAccountBody } from '../validation/schemas.js'
 
 const router = express.Router()
 
 // Public routes
 router.post('/signup', signupLimiter, validate({ body: signupBody }), signUp)
+router.post('/resend-verification', signupLimiter, validate({ body: resendVerificationBody }), resendVerification)
 
 // Protected routes
 router.get('/me', requireAuth, getMe)
