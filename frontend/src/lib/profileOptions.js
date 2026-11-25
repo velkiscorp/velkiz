@@ -38,3 +38,14 @@ export const INTEREST_OPTIONS = [
 ];
 
 export const DISTANCE_OPTIONS = [10, 25, 50, 100, 250, 500];
+
+// "Show me" in Discover filters. Values match the backend GENDERS list.
+export const SHOW_ME_OPTIONS = [
+  { value: 'male', label: 'Men' },
+  { value: 'female', label: 'Women' },
+  { value: 'non_binary', label: 'Non-binary' },
+  { value: 'other', label: 'Other' },
+];
+
+export const showMeLabel = (values) =>
+  values.map(v => SHOW_ME_OPTIONS.find(o => o.value === v)?.label || v).join(', ');

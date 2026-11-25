@@ -49,6 +49,8 @@ Covers the risky rules: 18+ from date of birth, input checks, who can see photos
 - All data goes through the backend (`/api/...`), which checks the login and validates input (`backend/src/validation/schemas.js`).
 - Photos sit in a private bucket and only load through `/api/photos/...`, which checks who's asking.
 - Ages come from the date of birth on the server. Usernames are lowercase.
+- Gender is set once at onboarding and can't be changed after.
+- Discover shows people by orientation by default, both ways: a straight man sees women who'd want to see a man (straight, bi or pan women), a gay man sees gay or bi men, and so on (`backend/src/services/orientation.js`). "Show me" in Filters picks the genders instead; the other person's orientation still has to fit.
 
 ## Test accounts
 

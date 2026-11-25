@@ -87,6 +87,8 @@ export const discoverQuery = z.object({
   maxHeight: optionalInt(120, 230),
   maxDistanceKm: optionalInt(1, 20000),
   sameRegion: z.enum(['true', 'false']).optional(),
+  // Genders to show; left out, it follows your orientation
+  showMe: csv(z.enum(GENDERS), GENDERS.length),
   limit: z.coerce.number().int().min(1).max(50).optional().default(20),
   offset: z.coerce.number().int().min(0).max(10000).optional().default(0),
 })

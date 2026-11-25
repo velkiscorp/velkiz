@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EMPTY_FILTERS } from '@/lib/discoverFilters';
-import { LOOKING_FOR_OPTIONS, INTEREST_OPTIONS, DISTANCE_OPTIONS, HEIGHT_OPTIONS } from '@/lib/profileOptions';
+import { SHOW_ME_OPTIONS, LOOKING_FOR_OPTIONS, INTEREST_OPTIONS, DISTANCE_OPTIONS, HEIGHT_OPTIONS } from '@/lib/profileOptions';
 
 const AGES = Array.from({ length: 82 }, (_, i) => 18 + i); // 18-99
 
@@ -59,6 +59,15 @@ export default function FilterPanel({ filters, hasLocation, onApply, onClose }) 
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
+          <Section title="Show me" hint="Based on your orientation if none picked">
+            <div className="flex flex-wrap gap-2">
+              <Chip active={!draft.showMe.length} onClick={() => set({ showMe: [] })}>My orientation</Chip>
+              {SHOW_ME_OPTIONS.map(o => (
+                <Chip key={o.value} active={draft.showMe.includes(o.value)} onClick={() => toggle('showMe', o.value)}>{o.label}</Chip>
+              ))}
+            </div>
+          </Section>
+
           <Section title="Looking for" hint="Any if none picked">
             <div className="flex flex-wrap gap-2">
               {LOOKING_FOR_OPTIONS.map(o => (
