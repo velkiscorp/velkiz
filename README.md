@@ -50,6 +50,15 @@ Covers the risky rules: 18+ from date of birth, input checks, who can see photos
 - Photos sit in a private bucket and only load through `/api/photos/...`, which checks who's asking.
 - Ages come from the date of birth on the server. Usernames are lowercase.
 
+## Test accounts
+
+`cd backend && npm run seed` creates 50 test accounts with finished profiles and placeholder photos, spread across 8 cities (London, Manchester, New York, Los Angeles, Toronto, Berlin, Mumbai, Sydney). It uses the service key in `backend/.env`, so the accounts are already verified, no emails are sent and signup limits don't apply.
+
+- Sign in as `seed01@example.com` to `seed50@example.com`, password `velkiz-seed-2026` (set `SEED_PASSWORD` in `backend/.env` to change it before seeding; `SEED_EMAIL_DOMAIN` changes the email domain).
+- `npm run seed -- --count 10` makes fewer. Running it again skips accounts that already exist.
+- `npm run seed -- --reset` deletes every seed account and everything attached to it. Only accounts the seed made are touched.
+- Don't run it against the live project once real people are using it.
+
 ## Email (signup verification, password reset)
 
 Supabase sends these through Resend (custom SMTP), from `no-reply@support.velkiz.com` (Resend domain: `support.velkiz.com`).
