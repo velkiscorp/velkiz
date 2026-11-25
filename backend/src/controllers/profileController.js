@@ -5,6 +5,7 @@ import { getBlockedUserIds, isBlockedBetween } from '../services/blocks.js'
 import { ageFromDob, MIN_AGE, MAX_AGE } from '../utils/age.js'
 import { photoAllowedForUser } from '../services/photos.js'
 import { applyDiscoverFilters } from '../services/discoverFilters.js'
+import { applyOrientationFilter } from '../services/orientation.js'
 import { distanceKm, roundedDistance } from '../utils/geo.js'
 
 export const getProfiles = async (req, res) => {
@@ -15,10 +16,11 @@ export const getProfiles = async (req, res) => {
     const filters = req.validatedQuery
     const { limit, offset, maxDistanceKm } = filters
 
-    // Your own country and rough location, for "Near me" and distance
+    // Your own country and rough location, for "Near me" and distance,
+    // and your gender and orientation, for who you see by default
     const { data: me } = await supabase
       .from('profiles')
-      .select('country, location_lat, location_lng')
+      .select('country, location_lat, location_lng, gender, orientation')
       .eq('user_id', currentUserId)
       .maybeSingle()
 
@@ -50,6 +52,7 @@ export const getProfiles = async (req, res) => {
     }
 
     query = applyDiscoverFilters(query, filters, me)
+    query = applyOrientationFilter(query, me, filters.showMe)
 
     const { data: profiles, error } = await query
 
@@ -145,14 +148,19 @@ export const updateMyProfile = async (req, res) => {
     if (location_lng !== undefined) updates.location_lng = roundForStorage(location_lng)
 
     const needsExisting = date_of_birth !== undefined || onboarding_complete === true ||
-      photos !== undefined || photo_url !== undefined
+      photos !== undefined || photo_url !== undefined || gender !== undefined
     const { data: existing } = needsExisting
       ? await supabase
         .from('profiles')
-        .select('date_of_birth, age, onboarding_complete, photos, photo_url')
+        .select('date_of_birth, age, onboarding_complete, photos, photo_url, gender')
         .eq('user_id', req.user.id)
         .maybeSingle()
       : { data: null }
+
+    // Gender is set once, during onboarding, and can't be changed after
+    if (gender !== undefined && existing?.gender && existing.gender !== gender) {
+      return res.status(400).json({ error: "Gender can't be changed" })
+    }
 
     // Photos: only your own uploads (or ones already on your profile), so
     // nobody can put someone else's photo on their profile to get access to it

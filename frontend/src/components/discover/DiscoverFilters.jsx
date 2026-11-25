@@ -1,7 +1,7 @@
 import React from 'react';
 import { SlidersHorizontal, MapPin, X } from 'lucide-react';
 import { countFilters } from '@/lib/discoverFilters';
-import { lookingForLabel } from '@/lib/profileOptions';
+import { lookingForLabel, showMeLabel } from '@/lib/profileOptions';
 
 // The row above the cards: a Filters button (opens the full panel), a quick
 // "Near me" toggle, and a chip for each active filter that clears it on tap.
@@ -9,6 +9,9 @@ export default function DiscoverFilters({ filters, onChange, onOpenPanel }) {
   const count = countFilters(filters);
 
   const chips = [];
+  if (filters.showMe.length) chips.push({
+    key: 'showMe', label: `Showing ${showMeLabel(filters.showMe)}`, clear: { showMe: [] },
+  });
   if (filters.lookingFor.length) chips.push({
     key: 'lookingFor',
     label: filters.lookingFor.map(lookingForLabel).join(', '),
