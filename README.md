@@ -52,7 +52,7 @@ Covers the risky rules: 18+ from date of birth, input checks, who can see photos
 
 ## Email (signup verification, password reset)
 
-Supabase sends these through Resend (custom SMTP), from `no-reply@velkiz.com`.
+Supabase sends these through Resend (custom SMTP), from `no-reply@support.velkiz.com` (Resend domain: `support.velkiz.com`).
 
 - Supabase > Authentication > Sign In / Providers > Email: **Confirm email** on. Signup then sends a verification link and the account can't sign in until it's clicked.
 - Authentication > Emails > SMTP Settings: host `smtp.resend.com`, port `465`, username `resend`, password = Resend API key.
