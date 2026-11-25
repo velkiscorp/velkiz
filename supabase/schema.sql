@@ -138,6 +138,17 @@ alter table public.matches enable row level security;
 alter table public.messages enable row level security;
 alter table public.blocked_users enable row level security;
 
+-- ------------------------------------------- table permissions (backend only)
+
+grant usage on schema public to service_role;
+grant select, insert, update, delete on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
+alter default privileges in schema public grant select, insert, update, delete on tables to service_role;
+alter default privileges in schema public grant usage, select on sequences to service_role;
+
+revoke all on all tables in schema public from anon, authenticated;
+alter default privileges in schema public revoke all on tables from anon, authenticated;
+
 -- ------------------------------------------------------------- storage
 
 -- Private photos bucket. Logged-in users may upload and delete only inside a
