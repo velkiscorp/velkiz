@@ -1,0 +1,116 @@
+{
+  "name": "Profile",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "description": "Anonymous display name \u2014 locked after creation"
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "male",
+        "female",
+        "non_binary",
+        "other"
+      ],
+      "description": "Locked after creation"
+    },
+    "orientation": {
+      "type": "string",
+      "enum": [
+        "heterosexual",
+        "bisexual",
+        "pansexual",
+        "gay",
+        "lesbian"
+      ]
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bio": {
+      "type": "string"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "is_nsfw": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "prompt1": {
+      "type": "string"
+    },
+    "prompt2": {
+      "type": "string"
+    },
+    "prompt3": {
+      "type": "string"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "show_dob": {
+      "type": "boolean",
+      "default": false
+    },
+    "age": {
+      "type": "number"
+    },
+    "city": {
+      "type": "string",
+      "description": "Locked after creation"
+    },
+    "country": {
+      "type": "string",
+      "description": "Locked after creation"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "looking_for": {
+      "type": "string",
+      "enum": [
+        "casual",
+        "dating",
+        "friends",
+        "open"
+      ]
+    },
+    "onboarding_complete": {
+      "type": "boolean",
+      "default": false
+    },
+    "discover_filters": {
+      "type": "object",
+      "description": "User's discovery preferences",
+      "properties": {
+        "looking_for": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "username"
+  ]
+}

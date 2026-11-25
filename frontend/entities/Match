@@ -1,0 +1,46 @@
+{
+  "name": "Match",
+  "type": "object",
+  "properties": {
+    "user1_email": {
+      "type": "string"
+    },
+    "user2_email": {
+      "type": "string"
+    },
+    "user1_username": {
+      "type": "string"
+    },
+    "user2_username": {
+      "type": "string"
+    },
+    "user1_photo": {
+      "type": "string"
+    },
+    "user2_photo": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "matched",
+        "unmatched",
+        "left"
+      ],
+      "default": "pending"
+    },
+    "left_by": {
+      "type": "string",
+      "description": "Email of person who left the chat"
+    },
+    "matched_date": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user1_email",
+    "user2_email"
+  ]
+}

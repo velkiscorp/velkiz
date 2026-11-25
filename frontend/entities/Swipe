@@ -1,0 +1,26 @@
+{
+  "name": "Swipe",
+  "type": "object",
+  "properties": {
+    "swiper_email": {
+      "type": "string"
+    },
+    "target_email": {
+      "type": "string"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "right",
+        "left",
+        "super"
+      ],
+      "description": "Swipe direction: right=like, left=pass, super=super like"
+    }
+  },
+  "required": [
+    "swiper_email",
+    "target_email",
+    "direction"
+  ]
+}
