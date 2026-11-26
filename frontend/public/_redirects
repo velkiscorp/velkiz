@@ -1,0 +1,2 @@
+# Netlify: every page path loads the app (it picks the page itself)
+/*  /index.html  200
