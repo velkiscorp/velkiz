@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Ban, BookOpen, Trash2, LogOut, ChevronRight, Sparkles, PauseCircle,
-  MapPinOff, Cake, LifeBuoy, FileText, Lock, Bell, Heart, MessageCircle,
+  MapPinOff, Cake, LifeBuoy, FileText, Lock, Bell, Heart, MessageCircle, Bug, ShieldAlert, Scale, Mail,
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -18,7 +18,7 @@ import { queryClientInstance } from '@/lib/query-client';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { getMatchAnimationsEnabled, setMatchAnimationsEnabled } from '@/lib/preferences';
-import { LEGAL } from '@/lib/legal';
+import { CONTACT } from '@/lib/contact';
 import { getPushPermission, enablePush } from '@/lib/push';
 
 const Section = ({ title, children }) => (
@@ -194,6 +194,7 @@ export default function Settings() {
         <Section title="Safety">
           <LinkRow icon={Ban} label="Blocked people" desc="See and unblock people you blocked" onClick={() => navigate('/Settings/blocked')} />
           <LinkRow icon={BookOpen} label="Community Guidelines" desc="How we keep Velkiz safe" onClick={() => navigate('/guidelines')} />
+          <LinkRow icon={ShieldAlert} label="Report a safety concern" desc="Something happened off the app, or you can't find their profile" onClick={() => { window.location.href = CONTACT.safety.href; }} />
         </Section>
 
         <Section title="App">
@@ -207,7 +208,10 @@ export default function Settings() {
         </Section>
 
         <Section title="Help and legal">
-          <LinkRow icon={LifeBuoy} label="Contact support" desc={LEGAL.supportEmail} onClick={() => { window.location.href = `mailto:${LEGAL.supportEmail}?subject=Velkiz%20support`; }} />
+          <LinkRow icon={LifeBuoy} label="Contact us" desc={CONTACT.support.email} onClick={() => { window.location.href = CONTACT.support.href; }} />
+          <LinkRow icon={Bug} label="Report a problem" desc="Something broken or not working" onClick={() => { window.location.href = CONTACT.problem.href; }} />
+          <LinkRow icon={Mail} label="Privacy and your data" desc={CONTACT.privacy.email} onClick={() => { window.location.href = CONTACT.privacy.href; }} />
+          <LinkRow icon={Scale} label="Grievance Officer" desc={CONTACT.grievance.email} onClick={() => { window.location.href = CONTACT.grievance.href; }} />
           <LinkRow icon={Lock} label="Privacy Policy" onClick={() => navigate('/privacy')} />
           <LinkRow icon={FileText} label="Terms of Service" onClick={() => navigate('/terms')} />
         </Section>

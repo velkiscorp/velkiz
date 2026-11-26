@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import EmptyState, { emptyCtaClass } from '@/components/shared/EmptyState';
-import { format } from 'date-fns';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 import { splitPhoneNumbers, maskPhoneNumber } from '@/lib/phone';
 import { useMatches } from '@/api/queries';
+import { useUnits } from '@/lib/units';
 
 // Chat previews always mask phone numbers; revealing happens inside the chat
 const maskedPreview = (text = '') =>
@@ -12,6 +12,7 @@ const maskedPreview = (text = '') =>
 
 
 export default function Messages() {
+  const units = useUnits();
 
   const { data: matchesData = {}, isLoading } = useMatches({ refetchInterval: 5000 });
 
@@ -66,7 +67,7 @@ export default function Messages() {
                 </div>
                 {match.lastMessage && (
                   <span className="text-[10px] text-muted-foreground shrink-0">
-                    {format(new Date(match.lastMessage.created_at), 'h:mm a')}
+                    {units.time(match.lastMessage.created_at)}
                   </span>
                 )}
               </Link>

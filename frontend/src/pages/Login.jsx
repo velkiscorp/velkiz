@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Check } from 'lucide-react'
+import { CONTACT } from '@/lib/contact'
 import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -198,6 +199,8 @@ export default function Login() {
           <Link to="/terms" className="hover:text-foreground">Terms</Link>
           <span className="mx-2">·</span>
           <Link to="/guidelines" className="hover:text-foreground">Guidelines</Link>
+          <span className="mx-2">·</span>
+          <a href={CONTACT.support.href} className="hover:text-foreground">Contact</a>
         </p>
       </motion.div>
     </div>

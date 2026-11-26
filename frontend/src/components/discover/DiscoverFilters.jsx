@@ -2,10 +2,12 @@ import React from 'react';
 import { SlidersHorizontal, MapPin, X } from 'lucide-react';
 import { countFilters } from '@/lib/discoverFilters';
 import { lookingForLabel, showMeLabel } from '@/lib/profileOptions';
+import { useUnits } from '@/lib/units';
 
 // The row above the cards: a Filters button (opens the full panel), a quick
 // "Near me" toggle, and a chip for each active filter that clears it on tap.
 export default function DiscoverFilters({ filters, onChange, onOpenPanel }) {
+  const units = useUnits();
   const count = countFilters(filters);
 
   const chips = [];
@@ -21,10 +23,10 @@ export default function DiscoverFilters({ filters, onChange, onOpenPanel }) {
     key: 'age', label: `Age ${filters.minAge || 18}-${filters.maxAge || '99+'}`, clear: { minAge: null, maxAge: null },
   });
   if (filters.maxDistanceKm) chips.push({
-    key: 'distance', label: `Within ${filters.maxDistanceKm} km`, clear: { maxDistanceKm: null },
+    key: 'distance', label: `Within ${units.distance(filters.maxDistanceKm)}`, clear: { maxDistanceKm: null },
   });
   if (filters.minHeight || filters.maxHeight) chips.push({
-    key: 'height', label: `Height ${filters.minHeight || 'any'}-${filters.maxHeight || 'any'} cm`, clear: { minHeight: null, maxHeight: null },
+    key: 'height', label: `Height ${filters.minHeight ? units.height(filters.minHeight) : 'any'} to ${filters.maxHeight ? units.height(filters.maxHeight) : 'any'}`, clear: { minHeight: null, maxHeight: null },
   });
   if (filters.interests.length) chips.push({
     key: 'interests',

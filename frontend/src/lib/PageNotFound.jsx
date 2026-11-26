@@ -1,4 +1,5 @@
 import { useLocation } from 'react-router-dom';
+import { CONTACT } from '@/lib/contact';
 
 export default function PageNotFound() {
   const location = useLocation();
@@ -25,6 +26,9 @@ export default function PageNotFound() {
             >
               Go Home
             </button>
+            <p className="text-xs text-muted-foreground pt-4">
+              Think something's broken? <a href={CONTACT.problem.href} className="underline underline-offset-2">Tell us</a>
+            </p>
           </div>
         </div>
       </div>

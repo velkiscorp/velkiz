@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EMPTY_FILTERS } from '@/lib/discoverFilters';
-import { SHOW_ME_OPTIONS, LOOKING_FOR_OPTIONS, INTEREST_OPTIONS, DISTANCE_OPTIONS, HEIGHT_OPTIONS } from '@/lib/profileOptions';
+import { SHOW_ME_OPTIONS, LOOKING_FOR_OPTIONS, INTEREST_OPTIONS, HEIGHT_OPTIONS } from '@/lib/profileOptions';
+import { useUnits } from '@/lib/units';
 
 const AGES = Array.from({ length: 82 }, (_, i) => 18 + i); // 18-99
 
@@ -39,6 +40,7 @@ export default function FilterPanel({ filters, hasLocation, onApply, onClose }) 
     [key]: draft[key].includes(value) ? draft[key].filter(v => v !== value) : [...draft[key], value],
   });
   const num = (v) => (v ? Number(v) : null);
+  const units = useUnits();
 
   return (
     <motion.div
@@ -93,7 +95,10 @@ export default function FilterPanel({ filters, hasLocation, onApply, onClose }) 
             <select aria-label="Maximum distance" className={`${selectClass} w-full`} disabled={!hasLocation}
               value={draft.maxDistanceKm || ''} onChange={e => set({ maxDistanceKm: num(e.target.value) })}>
               <option value="">Any distance</option>
-              {DISTANCE_OPTIONS.map(km => <option key={km} value={km}>Within {km} km</option>)}
+              {units.distanceOptions.map(o => <option key={o.value} value={o.value}>Within {o.label}</option>)}
+              {draft.maxDistanceKm && !units.distanceOptions.some(o => o.value === draft.maxDistanceKm) && (
+                <option value={draft.maxDistanceKm}>Within {units.distance(draft.maxDistanceKm)}</option>
+              )}
             </select>
           </Section>
 
@@ -101,11 +106,11 @@ export default function FilterPanel({ filters, hasLocation, onApply, onClose }) 
             <div className="flex items-center gap-2">
               <select aria-label="Minimum height" className={selectClass} value={draft.minHeight || ''} onChange={e => set({ minHeight: num(e.target.value) })}>
                 <option value="">Any</option>
-                {HEIGHT_OPTIONS.filter(h => !draft.maxHeight || h.value <= draft.maxHeight).map(h => <option key={h.value} value={h.value}>From {h.label}</option>)}
+                {HEIGHT_OPTIONS.filter(cm => !draft.maxHeight || cm <= draft.maxHeight).map(cm => <option key={cm} value={cm}>From {units.heightLong(cm)}</option>)}
               </select>
               <select aria-label="Maximum height" className={selectClass} value={draft.maxHeight || ''} onChange={e => set({ maxHeight: num(e.target.value) })}>
                 <option value="">Any</option>
-                {HEIGHT_OPTIONS.filter(h => !draft.minHeight || h.value >= draft.minHeight).map(h => <option key={h.value} value={h.value}>To {h.label}</option>)}
+                {HEIGHT_OPTIONS.filter(cm => !draft.minHeight || cm >= draft.minHeight).map(cm => <option key={cm} value={cm}>To {units.heightLong(cm)}</option>)}
               </select>
             </div>
           </Section>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { safetyApi, REPORT_REASONS } from '@/api/safety';
+import { CONTACT } from '@/lib/contact';
 
 // Report someone. Blocks them too unless the switch is turned off.
 // onDone({ blocked }) runs after the report is sent.
@@ -53,8 +54,9 @@ export default function ReportDialog({ open, onOpenChange, userId, username, mat
             <AlertDialogHeader>
               <AlertDialogTitle>Thanks for telling us</AlertDialogTitle>
               <AlertDialogDescription>
-                Our team reviews every report, usually within 24 hours. {username || 'They'} won't
+                We review every report, usually within 24 hours. {username || 'They'} won't
                 know it was you.{sent.blocked ? ` You won't see each other on Velkiz any more.` : ''}
+                {' '}To add anything, email <a href={CONTACT.safety.href} className="text-gold underline underline-offset-2">{CONTACT.safety.email}</a>.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -97,7 +99,8 @@ export default function ReportDialog({ open, onOpenChange, userId, username, mat
             </label>
 
             <p className="text-xs text-muted-foreground">
-              If you're in danger, contact your local emergency services first.
+              If you're in danger, contact your local emergency services first. You can also
+              email <a href={CONTACT.safety.href} className="text-gold underline underline-offset-2">{CONTACT.safety.email}</a>.
             </p>
 
             {error && <p className="text-sm text-destructive">{error}</p>}

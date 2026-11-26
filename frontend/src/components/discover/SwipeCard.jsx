@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 import SecureImage from '@/components/shared/SecureImage';
 import Watermark from '@/components/shared/Watermark';
-import { lookingForLabel, formatHeight } from '@/lib/profileOptions';
+import { lookingForLabel } from '@/lib/profileOptions';
+import { useUnits } from '@/lib/units';
 
 export default function SwipeCard({ profile, onSwipe, isTop, swipeDir, onTapInfo }) {
+  const units = useUnits();
   const [photoIdx, setPhotoIdx] = useState(0);
   const [revealedNSFW, setRevealedNSFW] = useState({});
 
@@ -148,7 +150,7 @@ export default function SwipeCard({ profile, onSwipe, isTop, swipeDir, onTapInfo
                   <Badge className="rounded-sm bg-gold/90 text-black border-transparent text-[10px] font-semibold uppercase tracking-[0.12em] px-2 hover:bg-gold/90">Couple</Badge>
                 )}
                 {profile.height_cm && (
-                  <span className="text-white/60 text-xs">{formatHeight(profile.height_cm)}</span>
+                  <span className="text-white/60 text-xs">{units.height(profile.height_cm)}</span>
                 )}
               </div>
             )}
@@ -156,7 +158,7 @@ export default function SwipeCard({ profile, onSwipe, isTop, swipeDir, onTapInfo
               <div className="flex items-center gap-1 text-white/60 text-xs uppercase tracking-[0.15em] mt-1">
                 <MapPin className="w-3.5 h-3.5 shrink-0" />
                 {[profile.city, profile.country].filter(Boolean).join(', ')}
-                {profile.distance_km != null && <span className="normal-case tracking-normal"> · {profile.distance_km} km away</span>}
+                {profile.distance_km != null && <span className="normal-case tracking-normal"> · {units.distance(profile.distance_km)} away</span>}
               </div>
             )}
           </div>

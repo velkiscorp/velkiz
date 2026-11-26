@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { format } from 'date-fns';
 import { ShieldAlert, Camera } from 'lucide-react';
 import { splitPhoneNumbers, maskPhoneNumber } from '@/lib/phone';
+import { useUnits } from '@/lib/units';
 
 export default function ChatBubble({ message, isMine }) {
+  const units = useUnits();
   const [revealed, setRevealed] = useState(false);
   const flagged = !!message.is_filtered;
   const parts = flagged ? splitPhoneNumbers(message.content || '') : null;
@@ -14,7 +15,7 @@ export default function ChatBubble({ message, isMine }) {
         <p className="flex items-center gap-1.5 text-[11px] text-gold/70 px-3 py-1 rounded-full border border-gold/20 bg-gold/5">
           <Camera className="w-3 h-3" />
           {isMine ? 'You took a screenshot' : 'They took a screenshot'}
-          {message.created_at && <span className="text-muted-foreground/60">· {format(new Date(message.created_at), 'HH:mm')}</span>}
+          {message.created_at && <span className="text-muted-foreground/60">· {units.time(message.created_at)}</span>}
         </p>
       </div>
     );
@@ -69,7 +70,7 @@ export default function ChatBubble({ message, isMine }) {
 
         <div className={`flex items-center gap-2 px-1 ${isMine ? 'justify-end' : ''}`}>
           <span className="text-[10px] text-muted-foreground tracking-wider uppercase">
-            {format(new Date(message.created_at), 'h:mm a')}
+            {units.time(message.created_at)}
           </span>
         </div>
       </div>

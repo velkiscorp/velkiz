@@ -13,20 +13,12 @@ export const LOOKING_FOR_OPTIONS = [
 export const lookingForLabel = (value) =>
   LOOKING_FOR_OPTIONS.find(o => o.value === value)?.label || null;
 
-// Height is stored in centimetres; shown as both, e.g. 5'9" (175 cm)
+// Height is stored in centimetres. How it's shown (5'9" or 175 cm) depends on
+// your country: see lib/units.js.
 export const MIN_HEIGHT_CM = 120;
 export const MAX_HEIGHT_CM = 230;
 
-export const formatHeight = (cm) => {
-  if (!cm) return null;
-  const totalInches = Math.round(cm / 2.54);
-  return `${Math.floor(totalInches / 12)}'${totalInches % 12}" (${cm} cm)`;
-};
-
-export const HEIGHT_OPTIONS = Array.from(
-  { length: 211 - 140 + 1 },
-  (_, i) => 140 + i
-).map(cm => ({ value: cm, label: formatHeight(cm) }));
+export const HEIGHT_OPTIONS = Array.from({ length: 211 - 140 + 1 }, (_, i) => 140 + i);
 
 // One interests list for onboarding, My Profile and the Discover filter.
 // (Casual isn't here on purpose: it's a "looking for" choice now.)
@@ -36,8 +28,6 @@ export const INTEREST_OPTIONS = [
   'Late Night Talks', 'Netflix & Chill', 'Spontaneous', 'Open Minded', 'Adventure',
   'Outdoors', 'Travel', 'Music', 'Dancing', 'Art', 'Photography', 'Fitness', 'Foodie',
 ];
-
-export const DISTANCE_OPTIONS = [10, 25, 50, 100, 250, 500];
 
 // "Show me" in Discover filters. Values match the backend GENDERS list.
 export const SHOW_ME_OPTIONS = [

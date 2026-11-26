@@ -5,26 +5,31 @@
 // them before launch, especially the sections on sensitive data, governing
 // law and liability.
 //
-// Fill in the [BRACKETS] once, here, and every page picks them up.
+// Velkiz is run by a small team of independent developers in India, not a
+// registered company. If that changes (a company is registered), update
+// `operator` and the governing law here. Indian law asks apps to publish a
+// Grievance Officer: change `grievanceOfficer` if that person changes.
 
 export const LEGAL = {
   appName: 'Velkiz',
-  company: '[COMPANY LEGAL NAME]',
-  companyAddress: '[COMPANY POSTAL ADDRESS]',
-  country: '[COUNTRY / STATE]',
+  // How the policies name who runs Velkiz
+  operator: 'a small team of independent developers based in India',
+  governingLaw: 'India',
+  grievanceOfficer: 'Anshika Pant',
+  grievanceEmail: 'grievance@velkiz.com',
   supportEmail: 'support@velkiz.com',
   privacyEmail: 'privacy@velkiz.com',
   website: 'https://velkiz.com',
   lastUpdated: 'November 26, 2026',
 }
 
-const { appName: APP, company: CO, country: COUNTRY, supportEmail: SUPPORT, privacyEmail: PRIVACY } = LEGAL
+const { appName: APP, operator: OP, governingLaw: LAW, supportEmail: SUPPORT, privacyEmail: PRIVACY } = LEGAL
 
 // Each document: a title, a short intro, and sections of paragraphs (p),
 // then bullet lists (list), then paragraphs after the list (after).
 export const PRIVACY_POLICY = {
   title: 'Privacy Policy',
-  intro: `${APP} is an anonymous dating app run by ${CO} ("we", "us"). Anonymity is the point of ${APP}, so we collect as little as we can, never sell your data, and never show other people your email or exact location. This policy explains what we collect, why, and the choices you have.`,
+  intro: `${APP} is an anonymous dating app run by ${OP} ("we", "us"), not a registered company. Anonymity is the point of ${APP}, so we collect as little as we can, never sell your data, and never show other people your email or exact location. This policy explains what we collect, why, and the choices you have.`,
   sections: [
     {
       h: 'What we collect',
@@ -77,16 +82,16 @@ export const PRIVACY_POLICY = {
       list: [
         'Supabase, which hosts our database, logins and photo storage.',
         'Resend, which sends our emails.',
-        '[HOSTING PROVIDER], which runs our servers.',
+        'Our cloud hosting provider, which runs our servers.',
         'Apple, to deliver push notifications if you turn them on.',
       ],
     },
     {
-      p: ['We may also share information if the law requires it, to protect someone from serious harm, or as part of a sale or merger of our business (in which case this policy will still apply to your information).'],
+      p: ['We may also share information if the law requires it, to protect someone from serious harm, or if ${APP} is transferred to a new owner or becomes a company (in which case this policy will still apply to your information).'],
     },
     {
       h: 'How long we keep it',
-      p: [`We keep your information while your account is open. When you delete your account in Settings, we permanently delete your profile, photos, matches, messages, likes, blocks and login straight away. Copies may remain in encrypted backups for up to [30] days before they are overwritten. We may keep limited records longer where the law requires it or to deal with a safety report about your account.`],
+      p: [`We keep your information while your account is open. When you delete your account in Settings, we permanently delete your profile, photos, matches, messages, likes, blocks and login straight away. Copies may remain in encrypted backups for up to 30 days before they are overwritten. We may keep limited records longer where the law requires it or to deal with a safety report about your account.`],
     },
     {
       h: 'Your choices and rights',
@@ -98,7 +103,7 @@ export const PRIVACY_POLICY = {
         'Delete your account and all your data from Settings.',
         `Ask for a copy of your data, or ask us to correct it, by emailing ${PRIVACY}.`,
       ],
-      after: [`Depending on where you live (for example the EU, UK or California), you may have further rights, such as to object to how we use your data or to complain to your data protection authority. Contact us at ${PRIVACY} and we will respond within the time the law requires.`],
+      after: [`Depending on where you live (for example India, the EU, the UK or California), you may have further rights, such as to object to how we use your data or to complain to your data protection authority. Contact us at ${PRIVACY} and we will respond within the time the law requires.`],
     },
     {
       h: 'Security',
@@ -110,7 +115,7 @@ export const PRIVACY_POLICY = {
     },
     {
       h: 'International transfers',
-      p: [`Our service providers may store and process data outside your country, including in [REGIONS]. Where the law requires, we use safeguards such as standard contractual clauses.`],
+      p: [`Our service providers may store and process data outside your country, including in the United States and the European Union. Where the law requires, we use safeguards such as standard contractual clauses.`],
     },
     {
       h: 'Changes',
@@ -118,14 +123,18 @@ export const PRIVACY_POLICY = {
     },
     {
       h: 'Contact',
-      p: [`${CO}, ${LEGAL.companyAddress}. Email ${PRIVACY}.`],
+      p: [`Email ${PRIVACY} for anything about your privacy or your data.`],
+    },
+    {
+      h: 'Grievance Officer (India)',
+      p: [`Under India's Information Technology Rules and Digital Personal Data Protection Act, you can raise a complaint with our Grievance Officer, ${LEGAL.grievanceOfficer}, at ${LEGAL.grievanceEmail}. We acknowledge complaints within 24 hours and resolve them within 15 days.`],
     },
   ],
 }
 
 export const TERMS = {
   title: 'Terms of Service',
-  intro: `These terms are an agreement between you and ${CO} ("we", "us") about your use of ${APP}. By creating an account you agree to them, to our Privacy Policy and to our Community Guidelines. Please read them.`,
+  intro: `These terms are an agreement between you and ${OP} ("we", "us"), not a registered company, about your use of ${APP}. By creating an account you agree to them, to our Privacy Policy and to our Community Guidelines. Please read them.`,
   sections: [
     {
       h: 'Who can use Velkiz',
@@ -185,7 +194,7 @@ export const TERMS = {
     },
     {
       h: 'Limitation of liability',
-      p: [`To the fullest extent the law allows, we are not liable for indirect, incidental, special or consequential losses, or for anything another user does, on or off the app. Our total liability to you is limited to the greater of the amount you paid us in the last 12 months and [AMOUNT]. Nothing in these terms limits liability that cannot be limited by law.`],
+      p: [`To the fullest extent the law allows, we are not liable for indirect, incidental, special or consequential losses, or for anything another user does, on or off the app. Our total liability to you is limited to the greater of the amount you paid us in the last 12 months and ₹10,000. Nothing in these terms limits liability that cannot be limited by law.`],
     },
     {
       h: 'Apple App Store',
@@ -206,11 +215,11 @@ export const TERMS = {
     },
     {
       h: 'Governing law',
-      p: [`These terms are governed by the laws of ${COUNTRY}, and disputes will be handled by the courts there, unless the law where you live gives you the right to bring a claim locally.`],
+      p: [`These terms are governed by the laws of ${LAW}, and disputes will be handled by the courts there, unless the law where you live gives you the right to bring a claim locally.`],
     },
     {
       h: 'Contact',
-      p: [`${CO}, ${LEGAL.companyAddress}. Email ${SUPPORT}.`],
+      p: [`Email ${SUPPORT}. For complaints under Indian law, write to our Grievance Officer, ${LEGAL.grievanceOfficer}, at ${LEGAL.grievanceEmail}.`],
     },
   ],
 }
@@ -256,7 +265,7 @@ export const GUIDELINES = {
     },
     {
       h: 'If something is wrong',
-      p: [`Tap Report on their profile or in the chat. Reports are anonymous and reviewed by our team, usually within 24 hours. You can also block anyone at any time. If you are in danger, contact local emergency services first. You can also email ${SUPPORT}.`],
+      p: [`Tap Report on their profile or in the chat. Reports are anonymous and we review every one, usually within 24 hours. You can also block anyone at any time. If you are in danger, contact local emergency services first. You can also email ${SUPPORT}.`],
     },
   ],
 }
