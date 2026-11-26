@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import apiClient from '@/api/client'
 import { queryClientInstance } from '@/lib/query-client'
 import { stopPush } from '@/lib/push'
+import { resetPurchases } from '@/lib/purchases'
 
 const AuthContext = createContext()
 
@@ -71,6 +72,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     // Stop this phone getting the account's notifications (needs the login, so first)
     await stopPush()
+    await resetPurchases()
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)

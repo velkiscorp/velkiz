@@ -15,7 +15,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { profilesApi } from '@/api/profiles';
 import { swipesApi } from '@/api/swipes';
 import { getMatchAnimationsEnabled } from '@/lib/preferences';
-import { useMyProfile, useRefresh } from '@/api/queries';
+import { useMyProfile, useRefresh, useSuperLikes } from '@/api/queries';
+import SuperLikeSheet from '../components/discover/SuperLikeSheet';
 import FilterPanel from '../components/discover/FilterPanel';
 import { loadFilters, saveFilters, toQueryParams } from '@/lib/discoverFilters';
 import { geocodeCity } from '@/lib/geocode';
@@ -41,6 +42,8 @@ export default function Discover() {
   const [filters, setFilters] = useState(loadFilters);
   const [panelOpen, setPanelOpen] = useState(false);
   const [previewProfile, setPreviewProfile] = useState(null);
+  const [superSheetOpen, setSuperSheetOpen] = useState(false);
+  const { data: superLikes } = useSuperLikes();
   const navigate = useNavigate();
   const refresh = useRefresh();
   const { user } = useAuth();
@@ -165,10 +168,11 @@ export default function Discover() {
 
   const swipeMutation = useMutation({
     mutationFn: ({ profile, direction }) => swipesApi.swipe(profile.id, direction),
-    onSuccess: (result, { profile }) => {
+    onSuccess: (result, { profile, direction }) => {
       setDeck(prev => prev.filter(p => p.id !== profile.id));
       setLastAction({ type: 'swipe', profile, matched: !!result.matched });
       setAnimDir(null);
+      if (direction === 'super') refresh.superLikes();
       if (result.matched) {
         setMatchPopup(result.match);
         refresh.matchesAndLikes();
@@ -176,6 +180,12 @@ export default function Discover() {
     },
     onError: (err, { profile }) => {
       setAnimDir(null);
+      // Out of Super Likes: the card stays, show how to get more
+      if (err?.code === 'NO_SUPER_LIKES') {
+        refresh.superLikes();
+        setSuperSheetOpen(true);
+        return;
+      }
       // Already swiped (e.g. on another device) or no longer available
       // (blocked / deleted): nothing to decide, so just drop the card
       if (err?.error === 'Already swiped this user' || err?.error === 'User not found') {
@@ -190,6 +200,10 @@ export default function Discover() {
   const handleSwipe = (direction) => {
     const profile = deck[0];
     if (!profile || swipeMutation.isPending || isUndoing) return;
+    if (direction === 'super' && superLikes && superLikes.total < 1) {
+      setSuperSheetOpen(true);
+      return;
+    }
     setAnimDir(direction);
     swipeMutation.mutate({ profile, direction });
   };
@@ -336,11 +350,26 @@ export default function Discover() {
           <Button size="lg" className="w-20 h-20 rounded-full bg-gradient-to-b from-primary to-accent border border-gold/30 shadow-lg animate-pulse-glow" onClick={() => handleSwipe('right')} disabled={swipeMutation.isPending || isUndoing}>
             <Heart className="w-8 h-8 text-primary-foreground" fill="currentColor" />
           </Button>
-          <Button size="lg" variant="outline" className="w-16 h-16 rounded-full border border-gold/50 bg-black/30 hover:bg-gold/10" onClick={() => handleSwipe('super')} disabled={swipeMutation.isPending || isUndoing}>
-            <Star className="w-7 h-7 text-gold" fill="currentColor" />
-          </Button>
+          <div className="relative">
+            <Button size="lg" variant="outline" className="w-16 h-16 rounded-full border border-gold/50 bg-black/30 hover:bg-gold/10" onClick={() => handleSwipe('super')} disabled={swipeMutation.isPending || isUndoing} aria-label="Super Like">
+              <Star className="w-7 h-7 text-gold" fill="currentColor" />
+            </Button>
+            {superLikes && (
+              <button
+                onClick={() => setSuperSheetOpen(true)}
+                aria-label={`${superLikes.total} Super Likes left`}
+                className="absolute -top-1 -right-1 min-w-6 h-6 px-1.5 rounded-full bg-gold text-black text-xs font-semibold flex items-center justify-center shadow"
+              >
+                {superLikes.total}
+              </button>
+            )}
+          </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {superSheetOpen && <SuperLikeSheet onClose={() => setSuperSheetOpen(false)} />}
+      </AnimatePresence>
 
       <AnimatePresence>
         {matchPopup && (

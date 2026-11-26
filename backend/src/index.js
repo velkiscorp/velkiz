@@ -12,6 +12,7 @@ import messageRoutes from './routes/messages.js'
 import photoRoutes from './routes/photos.js'
 import safetyRoutes from './routes/safety.js'
 import notificationRoutes from './routes/notifications.js'
+import { superLikeRoutes, purchaseRoutes } from './routes/superLikes.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { supabase } from './config/supabase.js'
 import { apiLimiter } from './middleware/rateLimits.js'
@@ -78,6 +79,8 @@ app.use('/api/messages', messageRoutes)
 app.use('/api/photos', photoRoutes)
 app.use('/api/safety', safetyRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/super-likes', superLikeRoutes)
+app.use('/api/purchases', purchaseRoutes)
 
 // Health check - lets you confirm the server is running
 app.get('/api/health', (req, res) => {

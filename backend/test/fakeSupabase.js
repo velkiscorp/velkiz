@@ -23,7 +23,13 @@ export const createFakeSupabase = (respond) => {
     })
     return chain
   }
-  return { client: { from: builder, storage: { from: () => ({}) }, auth: {} }, calls }
+  // rpc('fn', args) reaches respond() as { rpc: 'fn', args }
+  const rpc = async (name, args) => {
+    const q = { rpc: name, args }
+    calls.push(q)
+    return (await respond(q)) ?? { data: null, error: null }
+  }
+  return { client: { from: builder, rpc, storage: { from: () => ({}) }, auth: {} }, calls }
 }
 
 // Value of the first filter named `name` (e.g. eq on user_id)

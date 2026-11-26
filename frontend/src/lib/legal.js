@@ -50,6 +50,7 @@ export const PRIVACY_POLICY = {
         'When you were last active.',
         'Technical information such as your IP address, device type and app version, kept in server logs to keep the service secure and to stop abuse such as spam and bulk sign-ups.',
         'If you turn on push notifications, a device token that lets us send notifications to your phone.',
+        'If you buy Super Likes, a record of the purchase (which pack, when, and a transaction number). Payment is handled entirely by Apple: we never see your card or payment details.',
       ],
     },
     {
@@ -83,7 +84,8 @@ export const PRIVACY_POLICY = {
         'Supabase, which hosts our database, logins and photo storage.',
         'Resend, which sends our emails.',
         'Our cloud hosting provider, which runs our servers.',
-        'Apple, to deliver push notifications if you turn them on.',
+        'Apple, to deliver push notifications if you turn them on, and to process in-app purchases.',
+        'RevenueCat, which confirms in-app purchases with Apple for us. It receives your account ID (a random number, not your name or email) and your purchase history.',
       ],
     },
     {
@@ -186,7 +188,10 @@ export const TERMS = {
     },
     {
       h: 'Paid features',
-      p: [`${APP} is currently free. If we add paid features, they will be bought through the App Store and Apple's terms will apply to payment and refunds.`],
+      p: [
+        `${APP} is free to use. Everyone gets one free Super Like every 24 hours, and you can buy packs of extra Super Likes in the iPhone app.`,
+        `Purchases are made through the App Store, and Apple's terms apply to payment and refunds. Bought Super Likes don't expire, have no cash value, can't be transferred to another account, and are used up when you send them, even if you later undo that Super Like. If Apple refunds a purchase, the Super Likes from it that you haven't used are removed. If you delete your account, any unused Super Likes are lost.`,
+      ],
     },
     {
       h: 'Disclaimers',
