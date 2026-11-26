@@ -56,6 +56,8 @@ export const updateProfileBody = z.object({
   hide_city: z.boolean().optional(),
   // false = paused: hidden from Discover, matches and chats carry on
   is_active: z.boolean().optional(),
+  notify_matches: z.boolean().optional(),
+  notify_messages: z.boolean().optional(),
   gender: z.enum(GENDERS).nullable().optional(),
   orientation: z.enum(ORIENTATIONS).nullable().optional(),
   looking_for: z.enum(LOOKING_FOR).nullable().optional(),
@@ -141,3 +143,14 @@ export const reportBody = z.object({
   // Reporting blocks the person too unless you untick it
   alsoBlock: z.boolean().optional().default(true),
 })
+
+// ---- push notifications ----
+// Apple device tokens are hex strings (64 characters today, may grow)
+const deviceToken = z.string().regex(/^[0-9a-fA-F]{32,200}$/, 'Not a valid device token')
+
+export const deviceBody = z.object({
+  token: deviceToken,
+  platform: z.enum(['ios']).optional().default('ios'),
+})
+
+export const deviceTokenParams = z.object({ token: deviceToken })

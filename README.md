@@ -13,6 +13,13 @@ SUPABASE_ANON_KEY=<anon key>
 FRONTEND_URL=http://localhost:5173
 PORT=3000
 # TRUST_PROXY=1   # set when deployed behind a proxy (Railway, Render, ...)
+# Push notifications to the iPhone app (optional; skipped when missing).
+# Make the key at developer.apple.com > Certificates, IDs & Profiles > Keys.
+# APNS_KEY_ID=ABC123DEFG
+# APNS_TEAM_ID=XYZ987TEAM
+# APNS_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+# APNS_BUNDLE_ID=com.velkiz.app
+# APNS_PRODUCTION=true   # for TestFlight and App Store builds
 ```
 
 ```
@@ -30,6 +37,10 @@ VITE_API_URL=http://localhost:3000
 ```
 cd frontend && npm install && npm run dev
 ```
+
+## iPhone app
+
+See `frontend/IOS.md` for building the iPhone app in Xcode and uploading it.
 
 ## Tests
 

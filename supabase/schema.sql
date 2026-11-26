@@ -25,6 +25,8 @@ create table public.profiles (
   height_cm smallint check (height_cm is null or height_cm between 120 and 230),
   is_couple boolean not null default false,
   hide_city boolean not null default false, -- others see distance, not the city name
+  notify_matches boolean not null default true,  -- push for new matches
+  notify_messages boolean not null default true, -- push for new messages
   -- looking_for: long_term | short_term | casual | online | friends | open
   gender text,
   orientation text,
@@ -78,6 +80,16 @@ create table public.blocked_users (
   created_at timestamp with time zone not null default now()
 );
 
+-- Phones that allowed push notifications
+create table public.device_tokens (
+  id uuid not null default gen_random_uuid(),
+  user_id uuid not null,
+  token text not null,
+  platform text not null default 'ios',
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now()
+);
+
 -- Reports of abusive users. Review with: select * from reports where status = 'open'
 create table public.reports (
   id uuid not null default gen_random_uuid(),
@@ -98,6 +110,7 @@ alter table public.matches add constraint matches_pkey primary key (id);
 alter table public.messages add constraint messages_pkey primary key (id);
 alter table public.blocked_users add constraint blocked_users_pkey primary key (id);
 alter table public.reports add constraint reports_pkey primary key (id);
+alter table public.device_tokens add constraint device_tokens_pkey primary key (id);
 
 -- -------------------------------------------------------------- rules
 
@@ -118,6 +131,11 @@ create unique index matches_one_per_pair on public.matches using btree (least(us
 -- blocks: one per pair and direction
 alter table public.blocked_users add constraint blocked_users_blocker_id_blocked_id_key unique (blocker_id, blocked_id);
 
+-- device tokens: one row per phone
+alter table public.device_tokens add constraint device_tokens_token_key unique (token);
+alter table public.device_tokens add constraint device_tokens_token_check check (char_length(token) <= 200);
+alter table public.device_tokens add constraint device_tokens_platform_check check (platform = any (array['ios']));
+
 -- reports: a known reason, a short note, a review status
 alter table public.reports add constraint reports_reason_check check (reason = any (array['fake_profile', 'harassment', 'inappropriate_photos', 'underage', 'spam_or_scam', 'hate_speech', 'threats_or_violence', 'other']));
 alter table public.reports add constraint reports_details_check check (char_length(details) <= 1000);
@@ -134,6 +152,7 @@ alter table public.messages add constraint messages_match_id_fkey foreign key (m
 alter table public.messages add constraint messages_sender_id_fkey foreign key (sender_id) references auth.users(id) on delete cascade;
 alter table public.blocked_users add constraint blocked_users_blocker_id_fkey foreign key (blocker_id) references auth.users(id) on delete cascade;
 alter table public.blocked_users add constraint blocked_users_blocked_id_fkey foreign key (blocked_id) references auth.users(id) on delete cascade;
+alter table public.device_tokens add constraint device_tokens_user_id_fkey foreign key (user_id) references auth.users(id) on delete cascade;
 alter table public.reports add constraint reports_reporter_id_fkey foreign key (reporter_id) references auth.users(id) on delete cascade;
 alter table public.reports add constraint reports_reported_id_fkey foreign key (reported_id) references auth.users(id) on delete cascade;
 alter table public.reports add constraint reports_match_id_fkey foreign key (match_id) references public.matches(id) on delete set null;
@@ -150,6 +169,7 @@ create index profiles_looking_for_idx on public.profiles (looking_for);
 create index profiles_height_idx on public.profiles (height_cm);
 create index profiles_location_idx on public.profiles (location_lat, location_lng);
 create index profiles_interests_idx on public.profiles using gin (interests);
+create index device_tokens_user_id_idx on public.device_tokens (user_id);
 create index reports_reported_id_idx on public.reports (reported_id);
 create index reports_status_idx on public.reports (status, created_at);
 
@@ -161,6 +181,7 @@ alter table public.matches enable row level security;
 alter table public.messages enable row level security;
 alter table public.blocked_users enable row level security;
 alter table public.reports enable row level security;
+alter table public.device_tokens enable row level security;
 
 -- ------------------------------------------- table permissions (backend only)
 

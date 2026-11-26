@@ -10,6 +10,7 @@ import matchRoutes from './routes/matches.js'
 import messageRoutes from './routes/messages.js'
 import photoRoutes from './routes/photos.js'
 import safetyRoutes from './routes/safety.js'
+import notificationRoutes from './routes/notifications.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { supabase } from './config/supabase.js'
 import { apiLimiter } from './middleware/rateLimits.js'
@@ -61,6 +62,7 @@ app.use('/api/matches', matchRoutes)
 app.use('/api/messages', messageRoutes)
 app.use('/api/photos', photoRoutes)
 app.use('/api/safety', safetyRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 // Health check - lets you confirm the server is running
 app.get('/api/health', (req, res) => {

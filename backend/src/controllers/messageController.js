@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js'
+import { notifyUser } from '../services/push.js'
 import { containsPhoneNumber } from '../utils/phone.js'
 
 
@@ -114,6 +115,10 @@ export const sendMessage = async (req, res) => {
     // by comparing sender_id to its own user id.
     const io = req.app.get('io')
     io?.to(matchId).emit('receive_message', message)
+
+    // And a push notification to the other person's phone (no text in it)
+    const recipientId = match.user1_id === userId ? match.user2_id : match.user1_id
+    notifyUser(recipientId, 'message', { matchId })
 
     res.status(201).json({
       message: {

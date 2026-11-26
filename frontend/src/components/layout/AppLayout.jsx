@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { OuroborosIcon, HeartArrowIcon, ScrollSealIcon, LionIcon, TigressIcon } from '../icons/EmberIcons';
 import VelvetLogo from '../icons/VelvetLogo';
 import { useMyProfile, useLikes, useMatches } from '@/api/queries';
+import PushPrompt from '@/components/shared/PushPrompt';
 
 // Block screenshots / screen recording globally
 if (typeof document !== 'undefined') {
@@ -53,6 +54,8 @@ export default function AppLayout() {
       <main className="flex-1 max-w-lg mx-auto w-full">
         <Outlet />
       </main>
+
+      {myProfile?.profile?.onboarding_complete && <PushPrompt />}
 
       {/* Bottom Nav */}
       <nav className="sticky bottom-0 z-50 pb-safe backdrop-blur-xl bg-background/80 border-t border-border/50">

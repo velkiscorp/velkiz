@@ -18,6 +18,12 @@
     "StatusBar": {
       "style": "DARK",
       "overlaysWebView": true
+    },
+    "PushNotifications": {
+      "presentationOptions": [
+        "badge",
+        "sound"
+      ]
     }
   }
 }

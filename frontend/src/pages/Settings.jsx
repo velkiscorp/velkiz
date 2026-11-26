@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Ban, BookOpen, Trash2, LogOut, ChevronRight, Sparkles, PauseCircle,
-  MapPinOff, Cake, LifeBuoy, FileText, Lock,
+  MapPinOff, Cake, LifeBuoy, FileText, Lock, Bell, Heart, MessageCircle,
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -19,6 +19,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { getMatchAnimationsEnabled, setMatchAnimationsEnabled } from '@/lib/preferences';
 import { LEGAL } from '@/lib/legal';
+import { getPushPermission, enablePush } from '@/lib/push';
 
 const Section = ({ title, children }) => (
   <div className="space-y-2">
@@ -62,6 +63,13 @@ export default function Settings() {
   const refresh = useRefresh();
   const { data: myProfileData } = useMyProfile();
   const profile = myProfileData?.profile;
+
+  const [pushPermission, setPushPermission] = useState(null);
+  useEffect(() => { getPushPermission().then(setPushPermission); }, []);
+
+  const allowPush = async () => {
+    if (pushPermission === 'prompt') setPushPermission(await enablePush(navigate));
+  };
 
   const [matchAnimations, setMatchAnimations] = useState(getMatchAnimationsEnabled());
   const [saving, setSaving] = useState(null);
@@ -145,6 +153,41 @@ export default function Settings() {
             checked={profile ? profile.show_age !== false : true}
             disabled={!profile || saving === 'show_age'}
             onChange={(v) => saveProfileSetting('show_age', v)}
+          />
+        </Section>
+
+        <Section title="Notifications">
+          {pushPermission === 'prompt' && (
+            <LinkRow icon={Bell} label="Allow notifications" desc="Get told about matches and messages" onClick={allowPush} />
+          )}
+          {pushPermission === 'denied' && (
+            <div className="flex items-center gap-3 p-3.5">
+              <RowIcon icon={Bell} />
+              <p className="text-xs text-muted-foreground flex-1">
+                Notifications are off for Velkiz. Turn them on in your iPhone's Settings &gt; Velkiz &gt; Notifications.
+              </p>
+            </div>
+          )}
+          {pushPermission === 'unsupported' && (
+            <div className="flex items-center gap-3 p-3.5">
+              <RowIcon icon={Bell} />
+              <p className="text-xs text-muted-foreground flex-1">Notifications work in the Velkiz iPhone app.</p>
+            </div>
+          )}
+          <ToggleRow
+            icon={Heart}
+            label="New matches"
+            checked={profile ? profile.notify_matches !== false : true}
+            disabled={!profile || saving === 'notify_matches'}
+            onChange={(v) => saveProfileSetting('notify_matches', v)}
+          />
+          <ToggleRow
+            icon={MessageCircle}
+            label="New messages"
+            desc="Never shows who sent it or what they wrote"
+            checked={profile ? profile.notify_messages !== false : true}
+            disabled={!profile || saving === 'notify_messages'}
+            onChange={(v) => saveProfileSetting('notify_messages', v)}
           />
         </Section>
 

@@ -40,3 +40,13 @@ The iPhone app is the same React app wrapped with [Capacitor](https://capacitorj
 - Permission wording for photos and camera in `ios/App/App/Info.plist`.
 - `ITSAppUsesNonExemptEncryption = false`, so no export compliance question on each upload (the app only uses standard HTTPS).
 - Apple's privacy manifest, `ios/App/App/PrivacyInfo.xcprivacy`. It must match the privacy labels you fill in on App Store Connect.
+
+## Push notifications
+
+1. developer.apple.com > Certificates, IDs & Profiles > **Identifiers**: open `com.velkiz.app`, tick **Push Notifications**, save.
+2. **Keys** > **+**: name it "Velkiz push", tick **Apple Push Notifications service (APNs)**, download the `.p8` file (you can only download it once). Note the **Key ID** and your **Team ID** (top right of the page).
+3. Put them in the backend's environment (`APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_KEY`, `APNS_BUNDLE_ID`, and `APNS_PRODUCTION=true` for TestFlight and App Store builds). See the main README.
+4. In Xcode > **Signing & Capabilities**, check **Push Notifications** is listed (it comes from `App/App.entitlements`).
+5. Run `supabase/migrations/2026-11-26_push_notifications.sql` in Supabase.
+
+Notifications never contain names or message text, only "You have a new match" or "You have a new message", so a lock screen gives nothing away. People choose matches and/or messages in Settings.

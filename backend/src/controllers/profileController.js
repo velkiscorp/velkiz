@@ -119,7 +119,7 @@ export const updateMyProfile = async (req, res) => {
     const {
       username, bio, date_of_birth, show_age, height_cm, is_couple, hide_city, gender, orientation, looking_for,
       interests, photos, photo_url, location_lat, location_lng,
-      country, city, prompt1, prompt2, prompt3, onboarding_complete, is_active
+      country, city, prompt1, prompt2, prompt3, onboarding_complete, is_active, notify_matches, notify_messages
     } = req.body
 
     const updates = {
@@ -134,6 +134,8 @@ export const updateMyProfile = async (req, res) => {
     if (is_couple !== undefined) updates.is_couple = is_couple
     if (hide_city !== undefined) updates.hide_city = hide_city
     if (is_active !== undefined) updates.is_active = is_active
+    if (notify_matches !== undefined) updates.notify_matches = notify_matches
+    if (notify_messages !== undefined) updates.notify_messages = notify_messages
     if (gender !== undefined) updates.gender = gender
     if (orientation !== undefined) updates.orientation = orientation
     if (looking_for !== undefined) updates.looking_for = looking_for
