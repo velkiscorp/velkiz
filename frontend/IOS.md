@@ -72,6 +72,18 @@ Everyone gets one free Super Like every 24 hours. More are sold in packs through
 
 Without these, Super Likes still work: everyone gets their free one, and the sheet says packs aren't available.
 
+## Sign in with Apple
+
+The login screen in the app shows **Continue with Apple** above the email form. People can pick "Hide My Email". Apple accounts have no password, so deleting the account asks them to confirm with Apple instead.
+
+1. developer.apple.com > Identifiers > `com.velkiz.app`: **Sign In with Apple** ticked (Enable as a primary App ID).
+2. **Supabase** > Authentication > Sign In / Providers > **Apple**: turn it on. In **Client IDs** put `com.velkiz.app`. Leave the secret key empty (only needed for signing in on a website). Save.
+3. **Email sources** (so "Hide My Email" users get our emails): developer.apple.com > Services > **Sign in with Apple for Email Communication** > Configure. Add the domains `support.velkiz.com` and `velkiz.com`, and the address `support@velkiz.com`.
+4. **Revoke on delete** (Apple asks apps to remove themselves from the person's Apple ID when they delete their account): developer.apple.com > **Keys** > **+**, name "Velkiz Sign in with Apple", tick **Sign in with Apple** > Configure > primary App ID `com.velkiz.app` > Save > Continue > Register > download the `.p8`. On the backend (Render) add:
+   - `APPLE_SIGNIN_KEY_ID` = that key's ID
+   - `APPLE_SIGNIN_KEY` = the whole `.p8` text
+   - `APPLE_TEAM_ID` = `2R7CDWDFGY`
+
 ## What's set up
 
 - App icon and splash screen (sources in `frontend/resources/`).

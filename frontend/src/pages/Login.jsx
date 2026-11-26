@@ -6,6 +6,9 @@ import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { motion, useReducedMotion } from 'framer-motion'
+import apiClient from '@/api/client'
+import AppleButton from '@/components/auth/AppleButton'
+import { canUseApple, signInWithApple } from '@/lib/appleSignIn'
 
 export default function Login() {
   const [mode, setMode] = useState('login') // login | signup | reset
@@ -69,6 +72,28 @@ export default function Login() {
     }
   }
 
+  // Sign in with Apple: signs up or signs in, no email check needed (Apple
+  // has already verified it). Tapping it counts as agreeing to the Terms,
+  // which the line under the button says.
+  const handleApple = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      setMessage(null)
+      const signedIn = await signInWithApple()
+      if (!signedIn) return
+      await apiClient.post('/api/auth/accept-terms', { acceptedTerms: true })
+      await apiClient.post('/api/auth/create-profile').catch(() => {})
+      const me = await apiClient.get('/api/auth/me').catch(() => null)
+      window.location.href = me?.profile?.onboarding_complete ? '/Discover' : '/Onboarding'
+    } catch (err) {
+      console.error('Apple sign-in failed', err)
+      setError("Couldn't sign in with Apple. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-background px-6 overflow-hidden">
       {/* A pool of low red light behind the form, slowly breathing */}
@@ -95,6 +120,21 @@ export default function Login() {
             {mode === 'reset' && 'Reset your password'}
           </p>
         </div>
+
+        {mode !== 'reset' && canUseApple() && (
+          <div className="space-y-3">
+            <AppleButton onClick={handleApple} disabled={loading} />
+            <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+              By continuing with Apple you confirm you're 18 or older and agree to the{' '}
+              <Link to="/terms" className="text-gold hover:underline">Terms</Link>,{' '}
+              <Link to="/privacy" className="text-gold hover:underline">Privacy Policy</Link> and{' '}
+              <Link to="/guidelines" className="text-gold hover:underline">Community Guidelines</Link>.
+            </p>
+            <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60">
+              <div className="h-px flex-1 bg-border" />or with email<div className="h-px flex-1 bg-border" />
+            </div>
+          </div>
+        )}
 
         <div className="space-y-3">
           <Input

@@ -64,6 +64,7 @@ test('Discover paging has safe defaults and limits', () => {
 test('deleting an account needs a password', () => {
   assert.equal(ok(S.deleteAccountBody, { password: '' }), false)
   assert.equal(ok(S.deleteAccountBody, { password: 'x' }), true)
+  assert.equal(ok(S.deleteAccountBody, {}), true)
 })
 
 test('height is 120-230 cm or empty, couple is a yes/no', () => {

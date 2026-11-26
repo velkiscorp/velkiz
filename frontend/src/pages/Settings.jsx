@@ -20,6 +20,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { getMatchAnimationsEnabled, setMatchAnimationsEnabled } from '@/lib/preferences';
 import { CONTACT } from '@/lib/contact';
 import { getPushPermission, enablePush } from '@/lib/push';
+import { isAppleOnlyAccount, signInWithApple } from '@/lib/appleSignIn';
+import AppleButton from '@/components/auth/AppleButton';
 
 const Section = ({ title, children }) => (
   <div className="space-y-2">
@@ -58,7 +60,8 @@ const ToggleRow = ({ icon, label, desc, checked, onChange, disabled }) => (
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const appleOnly = isAppleOnlyAccount(user);
   const { toast } = useToast();
   const refresh = useRefresh();
   const { data: myProfileData } = useMyProfile();
@@ -98,12 +101,19 @@ export default function Settings() {
   };
 
   const handleDelete = async (e) => {
-    e.preventDefault();
-    if (!password || deleting) return;
+    e?.preventDefault();
+    if ((!appleOnly && !password) || deleting) return;
     setDeleting(true);
     setDeleteError(null);
     try {
-      await authApi.deleteAccount(password);
+      if (appleOnly) {
+        // Confirm it's really them with Apple, then delete
+        const apple = await signInWithApple();
+        if (!apple) { setDeleting(false); return; }
+        await authApi.deleteAccount({ appleAuthorizationCode: apple.authorizationCode });
+      } else {
+        await authApi.deleteAccount({ password });
+      }
       queryClientInstance.clear();
       window.location.replace('/login?deleted=1');
     } catch (err) {
@@ -231,9 +241,12 @@ export default function Settings() {
               <AlertDialogTitle>Delete your account?</AlertDialogTitle>
               <AlertDialogDescription>
                 This permanently deletes your profile, photos, matches, chats and login.
-                It can't be undone. Enter your password to confirm.
+                It can't be undone. {appleOnly ? 'Confirm with Apple to continue.' : 'Enter your password to confirm.'}
               </AlertDialogDescription>
             </AlertDialogHeader>
+            {appleOnly ? (
+              <AppleButton onClick={handleDelete} disabled={deleting} label={deleting ? 'Deleting...' : 'Confirm with Apple and delete'} />
+            ) : (
             <Input
               type="password"
               autoComplete="current-password"
@@ -243,12 +256,15 @@ export default function Settings() {
               className="h-12 bg-secondary border-border/50"
               autoFocus
             />
+            )}
             {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
             <AlertDialogFooter>
               <AlertDialogCancel type="button" disabled={deleting}>Cancel</AlertDialogCancel>
-              <Button type="submit" variant="destructive" disabled={!password || deleting}>
-                {deleting ? 'Deleting...' : 'Delete forever'}
-              </Button>
+              {!appleOnly && (
+                <Button type="submit" variant="destructive" disabled={!password || deleting}>
+                  {deleting ? 'Deleting...' : 'Delete forever'}
+                </Button>
+              )}
             </AlertDialogFooter>
           </form>
         </AlertDialogContent>

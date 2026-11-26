@@ -104,7 +104,14 @@ export const idParams = z.object({ id: uuid })
 // Deleting your account needs your password again, so someone holding an
 // unlocked phone or a stolen session can't wipe it
 export const deleteAccountBody = z.object({
-  password: z.string().min(1, 'Enter your password').max(72),
+  // Accounts with a password must send it; Sign in with Apple accounts sign
+  // in with Apple again instead (see deleteAccount)
+  password: z.string().min(1, 'Enter your password').max(72).optional(),
+  appleAuthorizationCode: z.string().max(2000).optional(),
+})
+
+export const acceptTermsBody = z.object({
+  acceptedTerms: z.literal(true, { error: 'Please agree to the Terms and confirm you are 18 or older' }),
 })
 
 // ---- swipes ----
