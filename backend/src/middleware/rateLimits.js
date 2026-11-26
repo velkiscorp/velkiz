@@ -57,3 +57,13 @@ export const photoLimiter = rateLimit({
   keyGenerator: byUserOrIp,
   message: json('Too many photos loaded, try again in a minute'),
 })
+
+// Reports and blocks, per user: enough for real use, stops someone spamming
+// the moderation queue
+export const safetyLimiter = rateLimit({
+  ...base,
+  windowMs: 60 * 60 * 1000,
+  limit: 30,
+  keyGenerator: byUserOrIp,
+  message: json('Too many reports or blocks, try again later'),
+})

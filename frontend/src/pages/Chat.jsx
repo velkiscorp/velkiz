@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { io as ioClient } from 'socket.io-client';
-import { ArrowLeft, Shield, MoreVertical, LogOut, Ban } from 'lucide-react';
+import { ArrowLeft, Shield, MoreVertical, LogOut, Ban, Flag } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
@@ -16,6 +16,7 @@ import { matchesApi } from '@/api/matches';
 import { profilesApi } from '@/api/profiles';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 import ProfileViewModal from '@/components/profile/ProfileViewModal';
+import ReportDialog from '@/components/safety/ReportDialog';
 import { useToast } from '@/components/ui/use-toast';
 import { getAccessToken } from '@/api/client';
 import { useMatches, useChatMessages, queryKeys } from '@/api/queries';
@@ -108,6 +109,14 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const [reportOpen, setReportOpen] = useState(false);
+
+  // Blocked from the profile sheet or by reporting: this chat is closed now
+  const leaveAfterBlock = () => {
+    queryClient.invalidateQueries({ queryKey: ['matches'] });
+    navigate('/Messages');
+  };
+
   const leaveOrBlockMutation = useMutation({
     mutationFn: async (action) => {
       if (action === 'leave') {
@@ -184,6 +193,14 @@ export default function Chat() {
               Leave chat
             </DropdownMenuItem>
             <DropdownMenuItem
+              onClick={() => setReportOpen(true)}
+              disabled={!partnerUserId}
+              className="gap-2 text-destructive focus:text-destructive"
+            >
+              <Flag className="w-4 h-4" />
+              Report
+            </DropdownMenuItem>
+            <DropdownMenuItem
               onClick={() => leaveOrBlockMutation.mutate('block')}
               className="gap-2 text-destructive focus:text-destructive"
             >
@@ -217,8 +234,19 @@ export default function Chat() {
         <ProfileViewModal
           profile={viewingProfile}
           onClose={() => setViewingProfile(null)}
+          matchId={matchId}
+          onBlocked={leaveAfterBlock}
         />
       )}
+
+      <ReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        userId={partnerUserId}
+        username={partnerUsername}
+        matchId={matchId}
+        onDone={({ blocked }) => { if (blocked) leaveAfterBlock(); }}
+      />
     </div>
   );
 }

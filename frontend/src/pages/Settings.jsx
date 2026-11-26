@@ -14,7 +14,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { getMatchAnimationsEnabled, setMatchAnimationsEnabled } from '@/lib/preferences';
 
 const SETTINGS_ROWS = [
-  { icon: Shield, label: 'Privacy & Safety', desc: 'Blocking, reporting, data' },
+  { icon: Shield, label: 'Blocked people', desc: 'See and unblock people you blocked', to: '/Settings/blocked' },
   { icon: Bell, label: 'Notifications', desc: 'Match alerts, messages' },
   { icon: Eye, label: 'Who can see me', desc: 'Visibility settings' },
   { icon: Trash2, label: 'Delete Account', desc: 'Permanently remove your profile', danger: true, action: 'delete' },
@@ -66,10 +66,10 @@ export default function Settings() {
       </div>
 
       <div className="p-4 space-y-3 max-w-lg mx-auto w-full">
-        {SETTINGS_ROWS.map(({ icon: Icon, label, desc, danger, action }) => (
+        {SETTINGS_ROWS.map(({ icon: Icon, label, desc, danger, action, to }) => (
           <button
             key={label}
-            onClick={action === 'delete' ? openDelete : undefined}
+            onClick={action === 'delete' ? openDelete : to ? () => navigate(to) : undefined}
             className={`w-full flex items-center gap-3 p-4 rounded-2xl bg-card border border-border/50 hover:bg-secondary/50 transition-colors text-left ${danger ? 'border-destructive/30' : ''}`}
           >
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${danger ? 'bg-destructive/10' : 'bg-secondary'}`}>

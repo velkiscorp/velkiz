@@ -9,6 +9,7 @@ import { swipesApi } from '@/api/swipes';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 import { useLikes, useRefresh } from '@/api/queries';
 import { lookingForLabel } from '@/lib/profileOptions';
+import SafetyActions from '@/components/safety/SafetyActions';
 
 export default function Matches() {
   const [previewProfile, setPreviewProfile] = useState(null);
@@ -175,6 +176,12 @@ export default function Matches() {
                 <Heart className="w-4 h-4 mr-2" /> Like back
               </Button>
             </div>
+
+            <SafetyActions
+              userId={previewProfile.id}
+              username={previewProfile.username}
+              onBlocked={() => { setPreviewProfile(null); refresh.matchesAndLikes(); }}
+            />
           </div>
         </div>
       )}

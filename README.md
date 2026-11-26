@@ -49,6 +49,7 @@ Covers the risky rules: 18+ from date of birth, input checks, who can see photos
 - All data goes through the backend (`/api/...`), which checks the login and validates input (`backend/src/validation/schemas.js`).
 - Photos sit in a private bucket and only load through `/api/photos/...`, which checks who's asking.
 - Ages come from the date of birth on the server. Usernames are lowercase.
+- Report and block work from any profile (Discover, Likes, chat). Reports land in the `reports` table; review open ones with `select * from reports where status = 'open' order by created_at;` and set `status` to `reviewed`, `actioned` or `dismissed`. Apple expects reports to be acted on within 24 hours.
 - Gender is set once at onboarding and can't be changed after.
 - Discover shows people by orientation by default, both ways: a straight man sees women who'd want to see a man (straight, bi or pan women), a gay man sees gay or bi men, and so on (`backend/src/services/orientation.js`). "Show me" in Filters picks the genders instead; the other person's orientation still has to fit.
 

@@ -209,6 +209,15 @@ export default function Discover() {
     }, 250);
   };
 
+  // Blocked from the profile sheet: drop them from the deck for good
+  const handleBlocked = (profile) => {
+    setPreviewProfile(null);
+    skippedIds.current.delete(profile.id);
+    setDeck(prev => prev.filter(p => p.id !== profile.id));
+    if (lastAction?.profile?.id === profile.id) setLastAction(null);
+    toast({ title: `${profile.username || 'They'} won't appear again` });
+  };
+
   const handleUndo = async () => {
     if (!lastAction || isUndoing || swipeMutation.isPending) return;
     const { type, profile } = lastAction;
@@ -369,6 +378,7 @@ export default function Discover() {
           onClose={() => setPreviewProfile(null)}
           onLike={() => { setPreviewProfile(null); handleSwipe('right'); }}
           onSuper={() => { setPreviewProfile(null); handleSwipe('super'); }}
+          onBlocked={() => handleBlocked(previewProfile)}
         />
       )}
     </div>

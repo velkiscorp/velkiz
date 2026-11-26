@@ -32,3 +32,39 @@ export const isBlockedBetween = async (userA, userB) => {
   if (error) throw error
   return (data?.length || 0) > 0
 }
+
+// Block someone: ends any match between the two (both see the chat close)
+// and records the block. Safe to call twice.
+export const blockUser = async (blockerId, blockedId, io) => {
+  const { data: matches, error: findErr } = await supabase
+    .from('matches')
+    .select('id')
+    .or(
+      `and(user1_id.eq.${blockerId},user2_id.eq.${blockedId}),` +
+      `and(user1_id.eq.${blockedId},user2_id.eq.${blockerId})`
+    )
+    .eq('status', 'matched')
+  if (findErr) throw findErr
+
+  const matchIds = (matches || []).map(m => m.id)
+  if (matchIds.length > 0) {
+    const { error: endErr } = await supabase
+      .from('matches')
+      .update({ status: 'unmatched' })
+      .in('id', matchIds)
+    if (endErr) throw endErr
+  }
+
+  const { error: blockErr } = await supabase
+    .from('blocked_users')
+    .upsert(
+      { blocker_id: blockerId, blocked_id: blockedId },
+      { onConflict: 'blocker_id,blocked_id' }
+    )
+  if (blockErr) throw blockErr
+
+  for (const id of matchIds) {
+    io?.to(id).emit('match_ended', { matchId: id })
+    io?.in(id).socketsLeave(id)
+  }
+}

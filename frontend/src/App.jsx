@@ -17,6 +17,7 @@ import Messages from './pages/Messages'
 import Chat from './pages/Chat'
 import MyProfile from './pages/MyProfile'
 import Settings from './pages/Settings'
+import BlockedPeople from './pages/BlockedPeople'
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated } = useAuth()
@@ -60,6 +61,7 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/Onboarding" element={<Onboarding />} />
       <Route path="/Settings" element={<Settings />} />
+      <Route path="/Settings/blocked" element={<BlockedPeople />} />
       <Route path="/Chat" element={<Chat />} />
       <Route element={<AppLayout />}>
         <Route path="/Discover" element={<Discover />} />

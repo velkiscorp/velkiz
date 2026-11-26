@@ -117,3 +117,23 @@ export const sendMessageBody = z.object({
     .min(1, 'Message cannot be empty')
     .max(2000, 'Message is too long (2000 characters max)'),
 })
+
+// ---- safety (report & block) ----
+export const REPORT_REASONS = [
+  'fake_profile', 'harassment', 'inappropriate_photos', 'underage',
+  'spam_or_scam', 'hate_speech', 'threats_or_violence', 'other',
+]
+
+export const userIdParams = z.object({ userId: uuid })
+
+export const blockBody = z.object({ userId: uuid })
+
+export const reportBody = z.object({
+  userId: uuid,
+  reason: z.enum(REPORT_REASONS),
+  details: optionalText(1000),
+  // The chat it happened in, so a reviewer can read the messages
+  matchId: uuid.optional(),
+  // Reporting blocks the person too unless you untick it
+  alsoBlock: z.boolean().optional().default(true),
+})
