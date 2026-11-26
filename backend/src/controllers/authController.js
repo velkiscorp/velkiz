@@ -73,10 +73,15 @@ export const createProfile = async (req, res) => {
 // Bump when the Terms or Privacy Policy change in a way people must agree to again
 const TERMS_VERSION = '2026-11-26'
 
-// Where the links in signup emails send people back to
-// Where email links go. SITE_URL is the website (https://velkiz.com); on an
-// iPhone with the app installed, iOS opens these links in the app.
-const callbackUrl = () => `${(process.env.SITE_URL || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')}/auth/callback`
+// Where email links go: the website (https://velkiz.com). On an iPhone with
+// the app installed, iOS opens these links in the app; on a computer the
+// website says to open it on the phone. FRONTEND_URL (a local dev server) is
+// only used outside production, so a live server never links to localhost.
+const callbackUrl = () => {
+  const devUrl = process.env.NODE_ENV !== 'production' && process.env.FRONTEND_URL
+  const base = process.env.SITE_URL || devUrl || 'https://velkiz.com'
+  return `${base.replace(/\/$/, '')}/auth/callback`
+}
 
 // Signup sends a verification email (when "Confirm email" is on in Supabase).
 // The account can't sign in until the link in that email is clicked.
