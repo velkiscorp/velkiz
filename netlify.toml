@@ -1,0 +1,10 @@
+# Netlify settings for velkiz.com (the landing page). These override the
+# Netlify dashboard, so the site always builds the same way.
+[build]
+  base = "frontend"
+  command = "npm run build"
+  # Relative to base, so this is frontend/dist
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
