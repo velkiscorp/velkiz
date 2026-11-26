@@ -1,5 +1,6 @@
 import { supabase, createAuthClient } from '../config/supabase.js'
 import { deleteAccountData } from '../services/deleteAccount.js'
+import { revokeAppleSignIn } from '../services/appleSignIn.js'
 
 const generateUsername = () => {
   const adjectives = ['ghost', 'shadow', 'cosmic', 'silent', 'wild', 'mystic', 'neon', 'dark', 'lucky', 'brave']
@@ -151,23 +152,63 @@ export const updateLastSeen = async (req, res) => {
   }
 }
 
+// Signed in with Apple (no password): people prove it's them by signing in
+// with Apple again right before deleting, so the session must be this fresh
+const REAUTH_WINDOW_MS = 10 * 60 * 1000
+
+const hasPassword = (user) =>
+  (user.identities || []).some(i => i.provider === 'email') || user.app_metadata?.provider === 'email'
+
 // DELETE /api/auth/me - permanently delete your account and everything in it
 export const deleteAccount = async (req, res) => {
   try {
-    // Check the password on a throwaway client so the shared one keeps the service key
-    const { error: pwError } = await createAuthClient().auth.signInWithPassword({
-      email: req.user.email,
-      password: req.body.password,
-    })
-    if (pwError) {
-      // 403, not 401: a 401 makes the app think the session expired
-      return res.status(403).json({ error: 'Wrong password' })
+    const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(req.user.id)
+    if (userError || !user) throw userError || new Error('User not found')
+
+    if (hasPassword(user)) {
+      if (!req.body.password) return res.status(403).json({ error: 'Enter your password', code: 'PASSWORD_REQUIRED' })
+      // Check the password on a throwaway client so the shared one keeps the service key
+      const { error: pwError } = await createAuthClient().auth.signInWithPassword({
+        email: user.email,
+        password: req.body.password,
+      })
+      if (pwError) {
+        // 403, not 401: a 401 makes the app think the session expired
+        return res.status(403).json({ error: 'Wrong password' })
+      }
+    } else {
+      const lastSignIn = user.last_sign_in_at ? new Date(user.last_sign_in_at).getTime() : 0
+      if (Date.now() - lastSignIn > REAUTH_WINDOW_MS) {
+        return res.status(403).json({ error: 'Please sign in with Apple again to confirm', code: 'REAUTH_REQUIRED' })
+      }
     }
 
     await deleteAccountData(req.user.id, req.app.get('io'))
+    // After the data is gone: also remove Velkiz from their Apple ID
+    if (req.body.appleAuthorizationCode) await revokeAppleSignIn(req.body.appleAuthorizationCode)
     res.json({ deleted: true })
   } catch (error) {
-    console.error('Delete account error:', error, error.cause)
+    console.error('Delete account error:', error, error?.cause)
     res.status(500).json({ error: "Couldn't delete your account. Please try again." })
+  }
+}
+
+// POST /api/auth/accept-terms - Sign in with Apple skips our signup form, so
+// the "I'm 18+ and agree to the Terms" is recorded here instead
+export const acceptTerms = async (req, res) => {
+  try {
+    const { data: { user }, error } = await supabase.auth.admin.getUserById(req.user.id)
+    if (error || !user) throw error || new Error('User not found')
+    const meta = user.user_metadata || {}
+    if (meta.terms_version !== TERMS_VERSION) {
+      const { error: updateError } = await supabase.auth.admin.updateUserById(req.user.id, {
+        user_metadata: { ...meta, terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION },
+      })
+      if (updateError) throw updateError
+    }
+    res.json({ accepted: true })
+  } catch (error) {
+    console.error('Accept terms error:', error)
+    res.status(500).json({ error: 'Something went wrong, please try again' })
   }
 }

@@ -35,7 +35,7 @@ export const PRIVACY_POLICY = {
       h: 'What we collect',
       p: ['Information you give us:'],
       list: [
-        'Account details: your email address and password (the password is stored only as a secure hash by our login provider).',
+        'Account details: your email address and password (the password is stored only as a secure hash by our login provider). If you use Sign in with Apple, we get an email address from Apple instead, which can be a private relay address if you choose "Hide My Email", and no password.',
         'Date of birth, used to confirm you are 18 or older and to show your age if you choose. We never show your date of birth itself.',
         'Profile details you choose to add: username, gender, sexual orientation, what you are looking for, height, whether you are a couple, bio, interests, prompt answers and photos.',
         'Messages you send to your matches.',
@@ -84,7 +84,7 @@ export const PRIVACY_POLICY = {
         'Supabase, which hosts our database, logins and photo storage.',
         'Resend, which sends our emails.',
         'Our cloud hosting provider, which runs our servers.',
-        'Apple, to deliver push notifications if you turn them on, and to process in-app purchases.',
+        'Apple, to deliver push notifications if you turn them on, to process in-app purchases, and for Sign in with Apple if you use it.',
         'RevenueCat, which confirms in-app purchases with Apple for us. It receives your account ID (a random number, not your name or email) and your purchase history.',
       ],
     },

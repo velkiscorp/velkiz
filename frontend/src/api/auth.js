@@ -36,8 +36,10 @@ export const authApi = {
 
   // Permanently deletes the account on the server (needs the password again),
   // then clears the local session. The login no longer exists after this.
-  deleteAccount: async (password) => {
-    await apiClient.delete('/api/auth/me', { data: { password } })
+  // Apple accounts have no password: they sign in with Apple again instead
+  // and send the code Apple gives back, so we can also revoke Apple sign-in
+  deleteAccount: async ({ password, appleAuthorizationCode } = {}) => {
+    await apiClient.delete('/api/auth/me', { data: { password, appleAuthorizationCode } })
     await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
   },
 
