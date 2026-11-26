@@ -7,15 +7,15 @@
 //
 // Velkiz is run by a small team of independent developers in India, not a
 // registered company. If that changes (a company is registered), update
-// `operator` and the governing law here. The one bracket left is the name of
-// the Grievance Officer, which Indian law asks apps to publish.
+// `operator` and the governing law here. Indian law asks apps to publish a
+// Grievance Officer: change `grievanceOfficer` if that person changes.
 
 export const LEGAL = {
   appName: 'Velkiz',
   // How the policies name who runs Velkiz
   operator: 'a small team of independent developers based in India',
   governingLaw: 'India',
-  grievanceOfficer: '[GRIEVANCE OFFICER NAME]',
+  grievanceOfficer: 'Anshika Pant',
   grievanceEmail: 'grievance@velkiz.com',
   supportEmail: 'support@velkiz.com',
   privacyEmail: 'privacy@velkiz.com',
