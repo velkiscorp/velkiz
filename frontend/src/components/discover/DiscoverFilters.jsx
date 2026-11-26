@@ -39,7 +39,7 @@ export default function DiscoverFilters({ filters, onChange, onOpenPanel }) {
   const off = 'border-border text-muted-foreground hover:text-foreground hover:border-gold/40';
 
   return (
-    <div className="flex gap-2 overflow-x-auto no-scrollbar px-1 pb-1" style={{ scrollbarWidth: 'none' }}>
+    <div className="relative z-30 shrink-0 flex gap-2 overflow-x-auto no-scrollbar px-1 py-1" style={{ scrollbarWidth: 'none' }}>
       <button onClick={onOpenPanel} className={`${base} ${count ? on : off}`}>
         <SlidersHorizontal className="w-3 h-3" />
         Filters{count ? ` · ${count}` : ''}

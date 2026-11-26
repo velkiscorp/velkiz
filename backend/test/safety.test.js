@@ -93,3 +93,27 @@ test('report reasons are a fixed list and notes are capped', () => {
   assert.equal(reportBody.safeParse({ userId: THEM, reason: 'made_up' }).success, false)
   assert.equal(reportBody.safeParse({ userId: THEM, reason: 'other', details: 'x'.repeat(1001) }).success, false)
 })
+
+test('a report emails the moderators and sends the reporter a receipt', async () => {
+  const sent = []
+  const realFetch = globalThis.fetch
+  process.env.RESEND_API_KEY = 'test-key'
+  globalThis.fetch = async (url, opts) => { sent.push({ url, body: JSON.parse(opts.body) }); return { ok: true } }
+  try {
+    let status
+    const res = { status(s) { status = s; return this }, json() { return this } }
+    await report({ user: { id: ME, email: 'me@example.com' }, body: { userId: THEM, reason: 'harassment', details: 'rude' }, app: { get: () => io } }, res)
+    assert.equal(status, 201)
+    await new Promise(r => setTimeout(r, 20))
+    assert.equal(sent.length, 2)
+    assert.ok(sent.every(s => s.url === 'https://api.resend.com/emails'))
+    assert.deepEqual(sent[0].body.to, ['support@velkiz.com'])
+    assert.match(sent[0].body.text, /harassment/)
+    assert.deepEqual(sent[1].body.to, ['me@example.com'])
+    // The receipt never names the person reported
+    assert.doesNotMatch(sent[1].body.text, new RegExp(THEM))
+  } finally {
+    globalThis.fetch = realFetch
+    delete process.env.RESEND_API_KEY
+  }
+})
