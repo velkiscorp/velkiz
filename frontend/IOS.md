@@ -47,7 +47,7 @@ velkiz.com only shows a landing page (download buttons, Privacy, Terms, Guidelin
 
 Verify-email and reset-password emails link to `https://velkiz.com/auth/...`. On an iPhone with Velkiz installed, iOS opens those links in the app (universal links). For that:
 
-1. In `frontend/public/.well-known/apple-app-site-association`, replace `TEAMID` with your Team ID, and deploy the website. Check that `https://velkiz.com/.well-known/apple-app-site-association` shows the file.
+1. `frontend/public/.well-known/apple-app-site-association` has your Team ID (2R7CDWDFGY). Deploy the website. Check that `https://velkiz.com/.well-known/apple-app-site-association` shows the file.
 2. Backend: set `SITE_URL=https://velkiz.com`.
 3. Supabase > Authentication > URL Configuration: Site URL `https://velkiz.com`, and add `https://velkiz.com/auth/callback` to Redirect URLs.
 
