@@ -26,7 +26,7 @@ export default function PhotoViewer({ photos, startIndex = 0, onClose }) {
   const blurred = photo.is_nsfw && !revealed[index];
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center pt-safe pb-safe" onClick={onClose}>
       <SecureImage
         src={photo.url}
         alt=""

@@ -25,7 +25,7 @@ export default function BlockedPeople() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="sticky top-0 z-10 backdrop-blur-xl bg-background/80 border-b border-border/50 px-4 h-14 flex items-center gap-3">
+      <div className="sticky top-0 z-10 backdrop-blur-xl bg-background/80 border-b border-border/50 px-4 h-14 box-content pt-safe flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>

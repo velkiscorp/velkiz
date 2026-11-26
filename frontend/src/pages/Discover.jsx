@@ -261,7 +261,7 @@ export default function Discover() {
   const canUndo = !!lastAction && !lastAction.matched && !isUndoing && !swipeMutation.isPending;
 
   return (
-    <div className="h-[calc(100vh-7.5rem)] flex flex-col gap-2 pt-3 px-4">
+    <div className="h-app flex flex-col gap-2 pt-3 px-4">
       <DiscoverFilters filters={filters} onChange={handleFilterChange} onOpenPanel={() => setPanelOpen(true)} />
 
       <div className="flex-1 relative">

@@ -152,9 +152,9 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-dvh-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50 px-4 h-16 flex items-center gap-3">
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50 px-4 h-16 box-content pt-safe flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-5 h-5" />
         </Button>

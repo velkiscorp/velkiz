@@ -28,9 +28,15 @@ app.disable('etag')
 // each visitor's real IP instead of the proxy's
 if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || 1)
 
+// The website, plus the iPhone app (Capacitor serves it from capacitor://localhost)
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'capacitor://localhost',
+]
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: allowedOrigins,
     methods: ['GET', 'POST']
   }
 })
@@ -40,7 +46,7 @@ app.set('io', io)
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true
 }))
 app.use(express.json({ limit: '50kb' }))

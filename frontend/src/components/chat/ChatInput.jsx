@@ -23,7 +23,7 @@ export default function ChatInput({ onSend }) {
   };
 
   return (
-    <div className="border-t border-border/50 bg-background/80 backdrop-blur-xl">
+    <div className="border-t border-border/50 bg-background/80 backdrop-blur-xl pb-safe">
       <div className="flex items-center gap-1.5 p-3">
         <Input
           placeholder="Type a message..."
