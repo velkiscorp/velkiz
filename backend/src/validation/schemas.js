@@ -18,6 +18,8 @@ const photoUrl = z.string().max(500).refine(
 export const signupBody = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   password: z.string().min(8, 'Password must be at least 8 characters').max(72),
+  // The "I'm 18+ and agree to the Terms" box at signup
+  acceptedTerms: z.literal(true, { error: 'Please agree to the Terms and confirm you are 18 or older' }),
 })
 
 export const resendVerificationBody = z.object({

@@ -6,10 +6,15 @@ const PHOTO = 'https://test.supabase.co/storage/v1/object/public/photos/'
 const ok = (schema, value) => schema.safeParse(value).success
 
 test('signup: email is trimmed and lowercased, password needs 8+ characters', () => {
-  assert.deepEqual(S.signupBody.parse({ email: ' Mel@Example.COM ', password: '12345678' }),
-    { email: 'mel@example.com', password: '12345678' })
-  assert.equal(ok(S.signupBody, { email: 'not-an-email', password: '12345678' }), false)
-  assert.equal(ok(S.signupBody, { email: 'a@b.com', password: 'short' }), false)
+  assert.deepEqual(S.signupBody.parse({ email: ' Mel@Example.COM ', password: '12345678', acceptedTerms: true }),
+    { email: 'mel@example.com', password: '12345678', acceptedTerms: true })
+  assert.equal(ok(S.signupBody, { email: 'not-an-email', password: '12345678', acceptedTerms: true }), false)
+  assert.equal(ok(S.signupBody, { email: 'a@b.com', password: 'short', acceptedTerms: true }), false)
+})
+
+test('signing up needs the Terms and 18+ box ticked', () => {
+  assert.equal(ok(S.signupBody, { email: 'a@b.com', password: '12345678' }), false)
+  assert.equal(ok(S.signupBody, { email: 'a@b.com', password: '12345678', acceptedTerms: false }), false)
 })
 
 test('usernames are lowercased and only allow a-z 0-9 _ .', () => {

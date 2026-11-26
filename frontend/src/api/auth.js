@@ -4,8 +4,8 @@ import apiClient from './client'
 export const authApi = {
   // Signup goes through our backend. Usually it sends a verification email
   // and returns no session; the link in the email signs the person in.
-  signup: async (email, password) => {
-    const response = await apiClient.post('/api/auth/signup', { email, password })
+  signup: async (email, password, acceptedTerms) => {
+    const response = await apiClient.post('/api/auth/signup', { email, password, acceptedTerms })
     
     // Set the session in Supabase client
     if (response.session) {
