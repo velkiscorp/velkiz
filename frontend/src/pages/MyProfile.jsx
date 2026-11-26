@@ -14,7 +14,8 @@ import { useToast } from "@/components/ui/use-toast";
 import PhotoViewer from '@/components/shared/PhotoViewer';
 import SecureImage from '@/components/shared/SecureImage';
 import { useMyProfile, useRefresh } from '@/api/queries';
-import { LOOKING_FOR_OPTIONS, lookingForLabel, formatHeight, HEIGHT_OPTIONS, INTEREST_OPTIONS } from '@/lib/profileOptions';
+import { LOOKING_FOR_OPTIONS, lookingForLabel, HEIGHT_OPTIONS, INTEREST_OPTIONS } from '@/lib/profileOptions';
+import { useUnits } from '@/lib/units';
 
 const INTERESTS = INTEREST_OPTIONS;
 
@@ -50,6 +51,7 @@ const ORIENTATION_OPTIONS = {
 };
 
 export default function MyProfile() {
+  const units = useUnits();
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(null);
@@ -179,7 +181,7 @@ export default function MyProfile() {
             <div className="flex items-center gap-3 mt-1.5 text-[10px] uppercase tracking-[0.18em] text-gold/70">
               {profile.age && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{profile.age}</span>}
               {(profile.city || profile.country) && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[profile.city, profile.country].filter(Boolean).join(', ')}</span>}
-              {profile.height_cm && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" />{formatHeight(profile.height_cm)}</span>}
+              {profile.height_cm && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" />{units.height(profile.height_cm)}</span>}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -286,7 +288,7 @@ export default function MyProfile() {
               className="w-full h-10 rounded-md bg-secondary border border-border/50 px-3 text-sm"
             >
               <option value="">Prefer not to say</option>
-              {HEIGHT_OPTIONS.map(h => <option key={h.value} value={h.value}>{h.label}</option>)}
+              {HEIGHT_OPTIONS.map(cm => <option key={cm} value={cm}>{units.heightLong(cm)}</option>)}
             </select>
           </div>
 

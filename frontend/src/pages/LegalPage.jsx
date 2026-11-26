@@ -2,6 +2,13 @@ import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { LEGAL, LEGAL_DOCS } from '@/lib/legal';
+import { hrefForEmail } from '@/lib/contact';
+
+// Turn any email address in the text into a tap-to-email link
+const EMAIL = /([a-z0-9._-]+@velkiz\.com)/gi;
+const Linked = ({ text }) => text.split(EMAIL).map((part, i) =>
+  i % 2 ? <a key={i} href={hrefForEmail(part)} className="text-gold underline underline-offset-2">{part}</a> : part
+);
 
 // /privacy, /terms and /guidelines. Open to everyone, signed in or not,
 // because Apple and the signup screen link to them.
@@ -22,19 +29,19 @@ export default function LegalPage({ doc }) {
       <article className="p-5 pb-16 max-w-2xl mx-auto w-full space-y-6 text-sm leading-relaxed">
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">Last updated {LEGAL.lastUpdated}</p>
-          <p className="text-foreground/90">{intro}</p>
+          <p className="text-foreground/90"><Linked text={intro} /></p>
         </div>
 
         {sections.map((s, i) => (
           <section key={i} className="space-y-2">
             {s.h && <h2 className="text-base font-serif italic text-gold">{s.h}</h2>}
-            {(s.p || []).map((t, j) => <p key={j} className="text-muted-foreground">{t}</p>)}
+            {(s.p || []).map((t, j) => <p key={j} className="text-muted-foreground"><Linked text={t} /></p>)}
             {s.list && (
               <ul className="list-disc pl-5 space-y-1.5 text-muted-foreground">
-                {s.list.map((t, j) => <li key={j}>{t}</li>)}
+                {s.list.map((t, j) => <li key={j}><Linked text={t} /></li>)}
               </ul>
             )}
-            {(s.after || []).map((t, j) => <p key={j} className="text-muted-foreground">{t}</p>)}
+            {(s.after || []).map((t, j) => <p key={j} className="text-muted-foreground"><Linked text={t} /></p>)}
           </section>
         ))}
 
@@ -42,6 +49,7 @@ export default function LegalPage({ doc }) {
           {doc !== 'privacy' && <Link to="/privacy" className="text-gold hover:underline">Privacy Policy</Link>}
           {doc !== 'terms' && <Link to="/terms" className="text-gold hover:underline">Terms of Service</Link>}
           {doc !== 'guidelines' && <Link to="/guidelines" className="text-gold hover:underline">Community Guidelines</Link>}
+          <a href={hrefForEmail(LEGAL.supportEmail)} className="text-gold hover:underline">Contact us</a>
         </nav>
       </article>
     </div>

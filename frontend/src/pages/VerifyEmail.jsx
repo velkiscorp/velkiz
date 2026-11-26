@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { authApi } from '@/api/auth'
 import { useState } from 'react'
+import { CONTACT } from '@/lib/contact'
 
 export default function VerifyEmail() {
   const location = useLocation()
@@ -53,6 +54,10 @@ export default function VerifyEmail() {
           >
             Back to sign in
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Still nothing after a few minutes?{' '}
+            <a href={CONTACT.support.href} className="text-gold underline underline-offset-2">Email {CONTACT.support.email}</a>
+          </p>
         </div>
       </div>
     </div>

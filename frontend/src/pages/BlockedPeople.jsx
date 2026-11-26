@@ -5,8 +5,10 @@ import { ArrowLeft, Ban } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/components/ui/use-toast';
 import { safetyApi } from '@/api/safety';
+import { useUnits } from '@/lib/units';
 
 export default function BlockedPeople() {
+  const units = useUnits();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -49,7 +51,7 @@ export default function BlockedPeople() {
           <div key={person.id} className="flex items-center justify-between p-4 rounded-2xl bg-card border border-border/50">
             <div>
               <p className="text-sm font-medium">{person.username || 'Deleted account'}</p>
-              <p className="text-xs text-muted-foreground">Blocked {new Date(person.blocked_at).toLocaleDateString()}</p>
+              <p className="text-xs text-muted-foreground">Blocked {units.date(person.blocked_at)}</p>
             </div>
             <Button
               variant="outline"

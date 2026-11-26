@@ -8,11 +8,13 @@ import PhotoViewer from '@/components/shared/PhotoViewer';
 import SecureImage from '@/components/shared/SecureImage';
 import SafetyActions from '@/components/safety/SafetyActions';
 import Watermark from '@/components/shared/Watermark';
-import { lookingForLabel, formatHeight } from '@/lib/profileOptions';
+import { lookingForLabel } from '@/lib/profileOptions';
+import { useUnits } from '@/lib/units';
 
 // onBlocked: shows Report and Block at the bottom, and runs once they're blocked
 export default function ProfileViewModal({ profile, onClose, onLike, onSuper, onBlocked, matchId }) {
   const [viewerIndex, setViewerIndex] = useState(null);
+  const units = useUnits();
   if (!profile) return null;
 
   // All photos (the backend only sends them once you've matched).
@@ -111,7 +113,7 @@ export default function ProfileViewModal({ profile, onClose, onLike, onSuper, on
                 <Badge className="bg-gold/90 text-black border-transparent">Couple</Badge>
               )}
               {profile.height_cm && (
-                <Badge className="bg-secondary text-muted-foreground border-border">{formatHeight(profile.height_cm)}</Badge>
+                <Badge className="bg-secondary text-muted-foreground border-border">{units.height(profile.height_cm)}</Badge>
               )}
             </div>
 
