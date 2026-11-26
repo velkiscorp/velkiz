@@ -39,7 +39,7 @@ If it fails, open the run and read the red step; the most common causes are a mi
 
 velkiz.com only shows a landing page (download buttons, Privacy, Terms, Guidelines, contact). The app itself only runs inside the iPhone app, where screenshots are blocked. `npm run dev` still runs the full app in a browser for testing.
 
-- Host the `frontend` build (`npm run build`, the `dist` folder) on velkiz.com, e.g. on Vercel, Netlify or Cloudflare Pages, with every unknown path falling back to `index.html`.
+- Host it on **Cloudflare Pages** (free): Workers & Pages > Create > Pages > Connect to Git > velkiz. Root directory `frontend`, build command `npm run build`, output `dist`. Add the environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Then Custom domains > `velkiz.com`. `public/_headers` serves the Apple file as JSON and adds safe headers.
 - Once the app is live, set `VITE_APP_STORE_URL` on the website's hosting to the App Store link and rebuild, so the button works.
 - On the backend, leave `FRONTEND_URL` unset in production: only the iPhone app may call the API.
 
