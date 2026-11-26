@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { authApi } from '@/api/auth'
 import { useState } from 'react'
 import { CONTACT } from '@/lib/contact'
+import { MailCheck } from 'lucide-react'
 
 export default function VerifyEmail() {
   const location = useLocation()
@@ -23,7 +24,7 @@ export default function VerifyEmail() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm space-y-6 text-center">
-        <div className="text-5xl">📬</div>
+        <MailCheck className="w-12 h-12 mx-auto text-gold" strokeWidth={1.5} aria-hidden="true" />
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Check your inbox</h1>
           <p className="text-muted-foreground text-sm">

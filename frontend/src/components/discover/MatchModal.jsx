@@ -18,7 +18,7 @@ export default function MatchModal({ match, myProfile, onChat, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-6 overflow-hidden"
+      className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md flex items-center justify-center p-6 overflow-hidden"
     >
       {/* Two red curtains that part to reveal the match */}
       <motion.div

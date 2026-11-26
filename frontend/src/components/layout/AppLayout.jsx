@@ -24,7 +24,7 @@ export default function AppLayout() {
 
   // iPhone app: screenshots come out blank, so say why
   useEffect(() => onScreenshot(() => {
-    toast({ title: 'Screenshots are blocked in Velkiz', description: "To protect everyone's privacy." });
+    toast({ title: 'Screenshots come out blank in Velkiz', description: 'This keeps everyone\'s chats and photos private.' });
   }), [toast]);
 
   const { data: likesData } = useLikes({ refetchInterval: 10000 });

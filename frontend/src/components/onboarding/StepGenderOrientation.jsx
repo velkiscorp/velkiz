@@ -1,12 +1,12 @@
 import React from 'react';
 import { Label } from "@/components/ui/label";
-import { Lock, ShieldCheck } from 'lucide-react';
+import { Lock, ShieldCheck, Mars, Venus, NonBinary, Sparkle } from 'lucide-react';
 
 const GENDERS = [
-  { value: 'male', label: 'Male', emoji: '♂' },
-  { value: 'female', label: 'Female', emoji: '♀' },
-  { value: 'non_binary', label: 'Non-binary', emoji: '⚧' },
-  { value: 'other', label: 'Other', emoji: '✦' },
+  { value: 'male', label: 'Male', Icon: Mars },
+  { value: 'female', label: 'Female', Icon: Venus },
+  { value: 'non_binary', label: 'Non-binary', Icon: NonBinary },
+  { value: 'other', label: 'Other', Icon: Sparkle },
 ];
 
 const ORIENTATIONS = [
@@ -41,7 +41,7 @@ export default function StepGenderOrientation({ data, onChange }) {
                   : 'border-border bg-secondary text-foreground hover:border-gold/50'
               }`}
             >
-              <span className="text-lg">{g.emoji}</span>
+              <g.Icon className="w-[18px] h-[18px]" strokeWidth={1.75} aria-hidden="true" />
               {g.label}
             </button>
           ))}

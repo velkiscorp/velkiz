@@ -27,7 +27,7 @@
     },
     "PrivacyScreen": {
       "enable": true,
-      "preventScreenshots": true,
+      "preventScreenshots": false,
       "imageName": "Splash",
       "contentMode": "scaleAspectFill"
     }

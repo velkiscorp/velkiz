@@ -1,8 +1,11 @@
 // Inspired by react-hot-toast library
 import { useState, useEffect } from "react";
 
-const TOAST_LIMIT = 20;
-const TOAST_REMOVE_DELAY = 1000000;
+const TOAST_LIMIT = 3;
+// How long a toast stays up unless it says otherwise (duration, in ms)
+const TOAST_DURATION = 4000;
+// Time between closing and being dropped from the list
+const TOAST_REMOVE_DELAY = 200;
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -133,6 +136,10 @@ function toast({ ...props }) {
       },
     },
   });
+
+  // Close on its own after a few seconds
+  const duration = props.duration ?? TOAST_DURATION;
+  if (duration !== Infinity) setTimeout(dismiss, duration);
 
   return {
     id,
