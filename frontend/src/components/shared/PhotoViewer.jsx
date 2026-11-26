@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import SecureImage from '@/components/shared/SecureImage';
-import Watermark from '@/components/shared/Watermark';
 
 // Full-screen photo viewer. photos: [{ url, is_nsfw }], startIndex: number.
 // NSFW photos start blurred and are revealed with a tap.
@@ -35,7 +34,6 @@ export default function PhotoViewer({ photos, startIndex = 0, onClose }) {
         style={blurred ? { filter: 'blur(24px)' } : undefined}
         onClick={(e) => { e.stopPropagation(); if (blurred) setRevealed(r => ({ ...r, [index]: true })); }}
       />
-      <Watermark />
       {blurred && (
         <p className="absolute text-white/80 text-sm pointer-events-none">Tap to reveal</p>
       )}

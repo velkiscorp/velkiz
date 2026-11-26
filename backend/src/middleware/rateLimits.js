@@ -23,6 +23,15 @@ export const signupLimiter = rateLimit({
   message: json('Too many sign-ups from this network, try again later'),
 })
 
+// Verification email resends, per IP: each one sends a real email, so keep
+// it low to protect our sending reputation and people's inboxes
+export const resendLimiter = rateLimit({
+  ...base,
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  message: json('Too many emails requested, try again later'),
+})
+
 // Per user (use after requireAuth)
 export const swipeLimiter = rateLimit({
   ...base,

@@ -7,6 +7,7 @@ const THEM = '22222222-2222-2222-2222-222222222222'
 let db
 
 const fake = createFakeSupabase((q) => {
+  if (q.rpc === 'use_super_like') return { data: 'free', error: null }
   const { table, op } = q
   if (table === 'profiles') return { data: { user_id: THEM, username: 'them', photos: [] }, error: null }
   if (table === 'blocked_users') return { data: db.blocked ? [{ id: 'b' }] : [], error: null }

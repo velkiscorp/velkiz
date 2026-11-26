@@ -152,7 +152,11 @@ export const getLikesReceived = async (req, res) => {
       .select('*')
       .in('user_id', unrespondedLikers)
 
-    const likes = (profiles || []).map(p => toPublicProfile(p))
+    // Super Likes stand out: flagged, and shown first
+    const superLikers = new Set(inbound.filter(s => s.direction === 'super').map(s => s.swiper_id))
+    const likes = (profiles || [])
+      .map(p => ({ ...toPublicProfile(p), superLiked: superLikers.has(p.user_id) }))
+      .sort((a, b) => Number(b.superLiked) - Number(a.superLiked))
 
     res.json({ likes })
 

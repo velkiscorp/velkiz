@@ -10,8 +10,15 @@ Anonymous dating app by Velvet. React + Vite frontend, Express + Socket.io backe
 SUPABASE_URL=https://<project>.supabase.co
 SUPABASE_SERVICE_KEY=<service role key>   # server only, never in the frontend
 SUPABASE_ANON_KEY=<anon key>
+# Where email links (verify, reset password) point. On an iPhone with the
+# app installed they open in the app. Locally use http://localhost:5173
+SITE_URL=https://velkiz.com
+# Only for running the app in a browser while developing; leave unset in production
 FRONTEND_URL=http://localhost:5173
+NODE_ENV=production   # on the live server
 PORT=3000
+# Super Like purchases: the secret you put in RevenueCat's webhook settings
+# REVENUECAT_WEBHOOK_SECRET=<long random password>
 # TRUST_PROXY=1   # set when deployed behind a proxy (Railway, Render, ...)
 # Push notifications to the iPhone app (optional; skipped when missing).
 # Make the key at developer.apple.com > Certificates, IDs & Profiles > Keys.
@@ -81,4 +88,4 @@ Supabase sends these through Resend (custom SMTP), from `no-reply@support.velkiz
 - Authentication > Emails > SMTP Settings: host `smtp.resend.com`, port `465`, username `resend`, password = Resend API key.
 - Authentication > Emails > Templates: paste `supabase/email-templates/confirm-signup.html` and `reset-password.html` (subject line is at the top of each file).
 - Authentication > URL Configuration: Site URL is the live app, and `<site>/auth/callback` plus `<site>/reset-password` are allowed redirect URLs.
-- `FRONTEND_URL` in `backend/.env` decides where verification links send people back to.
+- `SITE_URL` in `backend/.env` decides where verification links send people back to (see `frontend/IOS.md`, "Email links open the app").

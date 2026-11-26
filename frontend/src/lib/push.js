@@ -43,6 +43,7 @@ const setupListeners = async (navigate) => {
   await push.addListener('pushNotificationActionPerformed', ({ notification }) => {
     const data = notification?.data || {}
     if (data.kind === 'message' && data.matchId) navigate(`/Chat?matchId=${data.matchId}`)
+    else if (data.kind === 'superlike') navigate('/Matches')
     else navigate('/Messages')
   })
 }

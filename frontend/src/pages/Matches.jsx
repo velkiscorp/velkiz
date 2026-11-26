@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Heart, X } from 'lucide-react';
+import { Heart, X, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import EmptyState, { emptyCtaClass } from '@/components/shared/EmptyState';
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ export default function Matches() {
           {likes.map(profile => (
             <div
               key={profile.id}
-              className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/50"
+              className={`flex items-center gap-3 p-3 rounded-2xl bg-card border ${profile.superLiked ? 'border-gold/60' : 'border-border/50'}`}
             >
               <button
                 onClick={() => setPreviewProfile(profile)}
@@ -76,6 +76,11 @@ export default function Matches() {
                 onClick={() => setPreviewProfile(profile)}
               >
                 <p className="font-semibold text-sm truncate">{profile.username}</p>
+                {profile.superLiked && (
+                  <p className="text-[11px] text-gold flex items-center gap-1">
+                    <Star className="w-3 h-3" fill="currentColor" /> Super Liked you
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   {profile.age && `${profile.age} · `}{profile.city || profile.country}
                 </p>

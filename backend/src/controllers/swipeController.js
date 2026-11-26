@@ -2,6 +2,7 @@ import { supabase } from '../config/supabase.js'
 import { notifyUser } from '../services/push.js'
 import { isBlockedBetween } from '../services/blocks.js'
 import { toPublicProfile } from '../serializers/profile.js'
+import { useSuperLike, refundSuperLike, getBalance } from '../services/superLikes.js'
 
 // One match per pair of people. The database has a unique rule on the pair
 // (matches_one_per_pair), so if both people swipe at the same moment, the
@@ -82,6 +83,19 @@ if (!targetProfile) {
       return res.status(404).json({ error: 'User not found' })
     }
 
+    // A Super Like costs one: the free daily one first, then bought ones
+    let spent = null
+    if (direction === 'super') {
+      spent = await useSuperLike(swiperId)
+      if (!spent) {
+        return res.status(402).json({
+          error: "You're out of Super Likes",
+          code: 'NO_SUPER_LIKES',
+          superLikes: await getBalance(swiperId),
+        })
+      }
+    }
+
     // Record the swipe
     const { data: swipe, error: swipeError } = await supabase
       .from('swipes')
@@ -94,6 +108,7 @@ if (!targetProfile) {
       .single()
 
     if (swipeError) {
+      if (spent) await refundSuperLike(swiperId, spent)
       // unique constraint means already swiped
       if (swipeError.code === '23505') {
         return res.status(400).json({ error: 'Already swiped this user' })
@@ -130,6 +145,9 @@ if (!targetProfile) {
         // An ended match (unmatched/blocked) stays ended
       }
     }
+
+    // Let them know someone is very interested (no names, see push.js)
+    if (direction === 'super') notifyUser(targetId, 'superlike')
 
     // No match, just return the swipe
     res.status(201).json({
