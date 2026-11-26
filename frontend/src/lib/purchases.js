@@ -15,12 +15,14 @@ export const canBuy = () => isNativeApp() && !!API_KEY
 let ready = null
 let currentUser = null
 
-const sdk = async () => (await import('@revenuecat/purchases-capacitor')).Purchases
+// Return the module, never the plugin itself: awaiting a Capacitor plugin
+// hangs forever (it answers to "then" like any other method name)
+const sdkModule = () => import('@revenuecat/purchases-capacitor')
 
 // Purchases are tied to the Velkiz account (its user id), so they land on the
 // right account even if two people share a phone
 const setup = async (userId) => {
-  const Purchases = await sdk()
+  const { Purchases } = await sdkModule()
   if (!ready) {
     ready = Purchases.configure({ apiKey: API_KEY, appUserID: userId })
     currentUser = userId
@@ -30,13 +32,13 @@ const setup = async (userId) => {
     await Purchases.logIn({ appUserID: userId })
     currentUser = userId
   }
-  return Purchases
+  return { Purchases }
 }
 
 // The packs on sale, cheapest first: [{ pkg, id, count, price }]
 export const getPacks = async (userId) => {
   if (!canBuy() || !userId) return []
-  const Purchases = await setup(userId)
+  const { Purchases } = await setup(userId)
   const offerings = await Purchases.getOfferings()
   const packages = offerings?.current?.availablePackages || []
   return packages
@@ -47,7 +49,7 @@ export const getPacks = async (userId) => {
 
 // Resolves true when bought, false when the person cancelled
 export const buyPack = async (userId, pack) => {
-  const Purchases = await setup(userId)
+  const { Purchases } = await setup(userId)
   try {
     await Purchases.purchasePackage({ aPackage: pack.pkg })
     return true
@@ -60,6 +62,6 @@ export const buyPack = async (userId, pack) => {
 // On logout, so the next account on this phone starts clean
 export const resetPurchases = async () => {
   if (!ready) return
-  try { await (await sdk()).logOut() } catch { /* was never logged in */ }
+  try { await (await sdkModule()).Purchases.logOut() } catch { /* was never logged in */ }
   currentUser = null
 }

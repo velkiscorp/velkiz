@@ -8,7 +8,10 @@ const TOKEN_KEY = 'velkiz_push_token'
 const ASKED_KEY = 'velkiz_push_prompt_dismissed_at'
 const ASK_AGAIN_DAYS = 7
 
-const plugin = async () => (await import('@capacitor/push-notifications')).PushNotifications
+// Never return a Capacitor plugin from an async function or await it: the
+// plugin answers to any method name, including "then", so the await waits on
+// the phone forever. Return the module and take the plugin out after.
+const pushModule = () => import('@capacitor/push-notifications')
 
 const store = {
   get: (k) => { try { return localStorage.getItem(k) } catch { return null } },
@@ -20,7 +23,7 @@ const store = {
 export const getPushPermission = async () => {
   if (!isNativeApp()) return 'unsupported'
   try {
-    const { receive } = await (await plugin()).checkPermissions()
+    const { receive } = await (await pushModule()).PushNotifications.checkPermissions()
     return receive === 'granted' ? 'granted' : receive === 'denied' ? 'denied' : 'prompt'
   } catch {
     return 'unsupported'
@@ -34,7 +37,7 @@ let listenersReady = false
 const setupListeners = async (navigate) => {
   if (listenersReady) return
   listenersReady = true
-  const push = await plugin()
+  const { PushNotifications: push } = await pushModule()
   await push.addListener('registration', async ({ value }) => {
     store.set(TOKEN_KEY, value)
     try { await notificationsApi.registerDevice(value) } catch (e) { console.error('Push register failed', e) }
@@ -53,14 +56,14 @@ const setupListeners = async (navigate) => {
 export const startPush = async (navigate) => {
   if (!isNativeApp()) return
   await setupListeners(navigate)
-  if (await getPushPermission() === 'granted') (await plugin()).register()
+  if (await getPushPermission() === 'granted') (await pushModule()).PushNotifications.register()
 }
 
 // Shows Apple's "Allow notifications?" popup. Resolves the new permission.
 export const enablePush = async (navigate) => {
   if (!isNativeApp()) return 'unsupported'
   await setupListeners(navigate)
-  const push = await plugin()
+  const { PushNotifications: push } = await pushModule()
   const { receive } = await push.requestPermissions()
   if (receive === 'granted') await push.register()
   return receive === 'granted' ? 'granted' : 'denied'
