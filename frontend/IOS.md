@@ -50,3 +50,11 @@ The iPhone app is the same React app wrapped with [Capacitor](https://capacitorj
 5. Run `supabase/migrations/2026-11-26_push_notifications.sql` in Supabase.
 
 Notifications never contain names or message text, only "You have a new match" or "You have a new message", so a lock screen gives nothing away. People choose matches and/or messages in Settings.
+
+## Privacy protection
+
+- **Screenshots and screen recordings come out blank** in the app (`@capacitor-community/privacy-screen`, set in `capacitor.config.json`). iOS doesn't let apps fully stop the screenshot button, so this is the strongest option available.
+- **Screenshot alerts:** screenshotting a chat adds a "took a screenshot" line for both people and notifies the other person. Needs `supabase/migrations/2026-11-26_screenshot_alerts.sql`.
+- **App switcher** shows the splash screen instead of the last screen.
+- **Watermarks:** photos carry a faint repeating `@username` of whoever is looking, on the website and in the app, so a photo of the screen taken with another phone shows who leaked it.
+- Long-press "Save image" and right-click saving are turned off on photos.

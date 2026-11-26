@@ -19,6 +19,7 @@ import ProfileViewModal from '@/components/profile/ProfileViewModal';
 import ReportDialog from '@/components/safety/ReportDialog';
 import { useToast } from '@/components/ui/use-toast';
 import { getAccessToken } from '@/api/client';
+import { onScreenshot } from '@/lib/native';
 import { useMatches, useChatMessages, queryKeys } from '@/api/queries';
 
 export default function Chat() {
@@ -37,6 +38,23 @@ export default function Chat() {
   });
 
   const messages = messagesData?.messages || [];
+
+  // iPhone app: a screenshot here comes out blank, and both of you see a
+  // "took a screenshot" line in the chat
+  useEffect(() => {
+    if (!matchId) return;
+    return onScreenshot(async () => {
+      toast({ title: 'Screenshots are blocked in Velkiz', description: "To protect everyone's privacy. They've been told you tried." });
+      try {
+        const { message } = await messagesApi.reportScreenshot(matchId);
+        queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => {
+          const existing = old?.messages || [];
+          if (existing.some(m => m.id === message.id)) return old;
+          return { ...old, messages: [...existing, message] };
+        });
+      } catch {}
+    });
+  }, [matchId, queryClient, toast]);
 
   // Real-time: join this match's room and append pushed messages as they arrive
   useEffect(() => {

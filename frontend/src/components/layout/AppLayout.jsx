@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { OuroborosIcon, HeartArrowIcon, ScrollSealIcon, LionIcon, TigressIcon } from '../icons/EmberIcons';
 import VelvetLogo from '../icons/VelvetLogo';
 import { useMyProfile, useLikes, useMatches } from '@/api/queries';
 import PushPrompt from '@/components/shared/PushPrompt';
+import { onScreenshot } from '@/lib/native';
+import { useToast } from '@/components/ui/use-toast';
 
 // Block screenshots / screen recording globally
 if (typeof document !== 'undefined') {
@@ -18,6 +20,12 @@ export default function AppLayout() {
   const location = useLocation();
 
   const { data: myProfile } = useMyProfile();
+  const { toast } = useToast();
+
+  // iPhone app: screenshots come out blank, so say why
+  useEffect(() => onScreenshot(() => {
+    toast({ title: 'Screenshots are blocked in Velkiz', description: "To protect everyone's privacy." });
+  }), [toast]);
 
   const { data: likesData } = useLikes({ refetchInterval: 10000 });
 

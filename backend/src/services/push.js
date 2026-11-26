@@ -19,6 +19,7 @@ import { supabase } from '../config/supabase.js'
 export const MESSAGES = {
   match: { title: 'Velkiz', body: 'You have a new match' },
   message: { title: 'Velkiz', body: 'You have a new message' },
+  screenshot: { title: 'Velkiz', body: 'A match took a screenshot of your chat' },
 }
 
 const config = () => {
@@ -89,7 +90,7 @@ const sendToDevice = (cfg, token, payload) => new Promise((resolve) => {
 const isDeadToken = ({ status, reason }) =>
   status === 410 || reason === 'BadDeviceToken' || reason === 'Unregistered' || reason === 'DeviceTokenNotForTopic'
 
-const PREF = { match: 'notify_matches', message: 'notify_messages' }
+const PREF = { match: 'notify_matches', message: 'notify_messages', screenshot: 'notify_messages' }
 
 // Notify a user about a new match or message, if they allow it.
 // Never throws: a failed notification must not fail the swipe or message.

@@ -15,3 +15,19 @@ export const setupNativeApp = async () => {
   StatusBar.setStyle({ style: Style.Dark }).catch(() => {})
   SplashScreen.hide().catch(() => {})
 }
+
+// Screenshots come out blank in the app (the PrivacyScreen plugin, set up in
+// capacitor.config.json), and the app switcher shows the splash instead of
+// the screen. This tells you when someone tried. Returns an unsubscribe.
+export const onScreenshot = (callback) => {
+  if (!isNativeApp()) return () => {}
+  let handle = null
+  let cancelled = false
+  import('@capacitor-community/privacy-screen').then(({ PrivacyScreen }) =>
+    PrivacyScreen.addListener('screenshotTaken', callback)
+  ).then((h) => {
+    if (cancelled) h.remove()
+    else handle = h
+  }).catch(() => {})
+  return () => { cancelled = true; handle?.remove() }
+}

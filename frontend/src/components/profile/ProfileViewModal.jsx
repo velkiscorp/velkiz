@@ -7,6 +7,7 @@ import ProfileAvatar from '@/components/shared/ProfileAvatar';
 import PhotoViewer from '@/components/shared/PhotoViewer';
 import SecureImage from '@/components/shared/SecureImage';
 import SafetyActions from '@/components/safety/SafetyActions';
+import Watermark from '@/components/shared/Watermark';
 import { lookingForLabel, formatHeight } from '@/lib/profileOptions';
 
 // onBlocked: shows Report and Block at the bottom, and runs once they're blocked
@@ -60,6 +61,7 @@ export default function ProfileViewModal({ profile, onClose, onLike, onSuper, on
               className="w-full h-full object-cover"
               textClassName="text-8xl"
             />
+            {mainPhoto && <Watermark />}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
             {/* Close */}

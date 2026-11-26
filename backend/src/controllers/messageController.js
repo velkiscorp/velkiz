@@ -28,7 +28,7 @@ export const getMessages = async (req, res) => {
     // Get all messages
     const { data: messages, error } = await supabase
       .from('messages')
-      .select('id, content, sender_id, is_filtered, read_at, created_at')
+      .select('*') // includes kind once the screenshot-alerts SQL has run
       .eq('match_id', matchId)
       .order('created_at', { ascending: true })
 
@@ -130,5 +130,45 @@ export const sendMessage = async (req, res) => {
   } catch (error) {
     console.error('Send message error:', error)
     res.status(500).json({ error: 'Failed to send message' })
+  }
+}
+// POST /api/messages/:matchId/screenshot
+// The iPhone app calls this when someone screenshots a chat. Screenshots come
+// out blank, but the other person still deserves to know someone tried.
+export const reportScreenshot = async (req, res) => {
+  try {
+    const { matchId } = req.params
+    const userId = req.user.id
+
+    const { data: match } = await supabase
+      .from('matches')
+      .select('id, user1_id, user2_id, status')
+      .eq('id', matchId)
+      .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+      .single()
+
+    if (!match || match.status !== 'matched') {
+      return res.status(404).json({ error: 'Match not found' })
+    }
+
+    const { data: message, error } = await supabase
+      .from('messages')
+      .insert({ match_id: matchId, sender_id: userId, content: 'Took a screenshot', kind: 'screenshot' })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Screenshot alert error:', error)
+      return res.status(500).json({ error: 'Failed to record screenshot' })
+    }
+
+    req.app.get('io')?.to(matchId).emit('receive_message', message)
+    const recipientId = match.user1_id === userId ? match.user2_id : match.user1_id
+    notifyUser(recipientId, 'screenshot', { matchId })
+
+    res.status(201).json({ message: { ...message, isMine: true } })
+  } catch (error) {
+    console.error('Screenshot alert error:', error)
+    res.status(500).json({ error: 'Failed to record screenshot' })
   }
 }

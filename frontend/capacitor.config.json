@@ -24,6 +24,12 @@
         "badge",
         "sound"
       ]
+    },
+    "PrivacyScreen": {
+      "enable": true,
+      "preventScreenshots": true,
+      "imageName": "Splash",
+      "contentMode": "scaleAspectFill"
     }
   }
 }

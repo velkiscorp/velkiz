@@ -9,5 +9,16 @@ export default function SecureImage({ src, alt = '', className = '', style, ...r
     // Same box while loading, so layouts don't jump
     return <div className={`bg-secondary animate-pulse ${className}`} style={style} aria-label={alt} />;
   }
-  return <img src={resolved} alt={alt} className={className} style={style} draggable={false} {...rest} />;
+  // No dragging, right-click "Save image" or long-press save
+  return (
+    <img
+      src={resolved}
+      alt={alt}
+      className={className}
+      style={{ WebkitTouchCallout: 'none', ...style }}
+      draggable={false}
+      onContextMenu={(e) => e.preventDefault()}
+      {...rest}
+    />
+  );
 }

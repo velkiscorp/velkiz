@@ -69,6 +69,7 @@ create table public.messages (
   sender_id uuid not null,
   content text not null,
   is_filtered boolean default false,
+  kind text not null default 'text', -- 'text', or 'screenshot' for a screenshot alert
   read_at timestamp with time zone,
   created_at timestamp with time zone default now()
 );
@@ -130,6 +131,9 @@ create unique index matches_one_per_pair on public.matches using btree (least(us
 
 -- blocks: one per pair and direction
 alter table public.blocked_users add constraint blocked_users_blocker_id_blocked_id_key unique (blocker_id, blocked_id);
+
+-- messages: a normal message or a screenshot alert
+alter table public.messages add constraint messages_kind_check check (kind = any (array['text', 'screenshot']));
 
 -- device tokens: one row per phone
 alter table public.device_tokens add constraint device_tokens_token_key unique (token);
