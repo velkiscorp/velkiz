@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import dotenv from 'dotenv'
@@ -14,6 +15,7 @@ import notificationRoutes from './routes/notifications.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { supabase } from './config/supabase.js'
 import { apiLimiter } from './middleware/rateLimits.js'
+import { uuid } from './validation/schemas.js'
 
 dotenv.config()
 
@@ -29,23 +31,36 @@ app.disable('etag')
 // each visitor's real IP instead of the proxy's
 if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || 1)
 
-// The website, plus the iPhone app (Capacitor serves it from capacitor://localhost)
+const isProduction = process.env.NODE_ENV === 'production'
+
+// The app only runs inside the iPhone app (Capacitor serves it from
+// capacitor://localhost). FRONTEND_URL is for running it in a browser while
+// developing; leave it unset in production so no website can call the API.
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
   'capacitor://localhost',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  ...(isProduction ? [] : ['http://localhost:5173']),
 ]
 
 const io = new Server(httpServer, {
   cors: {
     origin: allowedOrigins,
     methods: ['GET', 'POST']
-  }
+  },
+  // Clients only ever send "join_match" with an id, so nothing big is needed
+  maxHttpBufferSize: 10_000,
 })
 
 // Make io reachable from controllers via req.app.get('io')
 app.set('io', io)
 
 // Middleware
+// Security headers (no sniffing, no framing, HSTS, ...). This server only
+// returns JSON and photos, so the strictest content policy is fine.
+app.use(helmet({
+  contentSecurityPolicy: { directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}))
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
@@ -68,6 +83,9 @@ app.use('/api/notifications', notificationRoutes)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' })
 })
+
+// Anything else under /api is an unknown route
+app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }))
 
 // Catch-all error handler - must come after all routes
 app.use(errorHandler)
@@ -93,8 +111,20 @@ io.on('connection', (socket) => {
 
   // User joins a chat room keyed to their match ID - only if they're actually
   // part of that match, so a guessed/known matchId can't be used to snoop
+  // Joining is cheap for the client and costs us a database read, so cap it
+  let joins = 0
+  const resetJoins = setInterval(() => { joins = 0 }, 60_000)
+
   socket.on('join_match', async (matchId) => {
     try {
+      if (!uuid.safeParse(matchId).success) {
+        socket.emit('join_error', { matchId: null, error: 'Invalid match' })
+        return
+      }
+      if (++joins > 60) {
+        socket.emit('join_error', { matchId, error: 'Too many requests' })
+        return
+      }
       const { data: match } = await supabase
         .from('matches')
         .select('id, user1_id, user2_id, status')
@@ -120,6 +150,7 @@ io.on('connection', (socket) => {
   // emits to the room after a successful save, see sendMessage().
 
   socket.on('disconnect', () => {
+    clearInterval(resetJoins)
     console.log('User disconnected:', socket.id)
   })
 })

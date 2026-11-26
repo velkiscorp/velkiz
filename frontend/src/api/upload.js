@@ -8,6 +8,9 @@ export const uploadPhoto = async (file) => {
   const { data: { session } } = await supabase.auth.getSession()
   const userId = session?.user?.id
   if (!userId) throw new Error('Please sign in again')
+  // Storage refuses these too (see the photo upload limits migration)
+  if (file.type && !file.type.startsWith('image/')) throw new Error('Please choose a photo')
+  if (file.size > 10 * 1024 * 1024) throw new Error('That photo is too big, please pick one under 10 MB')
 
   const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`

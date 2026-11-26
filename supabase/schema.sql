@@ -203,9 +203,12 @@ alter default privileges in schema public revoke all on tables from anon, authen
 -- Private photos bucket. Logged-in users may upload and delete only inside a
 -- folder named after their own user id. Nobody reads it directly: the
 -- backend serves photos through /api/photos after checking who's asking.
-insert into storage.buckets (id, name, public)
-values ('photos', 'photos', false)
-on conflict (id) do update set public = false;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('photos', 'photos', false, 10485760,
+        array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'])
+on conflict (id) do update set public = false,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 create policy "photos: upload to own folder" on storage.objects
   for insert to authenticated
