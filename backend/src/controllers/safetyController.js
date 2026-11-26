@@ -1,3 +1,4 @@
+import { sendEmail } from '../services/email.js'
 import { supabase } from '../config/supabase.js'
 import { blockUser } from '../services/blocks.js'
 
@@ -103,20 +104,66 @@ export const report = async (req, res) => {
       if (pair && pair.includes(me) && pair.includes(userId)) reportMatchId = match.id
     }
 
-    const { error } = await supabase.from('reports').insert({
+    const { data: saved, error } = await supabase.from('reports').insert({
       reporter_id: me,
       reported_id: userId,
       reason,
       details: details || null,
       match_id: reportMatchId,
-    })
+    }).select('id').single()
     if (error) throw error
 
     if (alsoBlock) await blockUser(me, userId, req.app.get('io'))
+
+    // Tell the moderators, and send the reporter a receipt. Never holds up
+    // or fails the report itself.
+    emailAboutReport({
+      reportId: saved?.id, reporterId: me, reporterEmail: req.user.email,
+      reportedId: userId, reason, details, matchId: reportMatchId, blocked: !!alsoBlock,
+    }).catch((e) => console.error('Report email error:', e))
 
     res.status(201).json({ message: 'Report sent', blocked: !!alsoBlock })
   } catch (error) {
     console.error('Report error:', error)
     res.status(500).json({ error: 'Failed to send report' })
   }
+}
+
+const emailAboutReport = async ({ reportId, reporterId, reporterEmail, reportedId, reason, details, matchId, blocked }) => {
+  const { data: reported } = await supabase
+    .from('profiles').select('username').eq('id', reportedId).maybeSingle()
+  const name = reported?.username || 'Unknown'
+
+  await sendEmail({
+    to: process.env.REPORTS_EMAIL || 'support@velkiz.com',
+    subject: `New report: ${name} (${reason})`,
+    text: [
+      'A new report was made in Velkiz. Please review it within 24 hours.',
+      '',
+      `Reported: ${name} (${reportedId})`,
+      `Reason: ${reason}`,
+      `Details: ${details || 'none given'}`,
+      `From a chat: ${matchId ? `yes (match ${matchId})` : 'no'}`,
+      `Reporter also blocked them: ${blocked ? 'yes' : 'no'}`,
+      `Reporter: ${reporterId}`,
+      `Report ID: ${reportId || 'unknown'}`,
+      '',
+      'Full details are in the reports table in Supabase.',
+    ].join('\n'),
+  })
+
+  await sendEmail({
+    to: reporterEmail,
+    subject: 'We got your report',
+    text: [
+      'Thanks for letting us know. Your report was received, and our team will review it, usually within 24 hours.',
+      '',
+      `The person you reported won't be told who reported them.${blocked ? " You've also blocked them, so they can't see you or message you." : ''}`,
+      '',
+      'If you have anything to add, or you feel unsafe, reply to this email. If you are in danger, contact local emergency services first.',
+      '',
+      'Velkiz',
+    ].join('\n'),
+    replyTo: process.env.REPORTS_EMAIL || 'support@velkiz.com',
+  })
 }

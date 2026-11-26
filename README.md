@@ -86,6 +86,13 @@ Supabase sends these through Resend (custom SMTP), from `no-reply@support.velkiz
 
 - Supabase > Authentication > Sign In / Providers > Email: **Confirm email** on. Signup then sends a verification link and the account can't sign in until it's clicked.
 - Authentication > Emails > SMTP Settings: host `smtp.resend.com`, port `465`, username `resend`, password = Resend API key.
+
+Report emails come from the backend itself, also through Resend. On Render, set:
+- `RESEND_API_KEY`: a Resend API key with sending access (can be the same key).
+- `REPORTS_EMAIL` (optional): where new reports go. Defaults to `support@velkiz.com`.
+- `EMAIL_FROM` (optional): defaults to `Velkiz <no-reply@support.velkiz.com>`.
+
+Without `RESEND_API_KEY`, reports are still saved but no emails are sent.
 - Authentication > Emails > Templates: paste `supabase/email-templates/confirm-signup.html` and `reset-password.html` (subject line is at the top of each file).
 - Authentication > URL Configuration: Site URL is the live app, and `<site>/auth/callback` plus `<site>/reset-password` are allowed redirect URLs.
 - `SITE_URL` in `backend/.env` decides where verification links send people back to (see `frontend/IOS.md`, "Email links open the app").

@@ -278,7 +278,7 @@ export default function Discover() {
     <div className="h-app flex flex-col gap-2 pt-3 px-4">
       <DiscoverFilters filters={filters} onChange={handleFilterChange} onOpenPanel={() => setPanelOpen(true)} />
 
-      <div className="flex-1 min-h-0 relative">
+      <div className="flex-1 min-h-0 relative mt-4">
         {isLoading ? (
           <div className="w-full h-full rounded-md bg-secondary animate-pulse" />
         ) : hasProfiles ? (
