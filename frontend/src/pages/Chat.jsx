@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { io as ioClient } from 'socket.io-client';
-import { ArrowLeft, Shield, MoreVertical, LogOut, Ban } from 'lucide-react';
+import { ArrowLeft, Shield, MoreVertical, LogOut, Ban, Flag } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
@@ -16,8 +16,10 @@ import { matchesApi } from '@/api/matches';
 import { profilesApi } from '@/api/profiles';
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 import ProfileViewModal from '@/components/profile/ProfileViewModal';
+import ReportDialog from '@/components/safety/ReportDialog';
 import { useToast } from '@/components/ui/use-toast';
 import { getAccessToken } from '@/api/client';
+import { onScreenshot } from '@/lib/native';
 import { useMatches, useChatMessages, queryKeys } from '@/api/queries';
 
 export default function Chat() {
@@ -36,6 +38,23 @@ export default function Chat() {
   });
 
   const messages = messagesData?.messages || [];
+
+  // iPhone app: a screenshot here comes out blank, and both of you see a
+  // "took a screenshot" line in the chat
+  useEffect(() => {
+    if (!matchId) return;
+    return onScreenshot(async () => {
+      toast({ title: 'Screenshots are blocked in Velkiz', description: "To protect everyone's privacy. They've been told you tried." });
+      try {
+        const { message } = await messagesApi.reportScreenshot(matchId);
+        queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => {
+          const existing = old?.messages || [];
+          if (existing.some(m => m.id === message.id)) return old;
+          return { ...old, messages: [...existing, message] };
+        });
+      } catch {}
+    });
+  }, [matchId, queryClient, toast]);
 
   // Real-time: join this match's room and append pushed messages as they arrive
   useEffect(() => {
@@ -108,6 +127,14 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const [reportOpen, setReportOpen] = useState(false);
+
+  // Blocked from the profile sheet or by reporting: this chat is closed now
+  const leaveAfterBlock = () => {
+    queryClient.invalidateQueries({ queryKey: ['matches'] });
+    navigate('/Messages');
+  };
+
   const leaveOrBlockMutation = useMutation({
     mutationFn: async (action) => {
       if (action === 'leave') {
@@ -143,9 +170,9 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-dvh-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50 px-4 h-16 flex items-center gap-3">
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50 px-4 h-16 box-content pt-safe flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -184,6 +211,14 @@ export default function Chat() {
               Leave chat
             </DropdownMenuItem>
             <DropdownMenuItem
+              onClick={() => setReportOpen(true)}
+              disabled={!partnerUserId}
+              className="gap-2 text-destructive focus:text-destructive"
+            >
+              <Flag className="w-4 h-4" />
+              Report
+            </DropdownMenuItem>
+            <DropdownMenuItem
               onClick={() => leaveOrBlockMutation.mutate('block')}
               className="gap-2 text-destructive focus:text-destructive"
             >
@@ -217,8 +252,19 @@ export default function Chat() {
         <ProfileViewModal
           profile={viewingProfile}
           onClose={() => setViewingProfile(null)}
+          matchId={matchId}
+          onBlocked={leaveAfterBlock}
         />
       )}
+
+      <ReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        userId={partnerUserId}
+        username={partnerUsername}
+        matchId={matchId}
+        onDone={({ blocked }) => { if (blocked) leaveAfterBlock(); }}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { MapPin, Sparkles, Eye, EyeOff, Info } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 import SecureImage from '@/components/shared/SecureImage';
+import Watermark from '@/components/shared/Watermark';
 import { lookingForLabel, formatHeight } from '@/lib/profileOptions';
 
 export default function SwipeCard({ profile, onSwipe, isTop, swipeDir, onTapInfo }) {
@@ -66,6 +67,7 @@ export default function SwipeCard({ profile, onSwipe, isTop, swipeDir, onTapInfo
               textClassName="text-8xl"
             />
           )}
+          {currentPhoto?.url && <Watermark />}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent" />
           {/* Faint oxblood tint so every photo sits in the same low light */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/25 mix-blend-multiply" />

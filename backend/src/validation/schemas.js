@@ -11,13 +11,15 @@ const optionalText = (max) => z.string().trim().max(max).nullable().optional()
 
 const photoUrl = z.string().max(500).refine(
   (url) => url.startsWith(PHOTO_PREFIX),
-  { message: 'Photo must be uploaded to Velkis storage' }
+  { message: 'Photo must be uploaded to Velkiz storage' }
 )
 
 // ---- auth ----
 export const signupBody = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   password: z.string().min(8, 'Password must be at least 8 characters').max(72),
+  // The "I'm 18+ and agree to the Terms" box at signup
+  acceptedTerms: z.literal(true, { error: 'Please agree to the Terms and confirm you are 18 or older' }),
 })
 
 export const resendVerificationBody = z.object({
@@ -52,6 +54,10 @@ export const updateProfileBody = z.object({
   height_cm: z.number().int().min(120, 'Height must be at least 120 cm').max(230, 'Height must be at most 230 cm').nullable().optional(),
   is_couple: z.boolean().optional(),
   hide_city: z.boolean().optional(),
+  // false = paused: hidden from Discover, matches and chats carry on
+  is_active: z.boolean().optional(),
+  notify_matches: z.boolean().optional(),
+  notify_messages: z.boolean().optional(),
   gender: z.enum(GENDERS).nullable().optional(),
   orientation: z.enum(ORIENTATIONS).nullable().optional(),
   looking_for: z.enum(LOOKING_FOR).nullable().optional(),
@@ -117,3 +123,34 @@ export const sendMessageBody = z.object({
     .min(1, 'Message cannot be empty')
     .max(2000, 'Message is too long (2000 characters max)'),
 })
+
+// ---- safety (report & block) ----
+export const REPORT_REASONS = [
+  'fake_profile', 'harassment', 'inappropriate_photos', 'underage',
+  'spam_or_scam', 'hate_speech', 'threats_or_violence', 'other',
+]
+
+export const userIdParams = z.object({ userId: uuid })
+
+export const blockBody = z.object({ userId: uuid })
+
+export const reportBody = z.object({
+  userId: uuid,
+  reason: z.enum(REPORT_REASONS),
+  details: optionalText(1000),
+  // The chat it happened in, so a reviewer can read the messages
+  matchId: uuid.optional(),
+  // Reporting blocks the person too unless you untick it
+  alsoBlock: z.boolean().optional().default(true),
+})
+
+// ---- push notifications ----
+// Apple device tokens are hex strings (64 characters today, may grow)
+const deviceToken = z.string().regex(/^[0-9a-fA-F]{32,200}$/, 'Not a valid device token')
+
+export const deviceBody = z.object({
+  token: deviceToken,
+  platform: z.enum(['ios']).optional().default('ios'),
+})
+
+export const deviceTokenParams = z.object({ token: deviceToken })

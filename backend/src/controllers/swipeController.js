@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js'
+import { notifyUser } from '../services/push.js'
 import { isBlockedBetween } from '../services/blocks.js'
 import { toPublicProfile } from '../serializers/profile.js'
 
@@ -118,6 +119,8 @@ if (!targetProfile) {
           return res.status(201).json({ swipe, matched: false })
         }
         if (match.status === 'matched') {
+          // Tell the other person (they liked first, so they're not looking)
+          notifyUser(targetId, 'match', { matchId: match.id })
           return res.status(201).json({
             swipe,
             matched: true,

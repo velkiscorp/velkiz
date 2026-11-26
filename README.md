@@ -1,4 +1,4 @@
-# Velkis
+# Velkiz
 
 Anonymous dating app by Velvet. React + Vite frontend, Express + Socket.io backend, Supabase for auth, database and storage.
 
@@ -13,6 +13,13 @@ SUPABASE_ANON_KEY=<anon key>
 FRONTEND_URL=http://localhost:5173
 PORT=3000
 # TRUST_PROXY=1   # set when deployed behind a proxy (Railway, Render, ...)
+# Push notifications to the iPhone app (optional; skipped when missing).
+# Make the key at developer.apple.com > Certificates, IDs & Profiles > Keys.
+# APNS_KEY_ID=ABC123DEFG
+# APNS_TEAM_ID=XYZ987TEAM
+# APNS_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+# APNS_BUNDLE_ID=com.velkiz.app
+# APNS_PRODUCTION=true   # for TestFlight and App Store builds
 ```
 
 ```
@@ -30,6 +37,10 @@ VITE_API_URL=http://localhost:3000
 ```
 cd frontend && npm install && npm run dev
 ```
+
+## iPhone app
+
+See `frontend/IOS.md` for building the iPhone app in Xcode and uploading it.
 
 ## Tests
 
@@ -49,6 +60,7 @@ Covers the risky rules: 18+ from date of birth, input checks, who can see photos
 - All data goes through the backend (`/api/...`), which checks the login and validates input (`backend/src/validation/schemas.js`).
 - Photos sit in a private bucket and only load through `/api/photos/...`, which checks who's asking.
 - Ages come from the date of birth on the server. Usernames are lowercase.
+- Report and block work from any profile (Discover, Likes, chat). Reports land in the `reports` table; review open ones with `select * from reports where status = 'open' order by created_at;` and set `status` to `reviewed`, `actioned` or `dismissed`. Apple expects reports to be acted on within 24 hours.
 - Gender is set once at onboarding and can't be changed after.
 - Discover shows people by orientation by default, both ways: a straight man sees women who'd want to see a man (straight, bi or pan women), a gay man sees gay or bi men, and so on (`backend/src/services/orientation.js`). "Show me" in Filters picks the genders instead; the other person's orientation still has to fit.
 

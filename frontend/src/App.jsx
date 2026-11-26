@@ -17,6 +17,8 @@ import Messages from './pages/Messages'
 import Chat from './pages/Chat'
 import MyProfile from './pages/MyProfile'
 import Settings from './pages/Settings'
+import BlockedPeople from './pages/BlockedPeople'
+import LegalPage from './pages/LegalPage'
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated } = useAuth()
@@ -36,6 +38,9 @@ const AuthenticatedApp = () => {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/privacy" element={<LegalPage doc="privacy" />} />
+        <Route path="/terms" element={<LegalPage doc="terms" />} />
+        <Route path="/guidelines" element={<LegalPage doc="guidelines" />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     )
@@ -60,6 +65,10 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/Onboarding" element={<Onboarding />} />
       <Route path="/Settings" element={<Settings />} />
+      <Route path="/Settings/blocked" element={<BlockedPeople />} />
+      <Route path="/privacy" element={<LegalPage doc="privacy" />} />
+      <Route path="/terms" element={<LegalPage doc="terms" />} />
+      <Route path="/guidelines" element={<LegalPage doc="guidelines" />} />
       <Route path="/Chat" element={<Chat />} />
       <Route element={<AppLayout />}>
         <Route path="/Discover" element={<Discover />} />

@@ -9,6 +9,8 @@ import swipeRoutes from './routes/swipes.js'
 import matchRoutes from './routes/matches.js'
 import messageRoutes from './routes/messages.js'
 import photoRoutes from './routes/photos.js'
+import safetyRoutes from './routes/safety.js'
+import notificationRoutes from './routes/notifications.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { supabase } from './config/supabase.js'
 import { apiLimiter } from './middleware/rateLimits.js'
@@ -27,9 +29,15 @@ app.disable('etag')
 // each visitor's real IP instead of the proxy's
 if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || 1)
 
+// The website, plus the iPhone app (Capacitor serves it from capacitor://localhost)
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'capacitor://localhost',
+]
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: allowedOrigins,
     methods: ['GET', 'POST']
   }
 })
@@ -39,7 +47,7 @@ app.set('io', io)
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true
 }))
 app.use(express.json({ limit: '50kb' }))
@@ -53,6 +61,8 @@ app.use('/api/swipes', swipeRoutes)
 app.use('/api/matches', matchRoutes)
 app.use('/api/messages', messageRoutes)
 app.use('/api/photos', photoRoutes)
+app.use('/api/safety', safetyRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 // Health check - lets you confirm the server is running
 app.get('/api/health', (req, res) => {

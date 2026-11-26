@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, Camera } from 'lucide-react';
 import { splitPhoneNumbers, maskPhoneNumber } from '@/lib/phone';
 
 export default function ChatBubble({ message, isMine }) {
   const [revealed, setRevealed] = useState(false);
   const flagged = !!message.is_filtered;
   const parts = flagged ? splitPhoneNumbers(message.content || '') : null;
+
+  if (message.kind === 'screenshot') {
+    return (
+      <div className="flex justify-center mb-3">
+        <p className="flex items-center gap-1.5 text-[11px] text-gold/70 px-3 py-1 rounded-full border border-gold/20 bg-gold/5">
+          <Camera className="w-3 h-3" />
+          {isMine ? 'You took a screenshot' : 'They took a screenshot'}
+          {message.created_at && <span className="text-muted-foreground/60">· {format(new Date(message.created_at), 'HH:mm')}</span>}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-3`}>

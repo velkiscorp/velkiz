@@ -1,6 +1,6 @@
 import { toPublicProfile } from '../serializers/profile.js'
 import { supabase } from '../config/supabase.js'
-import { getBlockedUserIds } from '../services/blocks.js'
+import { getBlockedUserIds, blockUser as blockUserById } from '../services/blocks.js'
 
 // GET ALL MY MATCHES
 export const getMyMatches = async (req, res) => {
@@ -162,7 +162,7 @@ export const getLikesReceived = async (req, res) => {
   }
 }
 
-// BLOCK
+// BLOCK (from a chat)
 export const blockUser = async (req, res) => {
   try {
     const { matchId } = req.params
@@ -180,30 +180,7 @@ export const blockUser = async (req, res) => {
     }
 
     const otherUserId = match.user1_id === userId ? match.user2_id : match.user1_id
-
-    const { error: unmatchError } = await supabase
-      .from('matches')
-      .update({ status: 'unmatched' })
-      .eq('id', matchId)
-
-    if (unmatchError) {
-      return res.status(500).json({ error: 'Failed to block user' })
-    }
-
-    const { error: blockError } = await supabase
-      .from('blocked_users')
-      .upsert(
-        { blocker_id: userId, blocked_id: otherUserId },
-        { onConflict: 'blocker_id,blocked_id' }
-      )
-    
-    if (blockError) {
-      return res.status(500).json({ error: 'Failed to block user' })
-    }
-
-    const io = req.app.get('io')
-    io?.to(matchId).emit('match_ended', { matchId })
-    io?.in(matchId).socketsLeave(matchId)
+    await blockUserById(userId, otherUserId, req.app.get('io'))
 
     res.json({ message: 'User blocked' })
   } catch (error) {

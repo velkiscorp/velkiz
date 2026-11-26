@@ -69,6 +69,9 @@ export const createProfile = async (req, res) => {
   }
 }
 
+// Bump when the Terms or Privacy Policy change in a way people must agree to again
+const TERMS_VERSION = '2026-11-26'
+
 // Where the links in signup emails send people back to
 const callbackUrl = () => `${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')}/auth/callback`
 
@@ -88,7 +91,11 @@ export const signUp = async (req, res) => {
     const { data, error } = await createAuthClient().auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: callbackUrl() }
+      options: {
+        emailRedirectTo: callbackUrl(),
+        // Proof they agreed to the Terms and Privacy Policy, and when
+        data: { terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION },
+      }
     })
 
     if (error) {

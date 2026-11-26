@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button";
 import ProfileAvatar from '@/components/shared/ProfileAvatar';
 import PhotoViewer from '@/components/shared/PhotoViewer';
 import SecureImage from '@/components/shared/SecureImage';
+import SafetyActions from '@/components/safety/SafetyActions';
+import Watermark from '@/components/shared/Watermark';
 import { lookingForLabel, formatHeight } from '@/lib/profileOptions';
 
-export default function ProfileViewModal({ profile, onClose, onLike, onSuper }) {
+// onBlocked: shows Report and Block at the bottom, and runs once they're blocked
+export default function ProfileViewModal({ profile, onClose, onLike, onSuper, onBlocked, matchId }) {
   const [viewerIndex, setViewerIndex] = useState(null);
   if (!profile) return null;
 
@@ -58,6 +61,7 @@ export default function ProfileViewModal({ profile, onClose, onLike, onSuper }) 
               className="w-full h-full object-cover"
               textClassName="text-8xl"
             />
+            {mainPhoto && <Watermark />}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
             {/* Close */}
@@ -175,6 +179,15 @@ export default function ProfileViewModal({ profile, onClose, onLike, onSuper }) 
               <Shield className="w-3.5 h-3.5" />
               <span>Anonymous profile — real identity protected</span>
             </div>
+
+            {onBlocked && (
+              <SafetyActions
+                userId={profile.id}
+                username={profile.username}
+                matchId={matchId}
+                onBlocked={onBlocked}
+              />
+            )}
           </div>
 
           {/* Action buttons */}

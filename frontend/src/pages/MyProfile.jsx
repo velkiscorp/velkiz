@@ -148,7 +148,7 @@ export default function MyProfile() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-7.5rem)]">
+      <div className="flex items-center justify-center h-app">
         <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -156,7 +156,7 @@ export default function MyProfile() {
 
   if (!profile) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-7.5rem)] p-6 text-center space-y-4">
+      <div className="flex flex-col items-center justify-center h-app p-6 text-center space-y-4">
         <h3 className="text-lg font-semibold">No profile yet</h3>
         <Button onClick={() => navigate('/Onboarding')} className="bg-gradient-to-r from-primary to-accent text-white">
           Create Profile
@@ -168,7 +168,7 @@ export default function MyProfile() {
   const orientationOptions = ORIENTATION_OPTIONS[profile.gender] || ORIENTATION_OPTIONS.other;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7.5rem)]">
+    <div className="flex flex-col h-app">
       {/* Sticky top header */}
       <div className="shrink-0 silk-banner px-4 py-6 space-y-4">
         <div className="flex items-center justify-between relative z-10">

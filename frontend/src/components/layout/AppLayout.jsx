@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { OuroborosIcon, HeartArrowIcon, ScrollSealIcon, LionIcon, TigressIcon } from '../icons/EmberIcons';
 import VelvetLogo from '../icons/VelvetLogo';
 import { useMyProfile, useLikes, useMatches } from '@/api/queries';
+import PushPrompt from '@/components/shared/PushPrompt';
+import { onScreenshot } from '@/lib/native';
+import { useToast } from '@/components/ui/use-toast';
 
 // Block screenshots / screen recording globally
 if (typeof document !== 'undefined') {
@@ -17,6 +20,12 @@ export default function AppLayout() {
   const location = useLocation();
 
   const { data: myProfile } = useMyProfile();
+  const { toast } = useToast();
+
+  // iPhone app: screenshots come out blank, so say why
+  useEffect(() => onScreenshot(() => {
+    toast({ title: 'Screenshots are blocked in Velkiz', description: "To protect everyone's privacy." });
+  }), [toast]);
 
   const { data: likesData } = useLikes({ refetchInterval: 10000 });
 
@@ -41,7 +50,7 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-background flex flex-col select-none" style={{ WebkitUserSelect: 'none', userSelect: 'none' }}>
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
+      <header className="sticky top-0 z-50 pt-safe backdrop-blur-xl bg-background/80 border-b border-border/50">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <Link to="/Discover" className="flex items-center">
             <VelvetLogo className="w-10 h-10" />
@@ -54,8 +63,10 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
+      {myProfile?.profile?.onboarding_complete && <PushPrompt />}
+
       {/* Bottom Nav */}
-      <nav className="sticky bottom-0 z-50 backdrop-blur-xl bg-background/80 border-t border-border/50">
+      <nav className="sticky bottom-0 z-50 pb-safe backdrop-blur-xl bg-background/80 border-t border-border/50">
         <div className="max-w-lg mx-auto px-4 h-16 flex items-center justify-around">
           {NAV_ITEMS.map(({ path, Icon, label, badge }) => {
             const isActive = location.pathname === path;

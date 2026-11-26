@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { Check } from 'lucide-react'
 import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,6 +10,7 @@ export default function Login() {
   const [mode, setMode] = useState('login') // login | signup | reset
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [agreed, setAgreed] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [message, setMessage] = useState(() =>
@@ -25,6 +27,7 @@ export default function Login() {
     if (!email.trim()) return setError('Please enter your email')
     if (mode !== 'reset' && !password.trim()) return setError('Please enter your password')
     if (mode !== 'reset' && password.length < 8) return setError('Password must be at least 8 characters')
+    if (mode === 'signup' && !agreed) return setError('Please confirm you are 18+ and agree to the Terms')
 
     try {
       setLoading(true)
@@ -32,7 +35,7 @@ export default function Login() {
       setMessage(null)
 
       if (mode === 'signup') {
-        const result = await authApi.signup(email, password)
+        const result = await authApi.signup(email, password, agreed)
         if (result.session) {
           window.location.href = '/Onboarding'
         } else {
@@ -82,7 +85,7 @@ export default function Login() {
         transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="text-center space-y-3">
-          <h1 className="text-6xl font-serif italic font-medium tracking-tight text-silk leading-none">Velkis</h1>
+          <h1 className="text-6xl font-serif italic font-medium tracking-tight text-silk leading-none">Velkiz</h1>
           <p className="text-[10px] uppercase tracking-[0.35em] text-gold/60">by Velvet</p>
           <div className="mx-auto h-px w-16 bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
           <p className="text-muted-foreground text-sm tracking-wide">
@@ -112,6 +115,28 @@ export default function Login() {
             />
           )}
 
+          {mode === 'signup' && (
+            <div className="flex items-start gap-3 text-xs text-muted-foreground text-left pt-1">
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={agreed}
+                aria-label="I am 18 or older and agree to the Terms"
+                onClick={() => setAgreed(a => !a)}
+                className={`mt-0.5 w-5 h-5 shrink-0 rounded border flex items-center justify-center transition-colors ${agreed ? 'bg-gold border-gold text-black' : 'border-border bg-black/30'}`}
+              >
+                {agreed && <Check className="w-3.5 h-3.5" />}
+              </button>
+              <p className="leading-relaxed">
+                I'm 18 or older and I agree to the{' '}
+                <Link to="/terms" className="text-gold hover:underline">Terms</Link>,{' '}
+                <Link to="/privacy" className="text-gold hover:underline">Privacy Policy</Link> and{' '}
+                <Link to="/guidelines" className="text-gold hover:underline">Community Guidelines</Link>.
+                Velkiz has zero tolerance for abusive behaviour.
+              </p>
+            </div>
+          )}
+
           {error && <p className="text-sm text-red-400 text-center">{error}</p>}
           {message && <p className="text-sm text-green-400 text-center">{message}</p>}
 
@@ -120,7 +145,7 @@ export default function Login() {
             onClick={handleSubmit}
             disabled={loading}
           >
-            {loading ? 'One moment...' : mode === 'login' ? 'Enter' : mode === 'signup' ? 'Join Velkis' : 'Send reset link'}
+            {loading ? 'One moment...' : mode === 'login' ? 'Enter' : mode === 'signup' ? 'Join Velkiz' : 'Send reset link'}
           </Button>
         </div>
 
@@ -166,6 +191,14 @@ export default function Login() {
             Your email is only used for verification. It is never shown to other users.
           </p>
         )}
+
+        <p className="text-[11px] text-muted-foreground/60 text-center">
+          <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+          <span className="mx-2">·</span>
+          <Link to="/terms" className="hover:text-foreground">Terms</Link>
+          <span className="mx-2">·</span>
+          <Link to="/guidelines" className="hover:text-foreground">Guidelines</Link>
+        </p>
       </motion.div>
     </div>
   )

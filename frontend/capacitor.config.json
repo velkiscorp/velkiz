@@ -1,0 +1,35 @@
+{
+  "appId": "com.velkiz.app",
+  "appName": "Velkiz",
+  "webDir": "dist",
+  "backgroundColor": "#08060a",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#08060a",
+    "scheme": "Velkiz"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "launchAutoHide": true,
+      "backgroundColor": "#08060a",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true
+    },
+    "PushNotifications": {
+      "presentationOptions": [
+        "badge",
+        "sound"
+      ]
+    },
+    "PrivacyScreen": {
+      "enable": true,
+      "preventScreenshots": true,
+      "imageName": "Splash",
+      "contentMode": "scaleAspectFill"
+    }
+  }
+}

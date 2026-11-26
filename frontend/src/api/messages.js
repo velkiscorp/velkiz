@@ -7,5 +7,10 @@ export const messagesApi = {
 
   sendMessage: async (matchId, content) => {
     return await apiClient.post(`/api/messages/${matchId}`, { content })
+  },
+
+  // iPhone app only: someone screenshotted this chat
+  reportScreenshot: async (matchId) => {
+    return await apiClient.post(`/api/messages/${matchId}/screenshot`)
   }
 }

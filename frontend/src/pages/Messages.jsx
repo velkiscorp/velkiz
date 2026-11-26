@@ -20,7 +20,7 @@ export default function Messages() {
 
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7.5rem)]">
+    <div className="flex flex-col h-app">
       {/* Banner */}
       <div className="shrink-0 silk-banner px-4 py-6">
         <div className="relative z-10">
