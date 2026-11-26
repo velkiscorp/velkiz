@@ -123,7 +123,7 @@ export default function Matches() {
       )}
 
       {previewProfile && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center p-4"
+        <div className="fixed inset-0 bg-black/80 z-[60] flex items-end justify-center p-4"
           onClick={() => setPreviewProfile(null)}>
           <div className="bg-card rounded-3xl w-full max-w-sm p-6 space-y-4"
             onClick={e => e.stopPropagation()}>

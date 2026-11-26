@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -16,6 +16,9 @@ import StepProfile from '../components/onboarding/StepProfile';
 import StepPhotos from '../components/onboarding/StepPhotos';
 import { differenceInYears, parseISO } from 'date-fns';
 import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/lib/AuthContext';
+import { queryKeys, useMyProfile } from '@/api/queries';
 
 const STEPS = [
   { component: StepUsername, label: 'Identity' },
@@ -32,6 +35,16 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { data: myProfileData } = useMyProfile();
+
+  // Already set up (say, the app was reopened on this screen): go straight in
+  useEffect(() => {
+    if (myProfileData?.profile?.onboarding_complete && !saving) {
+      navigate('/Discover', { replace: true });
+    }
+  }, [myProfileData, saving, navigate]);
 
   const onChange = (partial) => setData(prev => ({ ...prev, ...partial }));
   const { component: StepComponent } = STEPS[step];
@@ -54,13 +67,19 @@ export default function Onboarding() {
   try {
     // Only the date of birth is sent; the server works out the age and checks 18+
     const { age: _age, ...rest } = data;
-    await profilesApi.updateMyProfile({
+    const saved = await profilesApi.updateMyProfile({
       ...rest,
       photo_url: data.photos?.[0]?.url || '',
       onboarding_complete: true,
       is_active: true,
     });
-    navigate('/Discover');
+    // Put the finished profile in the cache before leaving. Otherwise Discover
+    // reads the old copy (onboarding not done) and sends you back to step 1.
+    if (saved?.profile) {
+      queryClient.setQueryData(queryKeys.myProfile(user?.id), { profile: saved.profile });
+    }
+    await queryClient.invalidateQueries({ queryKey: ['myProfile'] });
+    navigate('/Discover', { replace: true });
   } catch (error) {
     console.error('Onboarding failed:', error);
     toast({
