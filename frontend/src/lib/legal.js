@@ -5,26 +5,28 @@
 // them before launch, especially the sections on sensitive data, governing
 // law and liability.
 //
-// Fill in the [BRACKETS] once, here, and every page picks them up.
+// Velkiz is run by one independent developer, not a registered company. If
+// that changes (an LLC, say), update `operator` and the governing law here.
+// The one bracket left, `governingLaw`, is the US state the developer lives in.
 
 export const LEGAL = {
   appName: 'Velkiz',
-  company: '[COMPANY LEGAL NAME]',
-  companyAddress: '[COMPANY POSTAL ADDRESS]',
-  country: '[COUNTRY / STATE]',
+  // How the policies name who runs Velkiz
+  operator: 'the independent developer of Velkiz',
+  governingLaw: 'the State of [YOUR US STATE], United States',
   supportEmail: 'support@velkiz.com',
   privacyEmail: 'privacy@velkiz.com',
   website: 'https://velkiz.com',
   lastUpdated: 'November 26, 2026',
 }
 
-const { appName: APP, company: CO, country: COUNTRY, supportEmail: SUPPORT, privacyEmail: PRIVACY } = LEGAL
+const { appName: APP, operator: OP, governingLaw: LAW, supportEmail: SUPPORT, privacyEmail: PRIVACY } = LEGAL
 
 // Each document: a title, a short intro, and sections of paragraphs (p),
 // then bullet lists (list), then paragraphs after the list (after).
 export const PRIVACY_POLICY = {
   title: 'Privacy Policy',
-  intro: `${APP} is an anonymous dating app run by ${CO} ("we", "us"). Anonymity is the point of ${APP}, so we collect as little as we can, never sell your data, and never show other people your email or exact location. This policy explains what we collect, why, and the choices you have.`,
+  intro: `${APP} is an anonymous dating app run by ${OP} ("we", "us"), an individual, not a company. Anonymity is the point of ${APP}, so we collect as little as we can, never sell your data, and never show other people your email or exact location. This policy explains what we collect, why, and the choices you have.`,
   sections: [
     {
       h: 'What we collect',
@@ -77,16 +79,16 @@ export const PRIVACY_POLICY = {
       list: [
         'Supabase, which hosts our database, logins and photo storage.',
         'Resend, which sends our emails.',
-        '[HOSTING PROVIDER], which runs our servers.',
+        'Our cloud hosting provider, which runs our servers.',
         'Apple, to deliver push notifications if you turn them on.',
       ],
     },
     {
-      p: ['We may also share information if the law requires it, to protect someone from serious harm, or as part of a sale or merger of our business (in which case this policy will still apply to your information).'],
+      p: ['We may also share information if the law requires it, to protect someone from serious harm, or if ${APP} is transferred to a new owner or becomes a company (in which case this policy will still apply to your information).'],
     },
     {
       h: 'How long we keep it',
-      p: [`We keep your information while your account is open. When you delete your account in Settings, we permanently delete your profile, photos, matches, messages, likes, blocks and login straight away. Copies may remain in encrypted backups for up to [30] days before they are overwritten. We may keep limited records longer where the law requires it or to deal with a safety report about your account.`],
+      p: [`We keep your information while your account is open. When you delete your account in Settings, we permanently delete your profile, photos, matches, messages, likes, blocks and login straight away. Copies may remain in encrypted backups for up to 30 days before they are overwritten. We may keep limited records longer where the law requires it or to deal with a safety report about your account.`],
     },
     {
       h: 'Your choices and rights',
@@ -110,7 +112,7 @@ export const PRIVACY_POLICY = {
     },
     {
       h: 'International transfers',
-      p: [`Our service providers may store and process data outside your country, including in [REGIONS]. Where the law requires, we use safeguards such as standard contractual clauses.`],
+      p: [`Our service providers may store and process data outside your country, including in the United States. Where the law requires, we use safeguards such as standard contractual clauses.`],
     },
     {
       h: 'Changes',
@@ -118,14 +120,14 @@ export const PRIVACY_POLICY = {
     },
     {
       h: 'Contact',
-      p: [`${CO}, ${LEGAL.companyAddress}. Email ${PRIVACY}.`],
+      p: [`Email ${PRIVACY} for anything about your privacy or your data, including to find out who we are in more detail.`],
     },
   ],
 }
 
 export const TERMS = {
   title: 'Terms of Service',
-  intro: `These terms are an agreement between you and ${CO} ("we", "us") about your use of ${APP}. By creating an account you agree to them, to our Privacy Policy and to our Community Guidelines. Please read them.`,
+  intro: `These terms are an agreement between you and ${OP} ("we", "us"), an individual, not a company, about your use of ${APP}. By creating an account you agree to them, to our Privacy Policy and to our Community Guidelines. Please read them.`,
   sections: [
     {
       h: 'Who can use Velkiz',
@@ -185,7 +187,7 @@ export const TERMS = {
     },
     {
       h: 'Limitation of liability',
-      p: [`To the fullest extent the law allows, we are not liable for indirect, incidental, special or consequential losses, or for anything another user does, on or off the app. Our total liability to you is limited to the greater of the amount you paid us in the last 12 months and [AMOUNT]. Nothing in these terms limits liability that cannot be limited by law.`],
+      p: [`To the fullest extent the law allows, we are not liable for indirect, incidental, special or consequential losses, or for anything another user does, on or off the app. Our total liability to you is limited to the greater of the amount you paid us in the last 12 months and US$100. Nothing in these terms limits liability that cannot be limited by law.`],
     },
     {
       h: 'Apple App Store',
@@ -206,11 +208,11 @@ export const TERMS = {
     },
     {
       h: 'Governing law',
-      p: [`These terms are governed by the laws of ${COUNTRY}, and disputes will be handled by the courts there, unless the law where you live gives you the right to bring a claim locally.`],
+      p: [`These terms are governed by the laws of ${LAW}, and disputes will be handled by the courts there, unless the law where you live gives you the right to bring a claim locally.`],
     },
     {
       h: 'Contact',
-      p: [`${CO}, ${LEGAL.companyAddress}. Email ${SUPPORT}.`],
+      p: [`Email ${SUPPORT}.`],
     },
   ],
 }
@@ -256,7 +258,7 @@ export const GUIDELINES = {
     },
     {
       h: 'If something is wrong',
-      p: [`Tap Report on their profile or in the chat. Reports are anonymous and reviewed by our team, usually within 24 hours. You can also block anyone at any time. If you are in danger, contact local emergency services first. You can also email ${SUPPORT}.`],
+      p: [`Tap Report on their profile or in the chat. Reports are anonymous and we review every one, usually within 24 hours. You can also block anyone at any time. If you are in danger, contact local emergency services first. You can also email ${SUPPORT}.`],
     },
   ],
 }

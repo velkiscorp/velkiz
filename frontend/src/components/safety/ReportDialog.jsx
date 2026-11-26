@@ -53,7 +53,7 @@ export default function ReportDialog({ open, onOpenChange, userId, username, mat
             <AlertDialogHeader>
               <AlertDialogTitle>Thanks for telling us</AlertDialogTitle>
               <AlertDialogDescription>
-                Our team reviews every report, usually within 24 hours. {username || 'They'} won't
+                We review every report, usually within 24 hours. {username || 'They'} won't
                 know it was you.{sent.blocked ? ` You won't see each other on Velkiz any more.` : ''}
               </AlertDialogDescription>
             </AlertDialogHeader>
