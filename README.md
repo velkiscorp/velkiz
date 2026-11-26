@@ -1,4 +1,4 @@
-# Velkis
+# Velkiz
 
 Anonymous dating app by Velvet. React + Vite frontend, Express + Socket.io backend, Supabase for auth, database and storage.
 

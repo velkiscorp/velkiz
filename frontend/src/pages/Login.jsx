@@ -85,7 +85,7 @@ export default function Login() {
         transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="text-center space-y-3">
-          <h1 className="text-6xl font-serif italic font-medium tracking-tight text-silk leading-none">Velkis</h1>
+          <h1 className="text-6xl font-serif italic font-medium tracking-tight text-silk leading-none">Velkiz</h1>
           <p className="text-[10px] uppercase tracking-[0.35em] text-gold/60">by Velvet</p>
           <div className="mx-auto h-px w-16 bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
           <p className="text-muted-foreground text-sm tracking-wide">
@@ -145,7 +145,7 @@ export default function Login() {
             onClick={handleSubmit}
             disabled={loading}
           >
-            {loading ? 'One moment...' : mode === 'login' ? 'Enter' : mode === 'signup' ? 'Join Velkis' : 'Send reset link'}
+            {loading ? 'One moment...' : mode === 'login' ? 'Enter' : mode === 'signup' ? 'Join Velkiz' : 'Send reset link'}
           </Button>
         </div>
 

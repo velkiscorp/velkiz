@@ -11,7 +11,7 @@ const optionalText = (max) => z.string().trim().max(max).nullable().optional()
 
 const photoUrl = z.string().max(500).refine(
   (url) => url.startsWith(PHOTO_PREFIX),
-  { message: 'Photo must be uploaded to Velkis storage' }
+  { message: 'Photo must be uploaded to Velkiz storage' }
 )
 
 // ---- auth ----
@@ -54,6 +54,8 @@ export const updateProfileBody = z.object({
   height_cm: z.number().int().min(120, 'Height must be at least 120 cm').max(230, 'Height must be at most 230 cm').nullable().optional(),
   is_couple: z.boolean().optional(),
   hide_city: z.boolean().optional(),
+  // false = paused: hidden from Discover, matches and chats carry on
+  is_active: z.boolean().optional(),
   gender: z.enum(GENDERS).nullable().optional(),
   orientation: z.enum(ORIENTATIONS).nullable().optional(),
   looking_for: z.enum(LOOKING_FOR).nullable().optional(),

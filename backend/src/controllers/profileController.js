@@ -42,6 +42,8 @@ export const getProfiles = async (req, res) => {
       .from('profiles')
       .select('*')
       .eq('onboarding_complete', true)
+      // "Pause my profile" in Settings: hidden from Discover (null counts as active)
+      .not('is_active', 'is', false)
       // Stable order so paging with offset never skips or repeats people
       .order('created_at', { ascending: true })
       .order('user_id', { ascending: true })
@@ -117,7 +119,7 @@ export const updateMyProfile = async (req, res) => {
     const {
       username, bio, date_of_birth, show_age, height_cm, is_couple, hide_city, gender, orientation, looking_for,
       interests, photos, photo_url, location_lat, location_lng,
-      country, city, prompt1, prompt2, prompt3, onboarding_complete
+      country, city, prompt1, prompt2, prompt3, onboarding_complete, is_active
     } = req.body
 
     const updates = {
@@ -131,6 +133,7 @@ export const updateMyProfile = async (req, res) => {
     if (height_cm !== undefined) updates.height_cm = height_cm
     if (is_couple !== undefined) updates.is_couple = is_couple
     if (hide_city !== undefined) updates.hide_city = hide_city
+    if (is_active !== undefined) updates.is_active = is_active
     if (gender !== undefined) updates.gender = gender
     if (orientation !== undefined) updates.orientation = orientation
     if (looking_for !== undefined) updates.looking_for = looking_for
@@ -183,7 +186,7 @@ export const updateMyProfile = async (req, res) => {
         }
         const age = ageFromDob(date_of_birth)
         if (age < MIN_AGE) {
-          return res.status(400).json({ error: 'You must be 18 or older to use Velkis' })
+          return res.status(400).json({ error: 'You must be 18 or older to use Velkiz' })
         }
         if (age > MAX_AGE) {
           return res.status(400).json({ error: 'Please enter your real date of birth' })
