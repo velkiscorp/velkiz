@@ -40,7 +40,7 @@ export default function PhotoViewer({ photos, startIndex = 0, onClose }) {
 
       <button
         onClick={(e) => { e.stopPropagation(); onClose(); }}
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
+        className="absolute top-[calc(env(safe-area-inset-top)+0.75rem)] right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
         aria-label="Close"
       >
         <X className="w-5 h-5 text-white" />
@@ -66,7 +66,7 @@ export default function PhotoViewer({ photos, startIndex = 0, onClose }) {
               <ChevronRight className="w-5 h-5 text-white" />
             </button>
           )}
-          <p className="absolute bottom-6 text-white/70 text-xs">{index + 1} / {photos.length}</p>
+          <p className="absolute bottom-[calc(env(safe-area-inset-bottom)+1.5rem)] text-white/70 text-xs">{index + 1} / {photos.length}</p>
         </>
       )}
     </div>

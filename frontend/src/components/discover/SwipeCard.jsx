@@ -17,9 +17,11 @@ export default function SwipeCard({ profile, onSwipe, isTop, swipeDir, onTapInfo
   const likeOpacity = useTransform(x, [30, 120], [0, 1]);
   const nopeOpacity = useTransform(x, [-120, -30], [1, 0]);
 
+  // Swipe right to like, left to pass: far enough, or a quick flick
   const handleDragEnd = (_, info) => {
-    if (info.offset.x > 120) onSwipe('right');
-    else if (info.offset.x < -120) onSwipe('left');
+    const { offset, velocity } = info;
+    if (offset.x > 100 || (velocity.x > 500 && offset.x > 30)) onSwipe('right');
+    else if (offset.x < -100 || (velocity.x < -500 && offset.x < -30)) onSwipe('left');
   };
 
   // Normalize photos array - empty (not a stock-photo placeholder) when there's genuinely none
@@ -36,9 +38,12 @@ export default function SwipeCard({ profile, onSwipe, isTop, swipeDir, onTapInfo
   return (
     <motion.div
       className="absolute inset-0 cursor-grab active:cursor-grabbing select-none"
-      style={{ x, rotate, zIndex: isTop ? 10 : 0 }}
+      style={{ x, rotate, zIndex: isTop ? 10 : 0, touchAction: 'pan-y' }}
       drag={isTop ? "x" : false}
-      dragConstraints={{ left: 0, right: 0 }}
+      // The card follows your finger, and springs back if you let go early
+      dragElastic={1}
+      dragSnapToOrigin
+      dragMomentum={false}
       onDragEnd={handleDragEnd}
       whileDrag={{ scale: 1.03 }}
       animate={

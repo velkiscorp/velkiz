@@ -170,6 +170,14 @@ export default function Settings() {
           {pushPermission === 'prompt' && (
             <LinkRow icon={Bell} label="Allow notifications" desc="Get told about matches and messages" onClick={allowPush} />
           )}
+          {pushPermission === 'granted' && (
+            <div className="flex items-center gap-3 p-3.5">
+              <RowIcon icon={Bell} />
+              <p className="text-xs text-muted-foreground flex-1">
+                Notifications are on. Choose which ones you get below, or turn them all off in your iPhone's Settings &gt; Velkiz &gt; Notifications.
+              </p>
+            </div>
+          )}
           {pushPermission === 'denied' && (
             <div className="flex items-center gap-3 p-3.5">
               <RowIcon icon={Bell} />
