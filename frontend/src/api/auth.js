@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import apiClient from './client'
+import { SITE_URL } from '@/lib/site'
+import { isNativeApp } from '@/lib/native'
 
 export const authApi = {
   // Signup goes through our backend. Usually it sends a verification email
@@ -41,7 +43,9 @@ export const authApi = {
 
   resetPassword: async (email) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?type=recovery`
+      // In the app the link must go to the website (iOS then opens it in
+      // the app); capacitor://localhost can't be opened from an email
+      redirectTo: `${isNativeApp() ? SITE_URL : window.location.origin}/auth/callback?type=recovery`
     })
     if (error) throw error
   },

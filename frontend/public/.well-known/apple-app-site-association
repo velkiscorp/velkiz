@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.velkiz.app"],
+        "components": [
+          { "/": "/auth/*", "comment": "Email verification and sign-in links" },
+          { "/": "/reset-password", "comment": "Password reset" }
+        ]
+      }
+    ]
+  }
+}

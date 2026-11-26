@@ -19,6 +19,9 @@ import MyProfile from './pages/MyProfile'
 import Settings from './pages/Settings'
 import BlockedPeople from './pages/BlockedPeople'
 import LegalPage from './pages/LegalPage'
+import Landing from './pages/Landing'
+import OpenInApp from './pages/OpenInApp'
+import { runsFullApp } from '@/lib/site'
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated } = useAuth()
@@ -81,7 +84,23 @@ const AuthenticatedApp = () => {
   )
 }
 
+// velkiz.com in a browser: download links and legal pages, no app
+const Website = () => (
+  <Router>
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/privacy" element={<LegalPage doc="privacy" />} />
+      <Route path="/terms" element={<LegalPage doc="terms" />} />
+      <Route path="/guidelines" element={<LegalPage doc="guidelines" />} />
+      <Route path="/auth/*" element={<OpenInApp />} />
+      <Route path="/reset-password" element={<OpenInApp />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  </Router>
+)
+
 function App() {
+  if (!runsFullApp()) return <Website />
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
