@@ -5,15 +5,18 @@
 // them before launch, especially the sections on sensitive data, governing
 // law and liability.
 //
-// Velkiz is run by one independent developer, not a registered company. If
-// that changes (an LLC, say), update `operator` and the governing law here.
-// The one bracket left, `governingLaw`, is the US state the developer lives in.
+// Velkiz is run by a small team of independent developers in India, not a
+// registered company. If that changes (a company is registered), update
+// `operator` and the governing law here. The one bracket left is the name of
+// the Grievance Officer, which Indian law asks apps to publish.
 
 export const LEGAL = {
   appName: 'Velkiz',
   // How the policies name who runs Velkiz
-  operator: 'the independent developer of Velkiz',
-  governingLaw: 'the State of [YOUR US STATE], United States',
+  operator: 'a small team of independent developers based in India',
+  governingLaw: 'India',
+  grievanceOfficer: '[GRIEVANCE OFFICER NAME]',
+  grievanceEmail: 'grievance@velkiz.com',
   supportEmail: 'support@velkiz.com',
   privacyEmail: 'privacy@velkiz.com',
   website: 'https://velkiz.com',
@@ -26,7 +29,7 @@ const { appName: APP, operator: OP, governingLaw: LAW, supportEmail: SUPPORT, pr
 // then bullet lists (list), then paragraphs after the list (after).
 export const PRIVACY_POLICY = {
   title: 'Privacy Policy',
-  intro: `${APP} is an anonymous dating app run by ${OP} ("we", "us"), an individual, not a company. Anonymity is the point of ${APP}, so we collect as little as we can, never sell your data, and never show other people your email or exact location. This policy explains what we collect, why, and the choices you have.`,
+  intro: `${APP} is an anonymous dating app run by ${OP} ("we", "us"), not a registered company. Anonymity is the point of ${APP}, so we collect as little as we can, never sell your data, and never show other people your email or exact location. This policy explains what we collect, why, and the choices you have.`,
   sections: [
     {
       h: 'What we collect',
@@ -100,7 +103,7 @@ export const PRIVACY_POLICY = {
         'Delete your account and all your data from Settings.',
         `Ask for a copy of your data, or ask us to correct it, by emailing ${PRIVACY}.`,
       ],
-      after: [`Depending on where you live (for example the EU, UK or California), you may have further rights, such as to object to how we use your data or to complain to your data protection authority. Contact us at ${PRIVACY} and we will respond within the time the law requires.`],
+      after: [`Depending on where you live (for example India, the EU, the UK or California), you may have further rights, such as to object to how we use your data or to complain to your data protection authority. Contact us at ${PRIVACY} and we will respond within the time the law requires.`],
     },
     {
       h: 'Security',
@@ -112,7 +115,7 @@ export const PRIVACY_POLICY = {
     },
     {
       h: 'International transfers',
-      p: [`Our service providers may store and process data outside your country, including in the United States. Where the law requires, we use safeguards such as standard contractual clauses.`],
+      p: [`Our service providers may store and process data outside your country, including in the United States and the European Union. Where the law requires, we use safeguards such as standard contractual clauses.`],
     },
     {
       h: 'Changes',
@@ -120,14 +123,18 @@ export const PRIVACY_POLICY = {
     },
     {
       h: 'Contact',
-      p: [`Email ${PRIVACY} for anything about your privacy or your data, including to find out who we are in more detail.`],
+      p: [`Email ${PRIVACY} for anything about your privacy or your data.`],
+    },
+    {
+      h: 'Grievance Officer (India)',
+      p: [`Under India's Information Technology Rules and Digital Personal Data Protection Act, you can raise a complaint with our Grievance Officer, ${LEGAL.grievanceOfficer}, at ${LEGAL.grievanceEmail}. We acknowledge complaints within 24 hours and resolve them within 15 days.`],
     },
   ],
 }
 
 export const TERMS = {
   title: 'Terms of Service',
-  intro: `These terms are an agreement between you and ${OP} ("we", "us"), an individual, not a company, about your use of ${APP}. By creating an account you agree to them, to our Privacy Policy and to our Community Guidelines. Please read them.`,
+  intro: `These terms are an agreement between you and ${OP} ("we", "us"), not a registered company, about your use of ${APP}. By creating an account you agree to them, to our Privacy Policy and to our Community Guidelines. Please read them.`,
   sections: [
     {
       h: 'Who can use Velkiz',
@@ -187,7 +194,7 @@ export const TERMS = {
     },
     {
       h: 'Limitation of liability',
-      p: [`To the fullest extent the law allows, we are not liable for indirect, incidental, special or consequential losses, or for anything another user does, on or off the app. Our total liability to you is limited to the greater of the amount you paid us in the last 12 months and US$100. Nothing in these terms limits liability that cannot be limited by law.`],
+      p: [`To the fullest extent the law allows, we are not liable for indirect, incidental, special or consequential losses, or for anything another user does, on or off the app. Our total liability to you is limited to the greater of the amount you paid us in the last 12 months and ₹10,000. Nothing in these terms limits liability that cannot be limited by law.`],
     },
     {
       h: 'Apple App Store',
@@ -212,7 +219,7 @@ export const TERMS = {
     },
     {
       h: 'Contact',
-      p: [`Email ${SUPPORT}.`],
+      p: [`Email ${SUPPORT}. For complaints under Indian law, write to our Grievance Officer, ${LEGAL.grievanceOfficer}, at ${LEGAL.grievanceEmail}.`],
     },
   ],
 }
