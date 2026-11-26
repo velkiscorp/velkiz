@@ -278,7 +278,7 @@ export default function Discover() {
     <div className="h-app flex flex-col gap-2 pt-3 px-4">
       <DiscoverFilters filters={filters} onChange={handleFilterChange} onOpenPanel={() => setPanelOpen(true)} />
 
-      <div className="flex-1 relative">
+      <div className="flex-1 min-h-0 relative">
         {isLoading ? (
           <div className="w-full h-full rounded-md bg-secondary animate-pulse" />
         ) : hasProfiles ? (
@@ -287,7 +287,8 @@ export default function Discover() {
               const stackIdx = visibleProfiles.length - 1 - reversedIdx;
               const isTop = stackIdx === 0;
               const scale = 1 - stackIdx * 0.04;
-              const translateY = stackIdx * 10;
+              // Cards behind peek out above the top one, never down over the buttons
+              const translateY = -stackIdx * 8;
               return (
                 <div
                   key={profile.id}
@@ -295,7 +296,7 @@ export default function Discover() {
                   style={{
                     transform: `scale(${scale}) translateY(${translateY}px)`,
                     zIndex: isTop ? 10 : 10 - stackIdx,
-                    transformOrigin: 'center bottom',
+                    transformOrigin: 'center top',
                   }}
                 >
                   <SwipeCard
@@ -337,7 +338,7 @@ export default function Discover() {
       </div>
 
       {hasProfiles && (
-        <div className="flex items-center justify-center gap-3 py-2">
+        <div className="relative z-20 flex items-center justify-center gap-3 pt-1 pb-2 shrink-0">
           <Button size="lg" variant="outline" className="w-12 h-12 rounded-full border-border/50 hover:bg-secondary" onClick={handleUndo} disabled={!canUndo} title="Undo last">
             <Undo2 className="w-5 h-5 text-muted-foreground" />
           </Button>

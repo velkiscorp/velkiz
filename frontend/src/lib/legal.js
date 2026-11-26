@@ -9,6 +9,12 @@
 // registered company. If that changes (a company is registered), update
 // `operator` and the governing law here. Indian law asks apps to publish a
 // Grievance Officer: change `grievanceOfficer` if that person changes.
+//
+// Open questions for whoever writes the final version:
+// - GDPR Art. 27 / UK GDPR: a non-EU app with EU or UK users usually needs a
+//   representative in the EU and the UK. Name them in the GDPR section.
+// - Which Indian city's courts handle disputes ("the courts there" for now).
+// - Confirm the email provider named under "Who we share it with".
 
 export const LEGAL = {
   appName: 'Velkiz',
@@ -83,13 +89,13 @@ export const PRIVACY_POLICY = {
       list: [
         'Supabase, which hosts our database, logins and photo storage.',
         'Resend, which sends our emails.',
-        'Our cloud hosting provider, which runs our servers.',
+        'Render, which runs our servers, and Netlify, which hosts our website.',
         'Apple, to deliver push notifications if you turn them on, to process in-app purchases, and for Sign in with Apple if you use it.',
         'RevenueCat, which confirms in-app purchases with Apple for us. It receives your account ID (a random number, not your name or email) and your purchase history.',
       ],
     },
     {
-      p: ['We may also share information if the law requires it, to protect someone from serious harm, or if ${APP} is transferred to a new owner or becomes a company (in which case this policy will still apply to your information).'],
+      p: [`We may also share information if the law requires it, to protect someone from serious harm, or if ${APP} is transferred to a new owner or becomes a company (in which case this policy will still apply to your information).`],
     },
     {
       h: 'How long we keep it',
@@ -106,6 +112,39 @@ export const PRIVACY_POLICY = {
         `Ask for a copy of your data, or ask us to correct it, by emailing ${PRIVACY}.`,
       ],
       after: [`Depending on where you live (for example India, the EU, the UK or California), you may have further rights, such as to object to how we use your data or to complain to your data protection authority. Contact us at ${PRIVACY} and we will respond within the time the law requires.`],
+    },
+    {
+      h: 'If you are in the EU, EEA or UK (GDPR)',
+      p: ['If you live in the European Union, the European Economic Area or the United Kingdom, the General Data Protection Regulation (GDPR, or the UK GDPR) gives you extra protections. We are the "controller" of your personal data. We rely on these legal bases:'],
+      list: [
+        'Contract: to create your account, show your profile, suggest matches, deliver messages and provide Super Likes you buy.',
+        'Explicit consent: to use your sexual orientation and anything about your sex life you choose to share, only to decide who you see and who sees you. You can withdraw this consent at any time by removing it from your profile or deleting your account.',
+        'Consent: for location and push notifications. You can turn these off at any time in the app or in your phone\'s settings.',
+        'Legitimate interests: to keep Velkiz safe and secure, prevent fraud, spam and abuse, and enforce our rules. We have balanced these against your rights.',
+        'Legal obligation: where the law requires us to keep or share information.',
+      ],
+      after: [
+        `You have the right to access your data, correct it, delete it, restrict or object to how we use it, receive a copy in a portable format, and withdraw consent at any time without affecting what we did before. Email ${PRIVACY} and we will reply within one month. We will not discriminate against you for using these rights.`,
+        `You also have the right to complain to your local data protection authority (in the UK, the Information Commissioner\'s Office). We would appreciate the chance to sort it out first, so please contact us at ${PRIVACY}.`,
+        'We do not make decisions about you based solely on automated processing that have legal or similarly significant effects. Who appears in Discover is decided by the filters you set and the information on your profile.',
+      ],
+    },
+    {
+      h: 'If you are in California or another US state',
+      p: [`If you live in California, the California Consumer Privacy Act (as amended by the CPRA) gives you specific rights. Other US states such as Virginia, Colorado, Connecticut, Texas and Oregon give similar rights, and we honour them the same way. In the last 12 months we have collected these categories of personal information, for the purposes described in this policy:`],
+      list: [
+        'Identifiers: email address, account ID, IP address and device token.',
+        'Personal characteristics: age, gender and, if you add it, sexual orientation.',
+        'Commercial information: Super Like purchases.',
+        'Internet activity: how you use the app, such as likes, passes, matches and when you were last active.',
+        'Approximate geolocation.',
+        'Photos and other content you upload, and your messages.',
+        'Sensitive personal information: your account login, your approximate location, your sexual orientation and the content of your messages. We use these only to provide the service you asked for and to keep it safe, and never to infer things about you.',
+      ],
+      after: [
+        'We do not sell your personal information and we do not "share" it for cross-context behavioural advertising, and we have not done so in the last 12 months. We do not knowingly sell or share information about anyone under 16.',
+        `You have the right to know what personal information we collect, use and disclose, to get a copy of it, to have it corrected or deleted, and not to be treated differently for using these rights. To make a request, email ${PRIVACY} from the email address on your account, or delete your account in Settings. We may need to confirm it is really you before acting. You can also have an authorised agent make a request for you, with your written permission. If we turn down your request, you can appeal by replying to our answer, and we will respond within 45 days.`,
+      ],
     },
     {
       h: 'Security',
@@ -183,6 +222,8 @@ export const TERMS = {
       h: 'Moderation and ending your account',
       p: [
         'We may remove content, limit features or suspend or close accounts that break these terms or put others at risk, with or without notice.',
+        'If we remove your content or restrict, suspend or close your account, we will tell you why, unless the law or someone\'s safety stops us.',
+        `If you think we got it wrong, you can appeal within 6 months by emailing ${SUPPORT} with your username and why. A person who was not involved in the first decision will review it, and we will let you know the outcome, usually within 14 days.`,
         'You can delete your account at any time in Settings.',
       ],
     },
@@ -219,8 +260,20 @@ export const TERMS = {
       p: ['We may update these terms. If a change matters, we will tell you in the app before it takes effect. If you keep using Velkiz after that, you accept the new terms.'],
     },
     {
+      h: 'Resolving problems and disputes',
+      p: [
+        `Most problems can be sorted out quickly. If you have a complaint about ${APP}, please email ${SUPPORT} first and tell us what happened and what you would like us to do. We will reply within 14 days and try to fix it within 30 days.`,
+        `If you are in India, you can also go to our Grievance Officer, ${LEGAL.grievanceOfficer}, at ${LEGAL.grievanceEmail}. We acknowledge complaints within 24 hours and resolve them within 15 days.`,
+        'If we still cannot agree, either of us can take the dispute to the courts described below. Nothing in these terms stops you from going to a consumer court, a consumer protection authority or a data protection authority where you live.',
+      ],
+    },
+    {
       h: 'Governing law',
-      p: [`These terms are governed by the laws of ${LAW}, and disputes will be handled by the courts there, unless the law where you live gives you the right to bring a claim locally.`],
+      p: [
+        `These terms are governed by the laws of ${LAW}, and disputes will be handled by the courts there.`,
+        'If you live in the EU, the EEA or the UK, you also keep the protection of the mandatory consumer laws of the country where you live, and you can bring a claim in your local courts.',
+        'If you live in the United States, you can bring a claim in your local small claims court if it qualifies.',
+      ],
     },
     {
       h: 'Contact',
