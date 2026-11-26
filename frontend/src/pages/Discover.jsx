@@ -338,28 +338,28 @@ export default function Discover() {
       </div>
 
       {hasProfiles && (
-        <div className="relative z-20 flex items-center justify-center gap-3 pt-1 pb-2 shrink-0">
-          <Button size="lg" variant="outline" className="w-12 h-12 rounded-full border-border/50 hover:bg-secondary" onClick={handleUndo} disabled={!canUndo} title="Undo last">
-            <Undo2 className="w-5 h-5 text-muted-foreground" />
+        <div className="relative z-20 flex items-center justify-center gap-2.5 pt-1 pb-2 shrink-0">
+          <Button size="lg" className="w-11 h-11 p-0 [&_svg]:size-5 rounded-full bg-gradient-to-b from-gold to-[hsl(37_40%_60%)] border border-gold/60 shadow-[0_0_14px_hsl(37_45%_74%/0.35)] hover:brightness-110 disabled:opacity-40" onClick={handleUndo} disabled={!canUndo} title="Undo last" aria-label="Undo last">
+            <Undo2 className="w-5 h-5 text-primary" strokeWidth={2.5} />
           </Button>
-          <Button size="lg" variant="outline" className="w-12 h-12 rounded-full border-border/50 hover:bg-secondary" onClick={handleSkip} disabled={swipeMutation.isPending || isUndoing} title="Not sure yet - decide later">
+          <Button size="lg" variant="outline" className="w-11 h-11 p-0 [&_svg]:size-5 rounded-full border-border/50 hover:bg-secondary" onClick={handleSkip} disabled={swipeMutation.isPending || isUndoing} title="Not sure yet - decide later">
             <Clock className="w-5 h-5 text-muted-foreground" />
           </Button>
-          <Button size="lg" variant="outline" className="w-16 h-16 rounded-full border border-white/25 bg-black/30 hover:bg-white/5" onClick={() => handleSwipe('left')} disabled={swipeMutation.isPending || isUndoing}>
-            <X className="w-7 h-7 text-foreground/70" />
+          <Button size="lg" variant="outline" className="w-14 h-14 p-0 [&_svg]:size-6 rounded-full border border-white/25 bg-black/30 hover:bg-white/5" onClick={() => handleSwipe('left')} aria-label="Pass" disabled={swipeMutation.isPending || isUndoing}>
+            <X className="w-6 h-6 text-foreground/70" />
           </Button>
-          <Button size="lg" className="w-20 h-20 rounded-full bg-gradient-to-b from-primary to-accent border border-gold/30 shadow-lg animate-pulse-glow" onClick={() => handleSwipe('right')} disabled={swipeMutation.isPending || isUndoing}>
-            <Heart className="w-8 h-8 text-primary-foreground" fill="currentColor" />
+          <Button size="lg" className="w-[72px] h-[72px] p-0 [&_svg]:size-7 rounded-full bg-gradient-to-b from-primary to-accent border border-gold/30 shadow-lg animate-pulse-glow" onClick={() => handleSwipe('right')} aria-label="Like" disabled={swipeMutation.isPending || isUndoing}>
+            <Heart className="w-7 h-7 text-primary-foreground" fill="currentColor" />
           </Button>
           <div className="relative">
-            <Button size="lg" variant="outline" className="w-16 h-16 rounded-full border border-gold/50 bg-black/30 hover:bg-gold/10" onClick={() => handleSwipe('super')} disabled={swipeMutation.isPending || isUndoing} aria-label="Super Like">
-              <Star className="w-7 h-7 text-gold" fill="currentColor" />
+            <Button size="lg" className="w-14 h-14 p-0 [&_svg]:size-6 rounded-full bg-gradient-to-b from-gold to-[hsl(37_40%_60%)] border border-gold/60 shadow-[0_0_18px_hsl(37_45%_74%/0.4)] hover:brightness-110" onClick={() => handleSwipe('super')} disabled={swipeMutation.isPending || isUndoing} aria-label="Super Like">
+              <Star className="w-6 h-6 text-primary" fill="currentColor" />
             </Button>
             {superLikes && (
               <button
                 onClick={() => setSuperSheetOpen(true)}
                 aria-label={`${superLikes.total} Super Likes left`}
-                className="absolute -top-1 -right-1 min-w-6 h-6 px-1.5 rounded-full bg-gold text-black text-xs font-semibold flex items-center justify-center shadow"
+                className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold ring-2 ring-background flex items-center justify-center shadow"
               >
                 {superLikes.total}
               </button>
