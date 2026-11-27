@@ -49,6 +49,15 @@ export const messageLimiter = rateLimit({
   message: json('You are sending messages too fast'),
 })
 
+// Starting, answering and declining calls, per user: stops ring-spamming
+export const callLimiter = rateLimit({
+  ...base,
+  windowMs: 60 * 1000,
+  limit: 20,
+  keyGenerator: byUserOrIp,
+  message: json('Too many calls, please wait a moment'),
+})
+
 export const profileWriteLimiter = rateLimit({
   ...base,
   windowMs: 60 * 1000,

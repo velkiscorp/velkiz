@@ -131,6 +131,10 @@ export const sendMessageBody = z.object({
     .max(2000, 'Message is too long (2000 characters max)'),
 })
 
+// ---- calls ----
+export const callIdParams = z.object({ callId: uuid })
+export const startCallBody = z.object({ video: z.boolean().optional() })
+
 // ---- safety (report & block) ----
 export const REPORT_REASONS = [
   'fake_profile', 'harassment', 'inappropriate_photos', 'underage',

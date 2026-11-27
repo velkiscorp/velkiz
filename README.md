@@ -86,6 +86,9 @@ Supabase sends these through Resend (custom SMTP), from `no-reply@support.velkiz
 
 - Supabase > Authentication > Sign In / Providers > Email: **Confirm email** on. Signup then sends a verification link and the account can't sign in until it's clicked.
 - Authentication > Emails > SMTP Settings: host `smtp.resend.com`, port `465`, username `resend`, password = Resend API key.
+- Authentication > Emails > Templates: paste `supabase/email-templates/confirm-signup.html` and `reset-password.html` (subject line is at the top of each file).
+- Authentication > URL Configuration: Site URL is the live app, and `<site>/auth/callback` plus `<site>/reset-password` are allowed redirect URLs.
+- `SITE_URL` in `backend/.env` decides where verification links send people back to (see `frontend/IOS.md`, "Email links open the app").
 
 Report emails come from the backend itself, also through Resend. On Render, set:
 - `RESEND_API_KEY`: a Resend API key with sending access (can be the same key).
@@ -93,6 +96,12 @@ Report emails come from the backend itself, also through Resend. On Render, set:
 - `EMAIL_FROM` (optional): defaults to `Velkiz <no-reply@support.velkiz.com>`.
 
 Without `RESEND_API_KEY`, reports are still saved but no emails are sent.
-- Authentication > Emails > Templates: paste `supabase/email-templates/confirm-signup.html` and `reset-password.html` (subject line is at the top of each file).
-- Authentication > URL Configuration: Site URL is the live app, and `<site>/auth/callback` plus `<site>/reset-password` are allowed redirect URLs.
-- `SITE_URL` in `backend/.env` decides where verification links send people back to (see `frontend/IOS.md`, "Email links open the app").
+
+### Voice and video calls
+
+Matches can call each other from the chat. Sound and video go through LiveKit (livekit.io), not phone to phone, so nobody sees the other person's IP address. Nothing is recorded. On Render, set the three values from LiveKit Cloud > your project > Settings > Keys:
+- `LIVEKIT_URL`: like `wss://your-project.livekit.cloud`
+- `LIVEKIT_API_KEY`
+- `LIVEKIT_API_SECRET`
+
+Until these are set, the call buttons stay hidden. Run `supabase/migrations/2026-11-27_call_messages.sql` so calls leave a line in the chat ("Video call · 3:12", "Missed voice call"); without it calls still work, just without that line.

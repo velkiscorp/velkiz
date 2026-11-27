@@ -12,6 +12,8 @@ import messageRoutes from './routes/messages.js'
 import photoRoutes from './routes/photos.js'
 import safetyRoutes from './routes/safety.js'
 import notificationRoutes from './routes/notifications.js'
+import callRoutes from './routes/calls.js'
+import { userRoom } from './services/calls.js'
 import { superLikeRoutes, purchaseRoutes } from './routes/superLikes.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { supabase } from './config/supabase.js'
@@ -79,6 +81,7 @@ app.use('/api/messages', messageRoutes)
 app.use('/api/photos', photoRoutes)
 app.use('/api/safety', safetyRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/calls', callRoutes)
 app.use('/api/super-likes', superLikeRoutes)
 app.use('/api/purchases', purchaseRoutes)
 
@@ -111,6 +114,9 @@ io.use(async (socket, next) => {
 // Real time chat via WebSockets
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id)
+
+  // Every signed-in phone listens for its own incoming calls
+  socket.join(userRoom(socket.userId))
 
   // User joins a chat room keyed to their match ID - only if they're actually
   // part of that match, so a guessed/known matchId can't be used to snoop

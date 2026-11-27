@@ -45,6 +45,7 @@ export const PRIVACY_POLICY = {
         'Date of birth, used to confirm you are 18 or older and to show your age if you choose. We never show your date of birth itself.',
         'Profile details you choose to add: username, gender, sexual orientation, what you are looking for, height, whether you are a couple, bio, interests, prompt answers and photos.',
         'Messages you send to your matches.',
+        'Voice and video calls with your matches: when a call happened, whether it was answered and how long it lasted. We never record calls, and the sound and video are not stored anywhere.',
         'Your likes, passes, matches, blocks and any reports you make.',
         'Messages you send to our support team.',
       ],
@@ -89,6 +90,7 @@ export const PRIVACY_POLICY = {
       list: [
         'Supabase, which hosts our database, logins and photo storage.',
         'Resend, which sends our emails.',
+        'LiveKit, which carries voice and video calls between matches. Calls pass through LiveKit so neither person sees the other\'s IP address; they are not recorded or stored.',
         'Render, which runs our servers, and Netlify, which hosts our website.',
         'Apple, to deliver push notifications if you turn them on, to process in-app purchases, and for Sign in with Apple if you use it.',
         'RevenueCat, which confirms in-app purchases with Apple for us. It receives your account ID (a random number, not your name or email) and your purchase history.',
@@ -290,7 +292,7 @@ export const GUIDELINES = {
       h: 'Respect anonymity',
       list: [
         'Never try to find out who someone really is, where they live or work, unless they choose to tell you.',
-        'Never screenshot, record or share someone\'s photos or messages outside Velkiz.',
+        'Never screenshot, record or share someone\'s photos, messages or calls outside Velkiz.',
         'Never share another person\'s personal details.',
       ],
     },

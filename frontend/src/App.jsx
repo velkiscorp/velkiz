@@ -22,6 +22,7 @@ import LegalPage from './pages/LegalPage'
 import Landing from './pages/Landing'
 import OpenInApp from './pages/OpenInApp'
 import { runsFullApp } from '@/lib/site'
+import { CallProvider } from '@/lib/calls'
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated } = useAuth()
@@ -61,6 +62,7 @@ const AuthenticatedApp = () => {
   }
 
   return (
+    <CallProvider>
     <Routes>
       <Route path="/" element={<Navigate to="/Discover" replace />} />
       <Route path="/login" element={<Navigate to="/Discover" replace />} />
@@ -81,6 +83,7 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </CallProvider>
   )
 }
 

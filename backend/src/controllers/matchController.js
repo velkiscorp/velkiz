@@ -1,3 +1,4 @@
+import { endCallsForMatches } from '../services/calls.js'
 import { toPublicProfile } from '../serializers/profile.js'
 import { supabase } from '../config/supabase.js'
 import { getBlockedUserIds, blockUser as blockUserById } from '../services/blocks.js'
@@ -103,6 +104,7 @@ export const unmatch = async (req, res) => {
 
     // Tell anyone still in this chat that it's over, and close the room
     const io = req.app.get('io')
+    endCallsForMatches([matchId], io)
     io?.to(matchId).emit('match_ended', { matchId })
     io?.in(matchId).socketsLeave(matchId)
 

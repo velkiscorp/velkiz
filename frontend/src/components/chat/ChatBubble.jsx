@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldAlert, Camera } from 'lucide-react';
+import { ShieldAlert, Camera, Phone, Video, PhoneMissed } from 'lucide-react';
 import { splitPhoneNumbers, maskPhoneNumber } from '@/lib/phone';
 import { useUnits } from '@/lib/units';
 
@@ -15,6 +15,21 @@ export default function ChatBubble({ message, isMine }) {
         <p className="flex items-center gap-1.5 text-[11px] text-gold/70 px-3 py-1 rounded-full border border-gold/20 bg-gold/5">
           <Camera className="w-3 h-3" />
           {isMine ? 'You took a screenshot' : 'They took a screenshot'}
+          {message.created_at && <span className="text-muted-foreground/60">· {units.time(message.created_at)}</span>}
+        </p>
+      </div>
+    );
+  }
+
+  if (message.kind === 'call') {
+    const text = message.content || 'Call';
+    const missed = /^(Missed|Declined)/.test(text);
+    const Icon = missed ? PhoneMissed : /video/i.test(text) ? Video : Phone;
+    return (
+      <div className="flex justify-center mb-3">
+        <p className={`flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full border ${missed && !isMine ? 'text-primary border-primary/30 bg-primary/5' : 'text-gold/70 border-gold/20 bg-gold/5'}`}>
+          <Icon className="w-3 h-3" />
+          {text}
           {message.created_at && <span className="text-muted-foreground/60">· {units.time(message.created_at)}</span>}
         </p>
       </div>
