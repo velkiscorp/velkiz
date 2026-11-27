@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { io as ioClient } from 'socket.io-client';
-import { ArrowLeft, Shield, MoreVertical, LogOut, Ban, Flag } from 'lucide-react';
+import { ArrowLeft, Shield, MoreVertical, LogOut, Ban, Flag, Phone, Video } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
@@ -21,6 +21,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { getAccessToken } from '@/api/client';
 import { onScreenshot } from '@/lib/native';
 import { useMatches, useChatMessages, queryKeys } from '@/api/queries';
+import { useCalls } from '@/lib/calls';
 
 export default function Chat() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -30,6 +31,7 @@ export default function Chat() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { toast } = useToast();
+  const calls = useCalls();
 
   const { data: messagesData = {} } = useChatMessages(matchId, {
     // Socket handles real-time delivery - this is just a fallback in case
@@ -172,7 +174,7 @@ export default function Chat() {
   return (
     <div className="h-dvh-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50 px-4 h-16 box-content pt-safe flex items-center gap-3">
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50 px-4 h-16 box-content pt-safe flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -195,6 +197,17 @@ export default function Chat() {
             </div>
           </div>
         </button>
+
+        {calls.enabled && match && (
+          <>
+            <Button variant="ghost" size="icon" aria-label="Voice call" disabled={calls.inCall} onClick={() => calls.startCall(matchId, false)} className="text-gold [&_svg]:size-5">
+              <Phone />
+            </Button>
+            <Button variant="ghost" size="icon" aria-label="Video call" disabled={calls.inCall} onClick={() => calls.startCall(matchId, true)} className="text-gold [&_svg]:size-5">
+              <Video />
+            </Button>
+          </>
+        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

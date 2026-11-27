@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js'
+import { endCallsForMatches } from './calls.js'
 
 // One place for "are these people blocked from each other?".
 // A block works both ways: if either person blocked the other, they never see,
@@ -63,6 +64,7 @@ export const blockUser = async (blockerId, blockedId, io) => {
     )
   if (blockErr) throw blockErr
 
+  endCallsForMatches(matchIds, io)
   for (const id of matchIds) {
     io?.to(id).emit('match_ended', { matchId: id })
     io?.in(id).socketsLeave(id)

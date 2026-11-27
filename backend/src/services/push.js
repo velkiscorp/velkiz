@@ -21,6 +21,8 @@ export const MESSAGES = {
   message: { title: 'Velkiz', body: 'You have a new message' },
   screenshot: { title: 'Velkiz', body: 'A match took a screenshot of your chat' },
   superlike: { title: 'Velkiz', body: 'Someone Super Liked you' },
+  call: { title: 'Velkiz', body: 'A match is calling you' },
+  missedcall: { title: 'Velkiz', body: 'You missed a call from a match' },
 }
 
 const config = () => {
@@ -91,7 +93,7 @@ const sendToDevice = (cfg, token, payload) => new Promise((resolve) => {
 const isDeadToken = ({ status, reason }) =>
   status === 410 || reason === 'BadDeviceToken' || reason === 'Unregistered' || reason === 'DeviceTokenNotForTopic'
 
-const PREF = { match: 'notify_matches', message: 'notify_messages', screenshot: 'notify_messages', superlike: 'notify_matches' }
+const PREF = { match: 'notify_matches', message: 'notify_messages', screenshot: 'notify_messages', superlike: 'notify_matches', call: 'notify_messages', missedcall: 'notify_messages' }
 
 // Notify a user about a new match or message, if they allow it.
 // Never throws: a failed notification must not fail the swipe or message.
