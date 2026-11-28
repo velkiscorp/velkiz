@@ -5,6 +5,8 @@ import ProfileAvatar from '@/components/shared/ProfileAvatar';
 import { splitPhoneNumbers, maskPhoneNumber } from '@/lib/phone';
 import { useMatches } from '@/api/queries';
 import { useUnits } from '@/lib/units';
+import { Hourglass } from 'lucide-react';
+import { useNow, timeLeft, hoursLeft } from '@/lib/chatTimer';
 
 // Chat previews always mask phone numbers; revealing happens inside the chat
 const maskedPreview = (text = '') =>
@@ -13,6 +15,7 @@ const maskedPreview = (text = '') =>
 
 export default function Messages() {
   const units = useUnits();
+  const now = useNow(60_000);
 
   const { data: matchesData = {}, isLoading } = useMatches({ refetchInterval: 5000 });
 
@@ -64,6 +67,12 @@ export default function Messages() {
                   <p className={`text-xs truncate ${match.hasUnread ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                     {match.lastMessage ? maskedPreview(match.lastMessage.content) : 'Make the first move'}
                   </p>
+                  {match.timer?.expiresAt && !match.timer.kept && (
+                    <p className={`flex items-center gap-1 text-[10px] mt-0.5 ${hoursLeft(match.timer.expiresAt, now) < 3 ? 'text-primary' : 'text-gold/70'}`}>
+                      <Hourglass className="w-3 h-3" /> {timeLeft(match.timer.expiresAt, now)} left
+                      {match.timer.theyKeep && !match.timer.iKeep && ' · they want to keep it'}
+                    </p>
+                  )}
                 </div>
                 {match.lastMessage && (
                   <span className="text-[10px] text-muted-foreground shrink-0">

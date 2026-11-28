@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
@@ -29,21 +29,33 @@ const EMPTY_POLL_MS = 60_000;
 // After a like, move on to the next person after this long
 const ADVANCE_MS = 650;
 
+// Lives as long as the app is open. Leaving Discover (Messages, Filters,
+// a chat) and coming back picks up the same feed at the same person, and
+// people you passed stay in the feed until the app is closed. On the next
+// launch this is empty again, and those passes hide them for good.
+const visit = { passedSince: null, feed: null };
+
 // Discover is a vertical feed, one person per screen, like Reels.
 // Scroll down to move on (that counts as a pass), swipe sideways for their
 // photos and details, tap the heart (or double-tap a photo) to like.
 // You can scroll back up and like someone you passed.
 export default function Discover() {
-  const [items, setItems] = useState([]);
-  // id -> 'left' | 'right' | 'super' for people decided on this visit
-  const [decisions, setDecisions] = useState({});
-  const [busyId, setBusyId] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFetching, setIsFetching] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [index, setIndex] = useState(0);
-  const [matchPopup, setMatchPopup] = useState(null);
+  const { user } = useAuth();
   const [filters, setFilters] = useState(loadFilters);
+  // The feed as you left it, if you've been here since the app opened
+  const restored = useRef(
+    visit.feed && visit.feed.userId === user?.id &&
+    JSON.stringify(visit.feed.filters) === JSON.stringify(filters) ? visit.feed : null
+  ).current;
+  const [items, setItems] = useState(restored?.items ?? []);
+  // id -> 'left' | 'right' | 'super' for people decided on since the app opened
+  const [decisions, setDecisions] = useState(restored?.decisions ?? {});
+  const [busyId, setBusyId] = useState(null);
+  const [isLoading, setIsLoading] = useState(!restored);
+  const [isFetching, setIsFetching] = useState(false);
+  const [hasMore, setHasMore] = useState(restored?.hasMore ?? true);
+  const [index, setIndex] = useState(restored?.index ?? 0);
+  const [matchPopup, setMatchPopup] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [previewProfile, setPreviewProfile] = useState(null);
   const [superSheetOpen, setSuperSheetOpen] = useState(false);
@@ -52,19 +64,34 @@ export default function Discover() {
   const { data: superLikes } = useSuperLikes();
   const navigate = useNavigate();
   const refresh = useRefresh();
-  const { user } = useAuth();
   const { toast } = useToast();
 
   const feedRef = useRef(null);
-  const seenIds = useRef(new Set());
+  const seenIds = useRef(new Set(restored?.seenIds ?? []));
   const generation = useRef(0);
   const fetching = useRef(false);
-  const filteredOut = useRef(0);
+  const filteredOut = useRef(restored?.filteredOut ?? 0);
+  const skipFirstLoad = useRef(!!restored);
   const itemsRef = useRef(items);
   itemsRef.current = items;
   const decisionsRef = useRef(decisions);
   decisionsRef.current = decisions;
-  const indexRef = useRef(0);
+  const indexRef = useRef(index);
+
+  // Remember the feed for when you come back
+  useEffect(() => {
+    if (!user?.id) return;
+    visit.feed = {
+      userId: user.id, filters, items, decisions, index, hasMore,
+      seenIds: [...seenIds.current], filteredOut: filteredOut.current,
+    };
+  }, [user?.id, filters, items, decisions, index, hasMore]);
+
+  // Back on the person you were looking at
+  useLayoutEffect(() => {
+    const el = feedRef.current;
+    if (restored && el) el.scrollTop = restored.index * el.clientHeight;
+  }, [restored]);
 
   const { data: myProfileData } = useMyProfile();
   const myProfile = myProfileData?.profile;
@@ -100,18 +127,28 @@ export default function Discover() {
     try {
       // The server leaves out everyone already decided on (and people who
       // Super Liked you, who come separately), so its list now starts with
-      // the people loaded here but not decided yet.
-      const pending = itemsRef.current.filter(p => !p.superLikedYou && !decisionsRef.current[p.id]).length;
+      // the people loaded here but not decided yet. People passed since the
+      // app opened are still in its list, so they count too.
+      const liked = (p) => ['right', 'super'].includes(decisionsRef.current[p.id]);
+      const pending = itemsRef.current.filter(p => !p.superLikedYou && !liked(p)).length;
       const offset = pending + filteredOut.current;
       const result = await profilesApi.getProfiles({
-        filters: toQueryParams(filters),
+        filters: { ...toQueryParams(filters), passedSince: visit.passedSince || undefined },
         limit: PAGE_SIZE,
         offset,
       });
+      if (!visit.passedSince && result?.serverTime) visit.passedSince = result.serverTime;
       if (gen !== generation.current) return;
       const supers = (result?.superLikers || []).filter(p => !seenIds.current.has(p.id));
       const fresh = (result?.profiles || []).filter(p => !seenIds.current.has(p.id));
       [...supers, ...fresh].forEach(p => seenIds.current.add(p.id));
+      // Passed earlier on this visit (before a filter change, say): shown
+      // again as passed, so scrolling past them doesn't send another pass
+      const passedAgain = fresh.filter(p => p.passedByYou && !decisionsRef.current[p.id]);
+      if (passedAgain.length) {
+        decisionsRef.current = { ...decisionsRef.current, ...Object.fromEntries(passedAgain.map(p => [p.id, 'left'])) };
+        setDecisions(decisionsRef.current);
+      }
       filteredOut.current += result?.filteredOut || 0;
       setItems(prev => {
         // People who Super Liked you go right after where you are now
@@ -150,7 +187,10 @@ export default function Discover() {
   }, []);
 
   useEffect(() => {
-    if (canLoad) loadMore();
+    if (!canLoad) return;
+    // Came back to a feed that's already loaded: nothing to fetch
+    if (skipFirstLoad.current) { skipFirstLoad.current = false; return; }
+    loadMore();
   }, [canLoad, loadMore]);
 
   // Top up before running out

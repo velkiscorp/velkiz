@@ -37,13 +37,20 @@ export const getProfiles = async (req, res) => {
 
     const { data: mySwipes } = await supabase
       .from('swipes')
-      .select('target_id')
+      .select('target_id, direction, created_at')
       .eq('swiper_id', currentUserId)
+
+    // Passes made since the app was opened don't hide anyone yet: those
+    // people stay in the feed (marked as passed) until the next launch
+    const since = filters.passedSince ? new Date(filters.passedSince).getTime() : null
+    const passedThisVisit = new Set((mySwipes || [])
+      .filter(s => since !== null && s.direction === 'left' && new Date(s.created_at).getTime() >= since)
+      .map(s => s.target_id))
 
     const blockedIds = [...await getBlockedUserIds(currentUserId)]
 
     const swipedIds = [...new Set([
-      ...(mySwipes?.map(s => s.target_id) || []),
+      ...(mySwipes || []).map(s => s.target_id).filter(id => !passedThisVisit.has(id)),
       ...blockedIds,
     ])]
 
@@ -129,6 +136,7 @@ export const getProfiles = async (req, res) => {
     const sanitized = kept.map(({ row, km }) => ({
       ...toPublicProfile(row),
       distance_km: km === null ? null : roundedDistance(km),
+      ...(passedThisVisit.has(row.user_id) ? { passedByYou: true } : {}),
     }))
 
     // A full page suggests there may be more; a partial page means we hit the end
@@ -137,6 +145,9 @@ export const getProfiles = async (req, res) => {
       profiles: sanitized,
       filteredOut: withDistance.length - kept.length,
       hasMore: profiles.length === limit,
+      // The app sends this back as passedSince for the rest of the visit.
+      // A minute early, so a database clock a little behind ours can't hide a pass.
+      serverTime: new Date(Date.now() - 60_000).toISOString(),
     })
 
   } catch (error) {

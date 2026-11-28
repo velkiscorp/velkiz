@@ -82,7 +82,8 @@ export default function FilterPanel({ filters, hasLocation, onApply, onClose }) 
             <div className="flex items-center gap-2">
               <select aria-label="Minimum age" className={selectClass} value={draft.minAge || ''} onChange={e => set({ minAge: num(e.target.value) })}>
                 <option value="">From 18</option>
-                {AGES.filter(a => !draft.maxAge || a <= draft.maxAge).map(a => <option key={a} value={a}>From {a}</option>)}
+                {/* 18 is the "From 18" option above */}
+                {AGES.filter(a => a > 18 && (!draft.maxAge || a <= draft.maxAge)).map(a => <option key={a} value={a}>From {a}</option>)}
               </select>
               <select aria-label="Maximum age" className={selectClass} value={draft.maxAge || ''} onChange={e => set({ maxAge: num(e.target.value) })}>
                 <option value="">Any age</option>

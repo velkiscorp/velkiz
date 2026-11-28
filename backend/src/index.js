@@ -14,6 +14,7 @@ import safetyRoutes from './routes/safety.js'
 import notificationRoutes from './routes/notifications.js'
 import callRoutes from './routes/calls.js'
 import { userRoom } from './services/calls.js'
+import { startExpirySweep } from './services/chatExpiry.js'
 import { superLikeRoutes, purchaseRoutes } from './routes/superLikes.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { supabase } from './config/supabase.js'
@@ -168,3 +169,6 @@ const PORT = process.env.PORT || 3000
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
+
+// Chats whose 36 hours are up disappear (see services/chatExpiry.js)
+startExpirySweep(io)

@@ -12,6 +12,7 @@ import ChatBubble from '../components/chat/ChatBubble';
 import EmptyState from '@/components/shared/EmptyState';
 import ChatInput from '../components/chat/ChatInput';
 import MessageActions from '../components/chat/MessageActions';
+import ChatTimerBar from '../components/chat/ChatTimerBar';
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
@@ -111,9 +112,19 @@ export default function Chat() {
       queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => ({ ...old, messages: [] }));
     });
 
-    // The other person left or blocked: this chat is gone
+    // Someone tapped Keep chat, or the 36 hours started
+    socket.on('match_updated', (payload) => {
+      if (payload?.matchId !== matchId) return;
+      queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(matchId) });
+      queryClient.invalidateQueries({ queryKey: ['matches'] });
+    });
+
+    // The other person left or blocked, or the 36 hours ran out: this chat is gone
     socket.on('match_ended', (payload) => {
       if (payload?.matchId !== matchId) return;
+      if (payload.reason === 'expired') {
+        toast({ title: 'This chat disappeared', description: "Its 36 hours ran out. You might see each other in Discover again." });
+      }
       queryClient.invalidateQueries({ queryKey: ['matches'] });
       navigate('/Messages', { replace: true });
     });
@@ -125,7 +136,7 @@ export default function Chat() {
     return () => {
       socket.disconnect();
     };
-  }, [matchId, user?.id, queryClient, navigate, removeMessage]);
+  }, [matchId, user?.id, queryClient, navigate, removeMessage, toast]);
 
   const { data: matchesData = {} } = useMatches();
 
@@ -259,6 +270,17 @@ export default function Chat() {
     }
   };
 
+  const timer = messagesData?.timer ?? match?.timer ?? null;
+  const keepChat = async () => {
+    try {
+      const { timer: next } = await matchesApi.keepChat(matchId);
+      queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => old && ({ ...old, timer: next }));
+      queryClient.invalidateQueries({ queryKey: ['matches'] });
+    } catch (err) {
+      toast({ variant: 'destructive', title: "Couldn't keep the chat", description: err?.error || 'Please try again.' });
+    }
+  };
+
   const byId = React.useMemo(() => new Map(messages.map(m => [m.id, m])), [messages]);
 
   // Swipe in from the left edge to go back, like the rest of iOS
@@ -371,6 +393,8 @@ export default function Chat() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <ChatTimerBar timer={timer} onKeep={keepChat} />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4">

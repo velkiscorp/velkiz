@@ -1,4 +1,5 @@
 import { endCallsForMatches } from '../services/calls.js'
+import { isExpired, expireMatch, timerFor, keepChat as keepChatFor } from '../services/chatExpiry.js'
 import { toPublicProfile } from '../serializers/profile.js'
 import { supabase } from '../config/supabase.js'
 import { getBlockedUserIds, blockUser as blockUserById } from '../services/blocks.js'
@@ -10,13 +11,7 @@ export const getMyMatches = async (req, res) => {
 
     const { data: matches, error } = await supabase
       .from('matches')
-      .select(`
-        id,
-        status,
-        matched_at,
-        user1_id,
-        user2_id
-      `)
+      .select('*')
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
       .eq('status', 'matched')
       .order('matched_at', { ascending: false })
@@ -28,7 +23,14 @@ export const getMyMatches = async (req, res) => {
     // Hide matches with anyone blocked either way (blocking also unmatches,
     // this is a safety net for older rows)
     const blocked = await getBlockedUserIds(userId)
-    const visibleMatches = matches.filter(m =>
+    const io = req.app?.get?.('io')
+    const live = []
+    for (const m of matches) {
+      // Chats whose 36 hours ran out disappear (the sweep usually got there first)
+      if (isExpired(m)) { await expireMatch(m, io); continue }
+      live.push(m)
+    }
+    const visibleMatches = live.filter(m =>
       !blocked.has(m.user1_id === userId ? m.user2_id : m.user1_id)
     )
 
@@ -57,7 +59,8 @@ export const getMyMatches = async (req, res) => {
           matchedWith: toPublicProfile(profilesById.get(otherId(match)), { level: 'match' })
             || { id: otherId(match), username: null, photos: [] },
           lastMessage: lastMessage || null,
-          hasUnread: !!lastMessage && lastMessage.sender_id !== userId && !lastMessage.read_at
+          hasUnread: !!lastMessage && lastMessage.sender_id !== userId && !lastMessage.read_at,
+          timer: timerFor(match, userId),
         }
       })
     )
@@ -204,5 +207,37 @@ export const blockUser = async (req, res) => {
   } catch (error) {
     console.error('Block user error:', error)
     res.status(500).json({ error: 'Failed to block user' })
+  }
+}
+
+// POST /api/matches/:matchId/keep
+// "Keep chat": once both of you tap it, the chat never disappears
+export const keepChat = async (req, res) => {
+  try {
+    const { matchId } = req.params
+    const userId = req.user.id
+    const { data: match } = await supabase
+      .from('matches')
+      .select('*')
+      .eq('id', matchId)
+      .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+      .single()
+
+    if (!match || match.status !== 'matched') {
+      return res.status(404).json({ error: 'Match not found' })
+    }
+    if (isExpired(match)) {
+      await expireMatch(match, req.app.get('io'))
+      return res.status(404).json({ error: 'This chat disappeared', code: 'CHAT_EXPIRED' })
+    }
+    if (!('user1_keeps' in match)) {
+      return res.status(503).json({ error: 'Keeping chats is not set up yet' })
+    }
+
+    const updated = await keepChatFor(match, userId, req.app.get('io'))
+    res.json({ timer: timerFor(updated, userId) })
+  } catch (error) {
+    console.error('Keep chat error:', error)
+    res.status(500).json({ error: 'Failed to keep chat' })
   }
 }

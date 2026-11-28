@@ -97,6 +97,10 @@ export const discoverQuery = z.object({
   showMe: csv(z.enum(GENDERS), GENDERS.length),
   limit: z.coerce.number().int().min(1).max(50).optional().default(20),
   offset: z.coerce.number().int().min(0).max(10000).optional().default(0),
+  // When the app was opened (the server's own time from the first page).
+  // People you passed since then stay in the list, so moving around the app
+  // or changing filters doesn't make them vanish; they're hidden next launch.
+  passedSince: z.string().datetime({ offset: true }).optional(),
 })
 
 export const idParams = z.object({ id: uuid })

@@ -101,7 +101,7 @@ export const PRIVACY_POLICY = {
     },
     {
       h: 'How long we keep it',
-      p: [`We keep your information while your account is open. When you delete your account in Settings, we permanently delete your profile, photos, matches, messages, likes, blocks and login straight away. Copies may remain in encrypted backups for up to 30 days before they are overwritten. We may keep limited records longer where the law requires it or to deal with a safety report about your account.`],
+      p: [`We keep your information while your account is open. Chats disappear on their own: 36 hours after you have both opened a chat, the match, its messages, photos, videos and voice messages are permanently deleted, unless you both choose to keep the chat. Unsent messages and deleted chats are deleted for both of you straight away. When you delete your account in Settings, we permanently delete your profile, photos, matches, messages, likes, blocks and login straight away. Copies may remain in encrypted backups for up to 30 days before they are overwritten. We may keep limited records longer where the law requires it or to deal with a safety report about your account.`],
     },
     {
       h: 'Your choices and rights',
