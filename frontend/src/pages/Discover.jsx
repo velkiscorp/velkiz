@@ -1,69 +1,72 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
 import { AnimatePresence } from 'framer-motion';
-import { X, Heart, Star, Undo2, Clock, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import EmptyState, { emptyCtaClass } from '@/components/shared/EmptyState';
-import { Button } from "@/components/ui/button";
-import SwipeCard from '../components/discover/SwipeCard';
+import FeedCard from '../components/discover/FeedCard';
 import MatchModal from '../components/discover/MatchModal';
 import MatchBanner from '../components/discover/MatchBanner';
 import DiscoverFilters from '../components/discover/DiscoverFilters';
 import ProfileViewModal from '../components/profile/ProfileViewModal';
+import SuperLikeSheet from '../components/discover/SuperLikeSheet';
+import SuperLikeComposer from '../components/discover/SuperLikeComposer';
+import SuperLikeBurst from '../components/discover/SuperLikeBurst';
+import FilterPanel from '../components/discover/FilterPanel';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { profilesApi } from '@/api/profiles';
 import { swipesApi } from '@/api/swipes';
 import { getMatchAnimationsEnabled } from '@/lib/preferences';
 import { useMyProfile, useRefresh, useSuperLikes } from '@/api/queries';
-import SuperLikeSheet from '../components/discover/SuperLikeSheet';
-import FilterPanel from '../components/discover/FilterPanel';
 import { loadFilters, saveFilters, toQueryParams } from '@/lib/discoverFilters';
 import { geocodeCity } from '@/lib/geocode';
 
 const PAGE_SIZE = 20;
-// Load the next batch once only this many cards are left
+// Load the next batch once only this many people are left below
 const LOW_WATER = 5;
-// When the deck is empty, look for newly joined people this often
+// At the end of the feed, look for newly joined people this often
 const EMPTY_POLL_MS = 60_000;
+// After a like, move on to the next person after this long
+const ADVANCE_MS = 650;
 
+// Discover is a vertical feed, one person per screen, like Reels.
+// Scroll down to move on (that counts as a pass), swipe sideways for their
+// photos and details, tap the heart (or double-tap a photo) to like.
+// You can scroll back up and like someone you passed.
 export default function Discover() {
-  // The cards still to decide on, top card first. Swiped cards are removed
-  // from here locally instead of refetching the whole list.
-  const [deck, setDeck] = useState([]);
+  const [items, setItems] = useState([]);
+  // id -> 'left' | 'right' | 'super' for people decided on this visit
+  const [decisions, setDecisions] = useState({});
+  const [busyId, setBusyId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [index, setIndex] = useState(0);
   const [matchPopup, setMatchPopup] = useState(null);
-  // Last action that can be undone: { type: 'swipe' | 'skip', profile, matched }
-  const [lastAction, setLastAction] = useState(null);
-  const [isUndoing, setIsUndoing] = useState(false);
-  const [animDir, setAnimDir] = useState(null);
   const [filters, setFilters] = useState(loadFilters);
   const [panelOpen, setPanelOpen] = useState(false);
   const [previewProfile, setPreviewProfile] = useState(null);
   const [superSheetOpen, setSuperSheetOpen] = useState(false);
+  const [composeFor, setComposeFor] = useState(null);
+  const [burst, setBurst] = useState(false);
   const { data: superLikes } = useSuperLikes();
   const navigate = useNavigate();
   const refresh = useRefresh();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Profiles skipped with "decide later" this visit. The server still returns
-  // them (nothing was recorded), so they're hidden here and counted in the offset.
-  const skippedIds = useRef(new Set());
-  // Every id loaded for the current filter, to drop duplicates between pages
+  const feedRef = useRef(null);
   const seenIds = useRef(new Set());
-  // Bumped on filter change / refresh so late responses for the old deck are ignored
   const generation = useRef(0);
   const fetching = useRef(false);
-  // Profiles the server skipped for being outside your distance (see loadMore)
   const filteredOut = useRef(0);
-  const deckRef = useRef(deck);
-  deckRef.current = deck;
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const decisionsRef = useRef(decisions);
+  decisionsRef.current = decisions;
+  const indexRef = useRef(0);
 
   const { data: myProfileData } = useMyProfile();
-
   const myProfile = myProfileData?.profile;
   const canLoad = !!user?.id && !!myProfile?.onboarding_complete;
   const hasLocation = myProfile?.location_lat != null && myProfile?.location_lng != null;
@@ -95,22 +98,27 @@ export default function Discover() {
     setIsFetching(true);
     const gen = generation.current;
     try {
-      // The server leaves out everyone already swiped, so the profiles it would
-      // still return before the next page are exactly the ones loaded but not
-      // swiped yet: the cards in the deck plus the ones skipped for later.
-      // Plus the ones the server skipped for being outside your distance:
-      // they're still in its list, just not shown.
-      const offset = deckRef.current.length + skippedIds.current.size + filteredOut.current;
+      // The server leaves out everyone already decided on (and people who
+      // Super Liked you, who come separately), so its list now starts with
+      // the people loaded here but not decided yet.
+      const pending = itemsRef.current.filter(p => !p.superLikedYou && !decisionsRef.current[p.id]).length;
+      const offset = pending + filteredOut.current;
       const result = await profilesApi.getProfiles({
         filters: toQueryParams(filters),
         limit: PAGE_SIZE,
         offset,
       });
       if (gen !== generation.current) return;
+      const supers = (result?.superLikers || []).filter(p => !seenIds.current.has(p.id));
       const fresh = (result?.profiles || []).filter(p => !seenIds.current.has(p.id));
-      fresh.forEach(p => seenIds.current.add(p.id));
+      [...supers, ...fresh].forEach(p => seenIds.current.add(p.id));
       filteredOut.current += result?.filteredOut || 0;
-      setDeck(prev => [...prev, ...fresh]);
+      setItems(prev => {
+        // People who Super Liked you go right after where you are now
+        if (!supers.length) return [...prev, ...fresh];
+        const at = Math.min(prev.length, indexRef.current + (prev.length ? 1 : 0));
+        return [...prev.slice(0, at), ...supers, ...prev.slice(at), ...fresh];
+      });
       setHasMore(!!result?.hasMore);
     } catch {
       if (gen !== generation.current) return;
@@ -125,35 +133,35 @@ export default function Discover() {
     }
   }, [filters, toast]);
 
-  // Start a fresh deck. keepSkipped=false lets "decide later" people come back.
-  const resetDeck = useCallback(({ keepSkipped = false } = {}) => {
+  const resetFeed = useCallback(() => {
     generation.current += 1;
     fetching.current = false;
-    if (!keepSkipped) skippedIds.current = new Set();
-    seenIds.current = new Set(skippedIds.current);
+    seenIds.current = new Set();
     filteredOut.current = 0;
-    deckRef.current = [];
-    setDeck([]);
+    itemsRef.current = [];
+    decisionsRef.current = {};
+    indexRef.current = 0;
+    setItems([]);
+    setDecisions({});
+    setIndex(0);
     setHasMore(true);
     setIsLoading(true);
-    setLastAction(null);
+    feedRef.current?.scrollTo({ top: 0 });
   }, []);
 
-  // First load, and a new deck whenever the filter changes
   useEffect(() => {
     if (canLoad) loadMore();
   }, [canLoad, loadMore]);
 
-  // Top up before running out, so the next card is always ready
+  // Top up before running out
   useEffect(() => {
-    if (canLoad && hasMore && !isLoading && deck.length < LOW_WATER) loadMore();
-  }, [canLoad, hasMore, isLoading, deck.length, loadMore]);
+    if (canLoad && hasMore && !isLoading && items.length - index < LOW_WATER) loadMore();
+  }, [canLoad, hasMore, isLoading, items.length, index, loadMore]);
 
-  // With nothing left, check now and then (and when the app regains focus)
-  // for people who joined since, so they show up without a reload
-  const deckEmpty = !isLoading && deck.length === 0;
+  // At the end, check now and then for people who joined since
+  const atEnd = !isLoading && index >= items.length;
   useEffect(() => {
-    if (!canLoad || !deckEmpty) return;
+    if (!canLoad || !atEnd) return;
     const check = () => { if (!fetching.current) loadMore(); };
     const timer = setInterval(check, EMPTY_POLL_MS);
     const onVisible = () => { if (document.visibilityState === 'visible') check(); };
@@ -164,209 +172,184 @@ export default function Discover() {
       window.removeEventListener('focus', check);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [canLoad, deckEmpty, loadMore]);
+  }, [canLoad, atEnd, loadMore]);
 
-  const swipeMutation = useMutation({
-    mutationFn: ({ profile, direction }) => swipesApi.swipe(profile.id, direction),
-    onSuccess: (result, { profile, direction }) => {
-      setDeck(prev => prev.filter(p => p.id !== profile.id));
-      setLastAction({ type: 'swipe', profile, matched: !!result.matched });
-      setAnimDir(null);
+  const setDecision = (id, d) => {
+    decisionsRef.current = { ...decisionsRef.current, [id]: d };
+    setDecisions(decisionsRef.current);
+  };
+  const clearDecision = (id) => {
+    const next = { ...decisionsRef.current };
+    delete next[id];
+    decisionsRef.current = next;
+    setDecisions(next);
+  };
+
+  const scrollToIndex = (i) => {
+    const el = feedRef.current;
+    if (el) el.scrollTo({ top: i * el.clientHeight, behavior: 'smooth' });
+  };
+
+  // Scrolling past someone without liking them is a pass
+  const pass = useCallback(async (profile) => {
+    if (!profile || decisionsRef.current[profile.id]) return;
+    setDecision(profile.id, 'left');
+    try {
+      await swipesApi.swipe(profile.id, 'left');
+    } catch (err) {
+      if (err?.error === 'Already swiped this user') return;
+      // Not recorded: they'll simply show up again another time
+      clearDecision(profile.id);
+    }
+  }, []);
+
+  const onFeedScroll = () => {
+    const el = feedRef.current;
+    if (!el || !el.clientHeight) return;
+    const i = Math.round(el.scrollTop / el.clientHeight);
+    if (i === indexRef.current) return;
+    if (i > indexRef.current) pass(itemsRef.current[indexRef.current]);
+    indexRef.current = i;
+    setIndex(i);
+  };
+
+  // Like or Super Like. A pass from earlier is taken back first.
+  const decide = async (profile, direction, message) => {
+    if (!profile || busyId) return;
+    const before = decisionsRef.current[profile.id];
+    if (before === 'right' || before === 'super') return;
+    setBusyId(profile.id);
+    setDecision(profile.id, direction);
+    try {
+      if (before === 'left') await swipesApi.undo(profile.id).catch(() => {});
+      const result = await swipesApi.swipe(profile.id, direction, message);
       if (direction === 'super') refresh.superLikes();
       if (result.matched) {
         setMatchPopup(result.match);
         refresh.matchesAndLikes();
+      } else {
+        // Move on to the next person, like a reel
+        const i = itemsRef.current.findIndex(p => p.id === profile.id);
+        if (i === indexRef.current) setTimeout(() => scrollToIndex(i + 1), ADVANCE_MS);
       }
-    },
-    onError: (err, { profile }) => {
-      setAnimDir(null);
-      // Out of Super Likes: the card stays, show how to get more
+    } catch (err) {
+      if (before) setDecision(profile.id, before); else clearDecision(profile.id);
       if (err?.code === 'NO_SUPER_LIKES') {
         refresh.superLikes();
         setSuperSheetOpen(true);
         return;
       }
-      // Already swiped (e.g. on another device) or no longer available
-      // (blocked / deleted): nothing to decide, so just drop the card
-      if (err?.error === 'Already swiped this user' || err?.error === 'User not found') {
-        setDeck(prev => prev.filter(p => p.id !== profile.id));
+      if (err?.error === 'User not found') {
+        removeProfile(profile.id);
         return;
       }
-      // Swipe wasn't recorded: the card stays put instead of silently vanishing
-      toast({ title: "Swipe didn't go through", description: err?.error || 'Please try again.', variant: 'destructive' });
-    },
-  });
-
-  const handleSwipe = (direction) => {
-    const profile = deck[0];
-    if (!profile || swipeMutation.isPending || isUndoing) return;
-    if (direction === 'super' && superLikes && superLikes.total < 1) {
-      setSuperSheetOpen(true);
-      return;
+      toast({ title: "That didn't go through", description: err?.error || 'Please try again.', variant: 'destructive' });
+    } finally {
+      setBusyId(null);
     }
-    setAnimDir(direction);
-    swipeMutation.mutate({ profile, direction });
   };
 
-  const handleSkip = () => {
-    const profile = deck[0];
-    if (!profile || swipeMutation.isPending || isUndoing) return;
-    setAnimDir('skip');
-    // Intentionally no API call and nothing recorded - unlike a real swipe,
-    // this profile isn't excluded server-side, so it naturally reappears
-    // next time Discover is loaded fresh (reload, reopening the app, Refresh)
-    setTimeout(() => {
-      skippedIds.current.add(profile.id);
-      setDeck(prev => prev.filter(p => p.id !== profile.id));
-      setLastAction({ type: 'skip', profile });
-      setAnimDir(null);
-    }, 250);
+  const startSuper = (profile) => {
+    if (superLikes && superLikes.total < 1) { setSuperSheetOpen(true); return; }
+    setComposeFor(profile);
   };
 
-  // Blocked from the profile sheet: drop them from the deck for good
+  const sendSuper = (message) => {
+    const profile = composeFor;
+    setComposeFor(null);
+    setBurst(true);
+    decide(profile, 'super', message);
+  };
+
+  const removeProfile = (id) => {
+    setItems(prev => prev.filter(p => p.id !== id));
+  };
+
+  // Blocked from the profile sheet: gone for good
   const handleBlocked = (profile) => {
     setPreviewProfile(null);
-    skippedIds.current.delete(profile.id);
-    setDeck(prev => prev.filter(p => p.id !== profile.id));
-    if (lastAction?.profile?.id === profile.id) setLastAction(null);
+    removeProfile(profile.id);
     toast({ title: `${profile.username || 'They'} won't appear again` });
-  };
-
-  const handleUndo = async () => {
-    if (!lastAction || isUndoing || swipeMutation.isPending) return;
-    const { type, profile } = lastAction;
-    const gen = generation.current;
-
-    if (type === 'swipe') {
-      setIsUndoing(true);
-      try {
-        await swipesApi.undo(profile.id);
-      } catch (err) {
-        toast({ title: "Couldn't undo", description: err?.error || 'Please try again.', variant: 'destructive' });
-        setIsUndoing(false);
-        return;
-      }
-      setIsUndoing(false);
-    } else {
-      skippedIds.current.delete(profile.id);
-    }
-
-    if (gen !== generation.current) return;
-    setDeck(prev => [profile, ...prev.filter(p => p.id !== profile.id)]);
-    setLastAction(null);
   };
 
   const handleFilterChange = (next) => {
     setPanelOpen(false);
     if (JSON.stringify(next) === JSON.stringify(filters)) return;
     saveFilters(next);
-    resetDeck();
+    resetFeed();
     setFilters(next);
   };
 
   const handleRefresh = () => {
-    resetDeck();
+    resetFeed();
     loadMore();
   };
 
-  const visibleProfiles = deck.slice(0, 3);
-  const hasProfiles = visibleProfiles.length > 0;
-  // A swipe that made a match can't be undone (the server refuses), so don't offer it
-  const canUndo = !!lastAction && !lastAction.matched && !isUndoing && !swipeMutation.isPending;
-
   return (
-    <div className="h-app flex flex-col gap-2 pt-3 px-4">
+    <div className="h-app flex flex-col gap-2 pt-3 px-4 pb-3">
       <DiscoverFilters filters={filters} onChange={handleFilterChange} onOpenPanel={() => setPanelOpen(true)} />
 
-      <div className="flex-1 min-h-0 relative mt-4">
+      <div className="flex-1 min-h-0 relative mt-2">
         {isLoading ? (
           <div className="w-full h-full rounded-md bg-secondary animate-pulse" />
-        ) : hasProfiles ? (
-          <AnimatePresence>
-            {[...visibleProfiles].reverse().map((profile, reversedIdx) => {
-              const stackIdx = visibleProfiles.length - 1 - reversedIdx;
-              const isTop = stackIdx === 0;
-              const scale = 1 - stackIdx * 0.04;
-              // Cards behind peek out above the top one, never down over the buttons
-              const translateY = -stackIdx * 8;
-              return (
-                <div
-                  key={profile.id}
-                  className="absolute inset-0"
-                  style={{
-                    transform: `scale(${scale}) translateY(${translateY}px)`,
-                    zIndex: isTop ? 10 : 10 - stackIdx,
-                    transformOrigin: 'center top',
-                  }}
-                >
-                  <SwipeCard
-                    profile={profile}
-                    isTop={isTop}
-                    swipeDir={isTop ? animDir : null}
-                    onSwipe={handleSwipe}
-                    onTapInfo={isTop ? () => setPreviewProfile(profile) : undefined}
-                  />
-                </div>
-              );
-            })}
-          </AnimatePresence>
         ) : (
-          <EmptyState
-            drawing="moon"
-            title="The night is quiet, for now"
-            className="h-full"
-            action={
-              <>
-                <button className={emptyCtaClass} onClick={handleRefresh} disabled={isFetching}>
-                  <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
-                {lastAction && !lastAction.matched && (
-                  <Button variant="ghost" size="sm" className="rounded-full text-muted-foreground" onClick={handleUndo} disabled={!canUndo}>
-                    <Undo2 className="w-4 h-4 mr-2" />
-                    Undo last
-                  </Button>
-                )}
-              </>
-            }
+          <div
+            ref={feedRef}
+            onScroll={onFeedScroll}
+            className="absolute inset-0 overflow-y-auto snap-y snap-mandatory no-scrollbar overscroll-contain rounded-md"
           >
-            {skippedIds.current.size > 0
-              ? 'Refresh to see the people you skipped, or try another filter.'
-              : 'New people arrive all the time. Try another filter or check back later.'}
-          </EmptyState>
+            {items.map((profile, i) => (
+              <div key={profile.id} className="h-full snap-start snap-always pb-2">
+                {Math.abs(i - index) <= 2 ? (
+                  <FeedCard
+                    profile={profile}
+                    decision={decisions[profile.id]}
+                    busy={busyId === profile.id}
+                    superLeft={superLikes?.total}
+                    onLike={() => decide(profile, 'right')}
+                    onSuper={() => startSuper(profile)}
+                    onInfo={() => setPreviewProfile(profile)}
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-md bg-card" />
+                )}
+              </div>
+            ))}
+            <div className="h-full snap-start snap-always">
+              {isFetching && hasMore ? (
+                <div className="w-full h-full rounded-md bg-secondary animate-pulse" />
+              ) : (
+                <EmptyState
+                  drawing="moon"
+                  title={items.length ? "That's everyone for now" : 'The night is quiet, for now'}
+                  className="h-full"
+                  action={
+                    <button className={emptyCtaClass} onClick={handleRefresh} disabled={isFetching}>
+                      <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+                      Refresh
+                    </button>
+                  }
+                >
+                  New people arrive all the time. Try another filter or check back later.
+                </EmptyState>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
-      {hasProfiles && (
-        <div className="relative z-20 flex items-center justify-center gap-2.5 pt-1 pb-2 shrink-0">
-          <Button size="lg" className="w-11 h-11 p-0 [&_svg]:size-5 rounded-full bg-gradient-to-b from-gold to-[hsl(37_40%_60%)] border border-gold/60 shadow-[0_0_14px_hsl(37_45%_74%/0.35)] hover:brightness-110 disabled:opacity-40" onClick={handleUndo} disabled={!canUndo} title="Undo last" aria-label="Undo last">
-            <Undo2 className="w-5 h-5 text-primary" strokeWidth={2.5} />
-          </Button>
-          <Button size="lg" variant="outline" className="w-11 h-11 p-0 [&_svg]:size-5 rounded-full border-border/50 hover:bg-secondary" onClick={handleSkip} disabled={swipeMutation.isPending || isUndoing} title="Not sure yet - decide later">
-            <Clock className="w-5 h-5 text-muted-foreground" />
-          </Button>
-          <Button size="lg" variant="outline" className="w-14 h-14 p-0 [&_svg]:size-6 rounded-full border border-white/25 bg-black/30 hover:bg-white/5" onClick={() => handleSwipe('left')} aria-label="Pass" disabled={swipeMutation.isPending || isUndoing}>
-            <X className="w-6 h-6 text-foreground/70" />
-          </Button>
-          <Button size="lg" className="w-[72px] h-[72px] p-0 [&_svg]:size-7 rounded-full bg-gradient-to-b from-primary to-accent border border-gold/30 shadow-lg animate-pulse-glow" onClick={() => handleSwipe('right')} aria-label="Like" disabled={swipeMutation.isPending || isUndoing}>
-            <Heart className="w-7 h-7 text-primary-foreground" fill="currentColor" />
-          </Button>
-          <div className="relative">
-            <Button size="lg" className="w-14 h-14 p-0 [&_svg]:size-6 rounded-full bg-gradient-to-b from-gold to-[hsl(37_40%_60%)] border border-gold/60 shadow-[0_0_18px_hsl(37_45%_74%/0.4)] hover:brightness-110" onClick={() => handleSwipe('super')} disabled={swipeMutation.isPending || isUndoing} aria-label="Super Like">
-              <Star className="w-6 h-6 text-primary" fill="currentColor" />
-            </Button>
-            {superLikes && (
-              <button
-                onClick={() => setSuperSheetOpen(true)}
-                aria-label={`${superLikes.total} Super Likes left`}
-                className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold ring-2 ring-background flex items-center justify-center shadow"
-              >
-                {superLikes.total}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {composeFor && (
+          <SuperLikeComposer
+            profile={composeFor}
+            remaining={superLikes?.total}
+            onSend={sendSuper}
+            onClose={() => setComposeFor(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {burst && <SuperLikeBurst onDone={() => setBurst(false)} />}
 
       <AnimatePresence>
         {superSheetOpen && <SuperLikeSheet onClose={() => setSuperSheetOpen(false)} />}
@@ -406,8 +389,8 @@ export default function Discover() {
         <ProfileViewModal
           profile={previewProfile}
           onClose={() => setPreviewProfile(null)}
-          onLike={() => { setPreviewProfile(null); handleSwipe('right'); }}
-          onSuper={() => { setPreviewProfile(null); handleSwipe('super'); }}
+          onLike={() => { const p = previewProfile; setPreviewProfile(null); decide(p, 'right'); }}
+          onSuper={() => { const p = previewProfile; setPreviewProfile(null); startSuper(p); }}
           onBlocked={() => handleBlocked(previewProfile)}
         />
       )}

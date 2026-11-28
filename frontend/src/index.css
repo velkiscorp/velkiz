@@ -75,6 +75,9 @@
     height: calc(100vh - 7.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     height: calc(100dvh - 7.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
+  /* Scrolls, but without a visible scrollbar (Discover feed, photo pager) */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
   /* A slow band of satin light that slides across an element */
   .silk-sheen {
     position: relative;

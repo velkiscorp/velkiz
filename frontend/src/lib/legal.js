@@ -44,7 +44,7 @@ export const PRIVACY_POLICY = {
         'Account details: your email address and password (the password is stored only as a secure hash by our login provider). If you use Sign in with Apple, we get an email address from Apple instead, which can be a private relay address if you choose "Hide My Email", and no password.',
         'Date of birth, used to confirm you are 18 or older and to show your age if you choose. We never show your date of birth itself.',
         'Profile details you choose to add: username, gender, sexual orientation, what you are looking for, height, whether you are a couple, bio, interests, prompt answers and photos.',
-        'Messages you send to your matches.',
+        'Messages, photos, videos and voice messages you send to your matches. Photos are re-saved on your phone before sending, which removes hidden details like where they were taken.',
         'Voice and video calls with your matches: when a call happened, whether it was answered and how long it lasted. We never record calls, and the sound and video are not stored anywhere.',
         'Your likes, passes, matches, blocks and any reports you make.',
         'Messages you send to our support team.',

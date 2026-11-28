@@ -28,6 +28,7 @@ import { getAccessToken } from '@/api/client';
 import { onScreenshot } from '@/lib/native';
 import { useMatches, useChatMessages, queryKeys } from '@/api/queries';
 import { useCalls } from '@/lib/calls';
+import { preparePhoto, videoDuration, primeChatMedia, forgetChatMedia, MAX_VIDEO_BYTES } from '@/lib/chatMedia';
 
 export default function Chat() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -201,7 +202,44 @@ export default function Chat() {
     setReplyingTo(null);
   };
 
+  const [sendingMedia, setSendingMedia] = useState(false);
+  const mediaError = (description) => toast({ variant: 'destructive', title: "Couldn't send", description });
+
+  const sendMedia = async (file, { duration } = {}) => {
+    const replyToId = replyingTo?.id;
+    setSendingMedia(true);
+    try {
+      let blob = file;
+      let length = duration;
+      if (file.type.startsWith('image/')) {
+        blob = await preparePhoto(file);
+      } else if (file.type.startsWith('video/')) {
+        if (file.size > MAX_VIDEO_BYTES) {
+          mediaError('Videos can be up to 25 MB, about a minute long.');
+          return;
+        }
+        length = await videoDuration(file);
+      } else if (!file.type.startsWith('audio/')) {
+        mediaError('You can send photos, videos and voice messages.');
+        return;
+      }
+      const { message } = await messagesApi.sendMedia(matchId, blob, { replyToId, duration: length });
+      primeChatMedia(message.id, blob);
+      setReplyingTo(null);
+      queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => {
+        const existing = old?.messages || [];
+        if (existing.some(m => m.id === message.id)) return old;
+        return { ...old, messages: [...existing, message] };
+      });
+    } catch (err) {
+      mediaError(err?.error || err?.message || 'Please try again.');
+    } finally {
+      setSendingMedia(false);
+    }
+  };
+
   const unsend = async (message) => {
+    forgetChatMedia(message.id);
     removeMessage(message.id);
     try {
       await messagesApi.unsend(matchId, message.id);
@@ -354,7 +392,14 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
-      <ChatInput onSend={handleSend} replyingTo={replyingTo} onCancelReply={() => setReplyingTo(null)} />
+      <ChatInput
+        onSend={handleSend}
+        onSendMedia={sendMedia}
+        sendingMedia={sendingMedia}
+        onError={mediaError}
+        replyingTo={replyingTo}
+        onCancelReply={() => setReplyingTo(null)}
+      />
 
       <MessageActions
         message={actionsFor}

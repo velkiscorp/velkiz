@@ -118,7 +118,9 @@ export const acceptTermsBody = z.object({
 export const swipeBody = z.object({
   targetId: uuid,
   direction: z.enum(['left', 'right', 'super']),
-})
+  // Only with a Super Like: a short note they see with it
+  message: z.string().trim().max(200, 'Keep it under 200 characters').optional(),
+}).refine(b => !b.message || b.direction === 'super', { message: 'Only a Super Like can carry a message', path: ['message'] })
 
 export const targetIdParams = z.object({ targetId: uuid })
 
@@ -133,6 +135,12 @@ export const sendMessageBody = z.object({
 })
 
 export const messageIdParams = z.object({ matchId: uuid, messageId: uuid })
+
+export const sendMediaQuery = z.object({
+  replyToId: uuid.optional(),
+  // Seconds, for videos and voice messages
+  duration: z.coerce.number().min(0).max(600).optional(),
+})
 
 // ---- calls ----
 export const callIdParams = z.object({ callId: uuid })

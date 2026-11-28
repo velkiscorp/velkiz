@@ -3,6 +3,7 @@ import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { ShieldAlert, Camera, Phone, Video, PhoneMissed, Reply } from 'lucide-react';
 import { splitPhoneNumbers, maskPhoneNumber } from '@/lib/phone';
 import { useUnits } from '@/lib/units';
+import MediaContent from './MediaContent';
 
 const LONG_PRESS_MS = 450;
 const REPLY_SWIPE_PX = 56;
@@ -39,6 +40,21 @@ export default function ChatBubble({ message, isMine, replyTo, onReply, onHold }
           {message.created_at && <span className="text-muted-foreground/60">· {units.time(message.created_at)}</span>}
         </p>
       </div>
+    );
+  }
+
+  if (['image', 'video', 'audio'].includes(message.kind)) {
+    return (
+      <TextBubble message={message} isMine={isMine} replyTo={replyTo} onReply={onReply} onHold={onHold}>
+        <div className={`flex ${isMine ? 'justify-end' : ''}`}>
+          <MediaContent message={message} isMine={isMine} />
+        </div>
+        <div className={`flex items-center gap-2 px-1 ${isMine ? 'justify-end' : ''}`}>
+          <span className="text-[10px] text-muted-foreground tracking-wider uppercase">
+            {units.time(message.created_at)}
+          </span>
+        </div>
+      </TextBubble>
     );
   }
 

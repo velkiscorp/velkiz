@@ -53,6 +53,7 @@ create table public.swipes (
   swiper_id uuid not null,
   target_id uuid not null,
   direction text not null,
+  message text, -- optional note sent with a Super Like (200 characters max)
   created_at timestamp with time zone default now()
 );
 
@@ -70,8 +71,11 @@ create table public.messages (
   sender_id uuid not null,
   content text not null,
   is_filtered boolean default false,
-  kind text not null default 'text', -- 'text', 'screenshot' for a screenshot alert, or 'call' for a call line
+  kind text not null default 'text', -- 'text'; 'image', 'video', 'audio' for media; 'screenshot' alert; 'call' line
   reply_to_id uuid, -- the message this one replies to, if any
+  media_path text, -- photo, video or voice message: its file in the private chat-media bucket
+  media_type text,
+  media_duration real, -- seconds, for video and voice
   read_at timestamp with time zone,
   created_at timestamp with time zone default now()
 );
@@ -125,6 +129,7 @@ create unique index profiles_username_lower_key on public.profiles using btree (
 -- swipes: one per person per target
 alter table public.swipes add constraint swipes_direction_check check (direction = any (array['left'::text, 'right'::text, 'super'::text]));
 alter table public.swipes add constraint swipes_swiper_id_target_id_key unique (swiper_id, target_id);
+alter table public.swipes add constraint swipes_message_check check (message is null or (direction = 'super' and char_length(message) <= 200));
 
 -- matches: one per pair, whichever order the two people are stored in
 alter table public.matches add constraint matches_status_check check (status = any (array['matched'::text, 'unmatched'::text]));
@@ -135,7 +140,7 @@ create unique index matches_one_per_pair on public.matches using btree (least(us
 alter table public.blocked_users add constraint blocked_users_blocker_id_blocked_id_key unique (blocker_id, blocked_id);
 
 -- messages: a normal message or a screenshot alert
-alter table public.messages add constraint messages_kind_check check (kind = any (array['text', 'screenshot', 'call']));
+alter table public.messages add constraint messages_kind_check check (kind = any (array['text', 'screenshot', 'call', 'image', 'video', 'audio']));
 
 -- device tokens: one row per phone
 alter table public.device_tokens add constraint device_tokens_token_key unique (token);

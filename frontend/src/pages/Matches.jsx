@@ -57,7 +57,9 @@ export default function Matches() {
           {likes.map(profile => (
             <div
               key={profile.id}
-              className={`flex items-center gap-3 p-3 rounded-2xl bg-card border ${profile.superLiked ? 'border-gold/60' : 'border-border/50'}`}
+              className={`flex items-center gap-3 p-3 rounded-2xl border ${profile.superLiked
+                ? 'bg-gradient-to-r from-gold/15 via-card to-card border-gold/70 shadow-[0_0_20px_-6px_hsl(37_60%_60%/0.6)]'
+                : 'bg-card border-border/50'}`}
             >
               <button
                 onClick={() => setPreviewProfile(profile)}
@@ -66,7 +68,7 @@ export default function Matches() {
                 <ProfileAvatar
                   photoUrl={profile.photos?.[0]?.url}
                   username={profile.username}
-                  className="w-14 h-14 rounded-full object-cover ring-2 ring-accent/40"
+                  className={`w-14 h-14 rounded-full object-cover ring-2 ${profile.superLiked ? 'ring-gold' : 'ring-accent/40'}`}
                   textClassName="text-xl"
                 />
               </button>
@@ -84,7 +86,11 @@ export default function Matches() {
                 <p className="text-xs text-muted-foreground">
                   {profile.age && `${profile.age} · `}{profile.city || profile.country}
                 </p>
-                {profile.bio && (
+                {profile.superLikeMessage ? (
+                  <p className="text-xs text-white/90 mt-1 px-2.5 py-1.5 rounded-xl rounded-tl-sm bg-black/30 border border-gold/30 line-clamp-2">
+                    “{profile.superLikeMessage}”
+                  </p>
+                ) : profile.bio && (
                   <p className="text-xs text-muted-foreground truncate mt-0.5">{profile.bio}</p>
                 )}
               </button>

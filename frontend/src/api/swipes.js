@@ -1,8 +1,9 @@
 import apiClient from './client.js'
 
 export const swipesApi = {
-  swipe: async (targetId, direction) => {
-    return await apiClient.post('/api/swipes', { targetId, direction })
+  // message: optional note, only with a Super Like
+  swipe: async (targetId, direction, message) => {
+    return await apiClient.post('/api/swipes', message ? { targetId, direction, message } : { targetId, direction })
   },
 
   undo: async (targetId) => {

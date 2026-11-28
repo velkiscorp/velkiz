@@ -13,7 +13,7 @@ const fake = createFakeSupabase((q) => {
   if (q.table === 'messages' && q.op === 'delete') {
     db.deletes.push(q.filters)
     const mine = filterValue(q, 'eq', 'sender_id')
-    return { data: mine === undefined || mine === db.senderOfMsg ? [{ id: MSG }] : [], error: null }
+    return { data: mine === undefined || mine === db.senderOfMsg ? [{ id: MSG, media_path: db.mediaPath ?? null }] : [], error: null }
   }
   if (q.table === 'messages' && q.op === 'select' && q.single) return { data: db.original, error: null }
   if (q.table === 'messages' && q.op === 'insert') { db.inserted.push(q.payload); return { data: { id: 'new', ...q.payload }, error: null } }
@@ -21,20 +21,28 @@ const fake = createFakeSupabase((q) => {
 })
 mock.module('../src/config/supabase.js', { namedExports: { supabase: fake.client, createAuthClient: () => fake.client } })
 mock.module('../src/services/push.js', { namedExports: { notifyUser: () => {} } })
-const { unsendMessage, clearChat, sendMessage } = await import('../src/controllers/messageController.js')
+const storage = { uploaded: [], removed: [] }
+fake.client.storage = { from: () => ({
+  upload: async (path, buf, opts) => { storage.uploaded.push([path, opts.contentType]); return { error: null } },
+  remove: async (paths) => { storage.removed.push(...paths); return { error: null } },
+}) }
+const { unsendMessage, clearChat, sendMessage, sendMedia } = await import('../src/controllers/messageController.js')
+const { looksLike, kindForType, baseType } = await import('../src/services/chatMedia.js')
 
 const emitted = []
 const io = { to: (room) => ({ emit: (ev, data) => emitted.push([room, ev, data]) }) }
-const call = async (handler, params, body = {}) => {
+const call = async (handler, params, body = {}, extra = {}) => {
   let status = 200, json
   const res = { status(s) { status = s; return this }, json(j) { json = j; return this } }
-  await handler({ user: { id: ME }, params, body, app: { get: () => io } }, res)
+  await handler({ user: { id: ME }, params, body, app: { get: () => io }, get: () => extra.type, validatedQuery: extra.query || {} }, res)
   return { status, json }
 }
 
 beforeEach(() => {
   db = { match: { id: MATCH, user1_id: ME, user2_id: THEM, status: 'matched' }, senderOfMsg: ME, deletes: [], inserted: [], original: { id: MSG } }
   emitted.length = 0
+  storage.uploaded.length = 0
+  storage.removed.length = 0
 })
 
 test('unsending your own message removes it for both of you', async () => {
@@ -68,4 +76,47 @@ test('a reply has to point at a message in the same chat', async () => {
   db.original = null
   const bad = await call(sendMessage, { matchId: MATCH }, { content: 'yes!', replyToId: MSG })
   assert.equal(bad.status, 400)
+})
+
+const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0])
+const M4A = Buffer.concat([Buffer.from([0, 0, 0, 0x20]), Buffer.from('ftypM4A '), Buffer.alloc(8)])
+
+test('files are checked by their first bytes, not just their name', () => {
+  assert.equal(kindForType(baseType('audio/mp4;codecs=mp4a.40.2')), 'audio')
+  assert.equal(kindForType('application/pdf'), null)
+  assert.ok(looksLike('image/jpeg', JPEG))
+  assert.ok(looksLike('audio/mp4', M4A))
+  assert.ok(!looksLike('image/png', JPEG))
+  assert.ok(!looksLike('image/jpeg', Buffer.from('<html><script>alert(1)</script>')))
+})
+
+test('a photo is stored privately under the match and sent to the chat', async () => {
+  const r = await call(sendMedia, { matchId: MATCH }, JPEG, { type: 'image/jpeg' })
+  assert.equal(r.status, 201)
+  assert.equal(storage.uploaded.length, 1)
+  assert.match(storage.uploaded[0][0], new RegExp(`^${MATCH}/[0-9a-f-]{36}\\.jpg$`))
+  assert.equal(db.inserted[0].kind, 'image')
+  assert.equal(db.inserted[0].content, 'Photo')
+  assert.equal(emitted[0][1], 'receive_message')
+})
+
+test('a voice message keeps its length', async () => {
+  const r = await call(sendMedia, { matchId: MATCH }, M4A, { type: 'audio/mp4', query: { duration: 7.5 } })
+  assert.equal(r.status, 201)
+  assert.equal(db.inserted[0].kind, 'audio')
+  assert.equal(db.inserted[0].media_duration, 7.5)
+})
+
+test('fake or unknown files are refused, and nothing is uploaded', async () => {
+  assert.equal((await call(sendMedia, { matchId: MATCH }, Buffer.from('not really a jpeg at all'), { type: 'image/jpeg' })).status, 400)
+  assert.equal((await call(sendMedia, { matchId: MATCH }, JPEG, { type: 'application/pdf' })).status, 400)
+  db.match = null
+  assert.equal((await call(sendMedia, { matchId: MATCH }, JPEG, { type: 'image/jpeg' })).status, 404)
+  assert.equal(storage.uploaded.length, 0)
+})
+
+test('unsending a photo deletes the file too', async () => {
+  db.mediaPath = `${MATCH}/x.jpg`
+  await call(unsendMessage, { matchId: MATCH, messageId: MSG })
+  assert.deepEqual(storage.removed, [`${MATCH}/x.jpg`])
 })
