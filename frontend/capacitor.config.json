@@ -30,6 +30,9 @@
       "preventScreenshots": false,
       "imageName": "Splash",
       "contentMode": "scaleAspectFill"
+    },
+    "Keyboard": {
+      "resize": "none"
     }
   }
 }
