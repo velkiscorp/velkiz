@@ -45,6 +45,7 @@ const AuthenticatedApp = () => {
         <Route path="/privacy" element={<LegalPage doc="privacy" />} />
         <Route path="/terms" element={<LegalPage doc="terms" />} />
         <Route path="/guidelines" element={<LegalPage doc="guidelines" />} />
+        <Route path="/support" element={<LegalPage doc="support" />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     )
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
       <Route path="/privacy" element={<LegalPage doc="privacy" />} />
       <Route path="/terms" element={<LegalPage doc="terms" />} />
       <Route path="/guidelines" element={<LegalPage doc="guidelines" />} />
+      <Route path="/support" element={<LegalPage doc="support" />} />
       <Route path="/Chat" element={<Chat />} />
       <Route element={<AppLayout />}>
         <Route path="/Discover" element={<Discover />} />
@@ -95,6 +97,7 @@ const Website = () => (
       <Route path="/privacy" element={<LegalPage doc="privacy" />} />
       <Route path="/terms" element={<LegalPage doc="terms" />} />
       <Route path="/guidelines" element={<LegalPage doc="guidelines" />} />
+      <Route path="/support" element={<LegalPage doc="support" />} />
       <Route path="/auth/*" element={<OpenInApp />} />
       <Route path="/reset-password" element={<OpenInApp />} />
       <Route path="*" element={<Navigate to="/" replace />} />
