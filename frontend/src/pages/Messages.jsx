@@ -12,6 +12,21 @@ import { useNow, timeLeft, hoursLeft } from '@/lib/chatTimer';
 const maskedPreview = (text = '') =>
   splitPhoneNumbers(text).map(p => (p.isPhone ? maskPhoneNumber(p.text) : p.text)).join('');
 
+const KEEP_PREVIEW = {
+  requested: ['You asked to keep this chat', 'Wants to keep this chat'],
+  cancelled: ['You cancelled your keep invite', 'Cancelled their keep invite'],
+  declined: ['You said not now to keeping it', 'Said not now to keeping it'],
+  kept: ['You both kept this chat', 'You both kept this chat'],
+};
+
+const preview = (msg, otherId) => {
+  if (msg.kind === 'keep') {
+    const lines = KEEP_PREVIEW[msg.content] || KEEP_PREVIEW.requested;
+    return lines[msg.sender_id === otherId ? 1 : 0];
+  }
+  return maskedPreview(msg.content || '');
+};
+
 
 export default function Messages() {
   const units = useUnits();
@@ -65,7 +80,7 @@ export default function Messages() {
                     {match.matchedWith.username || 'Anonymous'}
                   </h4>
                   <p className={`text-xs truncate ${match.hasUnread ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                    {match.lastMessage ? maskedPreview(match.lastMessage.content) : 'Make the first move'}
+                    {match.lastMessage ? preview(match.lastMessage, match.matchedWith.id) : 'Make the first move'}
                   </p>
                   {match.timer?.expiresAt && !match.timer.kept && (
                     <p className={`flex items-center gap-1 text-[10px] mt-0.5 ${hoursLeft(match.timer.expiresAt, now) < 3 ? 'text-primary' : 'text-gold/70'}`}>

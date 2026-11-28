@@ -69,20 +69,67 @@ export const markOpened = async (match, userId, io) => {
   return updated
 }
 
-// "Keep chat": once both have tapped it, the chat stays
+// A line in the chat about a keep invite: requested, cancelled, declined or
+// kept. It's a message from whoever acted, so for the other person it counts
+// as unread and moves the chat to the top. Never throws: before the SQL that
+// allows kind 'keep' has run, the invite still works, just without the line.
+export const KEEP_EVENTS = ['requested', 'cancelled', 'declined', 'kept']
+const logKeep = async (match, userId, event, io) => {
+  try {
+    const { data: message, error } = await supabase
+      .from('messages')
+      .insert({ match_id: match.id, sender_id: userId, kind: 'keep', content: event })
+      .select()
+      .single()
+    if (error || !message) return null
+    io?.to(match.id).emit('receive_message', message)
+    return message
+  } catch {
+    return null
+  }
+}
+
+const saveKeeps = async (match, updated, changes, io) => {
+  const { error } = await supabase.from('matches').update(changes).eq('id', match.id)
+  if (error) throw error
+  emitUpdate(io, updated)
+  return updated
+}
+
+// "Keep chat": sends an invite, or accepts theirs. Once both have tapped it,
+// the chat stays for good.
 export const keepChat = async (match, userId, io) => {
   const me = side(match, userId)
+  if (match[`${me}_keeps`] || isKept(match)) return match
   const updated = { ...match, [`${me}_keeps`]: true }
   const changes = { [`${me}_keeps`]: true }
   if (isKept(updated)) {
     updated.expires_at = null
     changes.expires_at = null
   }
-  const { error } = await supabase.from('matches').update(changes).eq('id', match.id)
-  if (error) throw error
-  emitUpdate(io, updated)
-  if (!isKept(updated)) notifyUser(otherId(match, userId), 'keep', { matchId: match.id })
-  else notifyUser(otherId(match, userId), 'kept', { matchId: match.id })
+  await saveKeeps(match, updated, changes, io)
+  const kept = isKept(updated)
+  await logKeep(match, userId, kept ? 'kept' : 'requested', io)
+  notifyUser(otherId(match, userId), kept ? 'kept' : 'keep', { matchId: match.id })
+  return updated
+}
+
+// Take back your own invite (only while they haven't accepted). You can send
+// another one any time.
+export const cancelKeep = async (match, userId, io) => {
+  const me = side(match, userId)
+  if (!match[`${me}_keeps`] || isKept(match)) return match
+  const updated = await saveKeeps(match, { ...match, [`${me}_keeps`]: false }, { [`${me}_keeps`]: false }, io)
+  await logKeep(match, userId, 'cancelled', io)
+  return updated
+}
+
+// "Not now" on their invite. They can ask again any time.
+export const declineKeep = async (match, userId, io) => {
+  const them = side(match, userId) === 'user1' ? 'user2' : 'user1'
+  if (!match[`${them}_keeps`] || isKept(match)) return match
+  const updated = await saveKeeps(match, { ...match, [`${them}_keeps`]: false }, { [`${them}_keeps`]: false }, io)
+  await logKeep(match, userId, 'declined', io)
   return updated
 }
 

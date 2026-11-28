@@ -4,17 +4,23 @@ import { ShieldAlert, Camera, Phone, Video, PhoneMissed, Reply } from 'lucide-re
 import { splitPhoneNumbers, maskPhoneNumber } from '@/lib/phone';
 import { useUnits } from '@/lib/units';
 import MediaContent from './MediaContent';
+import KeepBanner from './KeepBanner';
 
 const LONG_PRESS_MS = 450;
 const REPLY_SWIPE_PX = 56;
 
 // Hold a message for its actions (onHold), or swipe it right to reply.
 // replyTo: the message this one answers, if it's still there.
-export default function ChatBubble({ message, isMine, replyTo, onReply, onHold }) {
+// keep: { actionable, onKeep, onDecline } for keep-chat lines
+export default function ChatBubble({ message, isMine, replyTo, onReply, onHold, keep }) {
   const units = useUnits();
   const [revealed, setRevealed] = useState(false);
   const flagged = !!message.is_filtered;
   const parts = flagged ? splitPhoneNumbers(message.content || '') : null;
+
+  if (message.kind === 'keep') {
+    return <KeepBanner message={message} isMine={isMine} {...keep} />;
+  }
 
   if (message.kind === 'screenshot') {
     return (

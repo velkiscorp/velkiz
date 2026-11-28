@@ -1,5 +1,5 @@
 import { endCallsForMatches } from '../services/calls.js'
-import { isExpired, expireMatch, timerFor, keepChat as keepChatFor } from '../services/chatExpiry.js'
+import { isExpired, expireMatch, timerFor, keepChat as keepChatFor, cancelKeep as cancelKeepFor, declineKeep as declineKeepFor } from '../services/chatExpiry.js'
 import { toPublicProfile } from '../serializers/profile.js'
 import { supabase } from '../config/supabase.js'
 import { getBlockedUserIds, blockUser as blockUserById } from '../services/blocks.js'
@@ -47,7 +47,7 @@ export const getMyMatches = async (req, res) => {
       visibleMatches.map(async (match) => {
         const { data: lastMessage } = await supabase
           .from('messages')
-          .select('content, created_at, sender_id, read_at')
+          .select('*')
           .eq('match_id', match.id)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -210,34 +210,53 @@ export const blockUser = async (req, res) => {
   }
 }
 
-// POST /api/matches/:matchId/keep
-// "Keep chat": once both of you tap it, the chat never disappears
-export const keepChat = async (req, res) => {
+// The match for a keep action, or an error response already sent
+const matchForKeep = async (req, res) => {
+  const { matchId } = req.params
+  const userId = req.user.id
+  const { data: match } = await supabase
+    .from('matches')
+    .select('*')
+    .eq('id', matchId)
+    .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+    .single()
+
+  if (!match || match.status !== 'matched') {
+    res.status(404).json({ error: 'Match not found' })
+    return null
+  }
+  if (isExpired(match)) {
+    await expireMatch(match, req.app.get('io'))
+    res.status(404).json({ error: 'This chat disappeared', code: 'CHAT_EXPIRED' })
+    return null
+  }
+  if (!('user1_keeps' in match)) {
+    res.status(503).json({ error: 'Keeping chats is not set up yet' })
+    return null
+  }
+  return match
+}
+
+const keepAction = (action, label) => async (req, res) => {
   try {
-    const { matchId } = req.params
-    const userId = req.user.id
-    const { data: match } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('id', matchId)
-      .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-      .single()
-
-    if (!match || match.status !== 'matched') {
-      return res.status(404).json({ error: 'Match not found' })
-    }
-    if (isExpired(match)) {
-      await expireMatch(match, req.app.get('io'))
-      return res.status(404).json({ error: 'This chat disappeared', code: 'CHAT_EXPIRED' })
-    }
-    if (!('user1_keeps' in match)) {
-      return res.status(503).json({ error: 'Keeping chats is not set up yet' })
-    }
-
-    const updated = await keepChatFor(match, userId, req.app.get('io'))
-    res.json({ timer: timerFor(updated, userId) })
+    const match = await matchForKeep(req, res)
+    if (!match) return
+    const updated = await action(match, req.user.id, req.app.get('io'))
+    res.json({ timer: timerFor(updated, req.user.id) })
   } catch (error) {
-    console.error('Keep chat error:', error)
-    res.status(500).json({ error: 'Failed to keep chat' })
+    console.error(`${label} error:`, error)
+    res.status(500).json({ error: `Failed to ${label.toLowerCase()}` })
   }
 }
+
+// POST /api/matches/:matchId/keep
+// "Keep chat": sends an invite, or accepts theirs. Once both of you have, the chat never disappears.
+export const keepChat = keepAction(keepChatFor, 'Keep chat')
+
+// DELETE /api/matches/:matchId/keep
+// Take back the invite you sent
+export const cancelKeep = keepAction(cancelKeepFor, 'Cancel keep')
+
+// POST /api/matches/:matchId/keep/decline
+// "Not now" on their invite
+export const declineKeep = keepAction(declineKeepFor, 'Decline keep')

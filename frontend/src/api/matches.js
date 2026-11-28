@@ -18,6 +18,16 @@ export const matchesApi = {
     return await apiClient.post(`/api/matches/${matchId}/keep`)
   },
 
+  // Take back the keep invite you sent
+  cancelKeep: async (matchId) => {
+    return await apiClient.delete(`/api/matches/${matchId}/keep`)
+  },
+
+  // "Not now" on their keep invite
+  declineKeep: async (matchId) => {
+    return await apiClient.post(`/api/matches/${matchId}/keep/decline`)
+  },
+
   blockUser: async (matchId) => {
     return await apiClient.patch(`/api/matches/${matchId}/block`)
   }
