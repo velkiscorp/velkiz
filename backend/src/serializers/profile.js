@@ -1,5 +1,6 @@
 import { profileAge } from '../utils/age.js'
 import { fuzzyLocation } from '../utils/anonymize.js'
+import { normalizeInterests } from '../utils/interests.js'
 
 // The ONE way a profile leaves the server for someone else to see.
 // Every endpoint (Discover, Likes, Matches, profile sheet, match popup)
@@ -19,7 +20,7 @@ export const toPublicProfile = (row, { level = 'card' } = {}) => {
     bio: row.bio ?? null,
     photos: Array.isArray(row.photos) ? row.photos : [],
     looking_for: row.looking_for ?? null,
-    interests: Array.isArray(row.interests) ? row.interests : [],
+    interests: Array.isArray(row.interests) ? normalizeInterests(row.interests) : [],
     height_cm: row.height_cm ?? null,
     is_couple: row.is_couple === true,
     // "Hide my city": others only see the country and how far away you are
@@ -47,4 +48,8 @@ export const toPublicProfile = (row, { level = 'card' } = {}) => {
 
 // Your own profile, as the edit screens need it: every column, plus the
 // age worked out from the date of birth
-export const toOwnProfile = (row) => row && { ...row, age: profileAge(row) }
+export const toOwnProfile = (row) => row && {
+  ...row,
+  age: profileAge(row),
+  ...(Array.isArray(row.interests) ? { interests: normalizeInterests(row.interests) } : {}),
+}
