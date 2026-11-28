@@ -45,7 +45,7 @@ const setupListeners = async (navigate) => {
   await push.addListener('registrationError', (e) => console.error('Push registration error', e))
   await push.addListener('pushNotificationActionPerformed', ({ notification }) => {
     const data = notification?.data || {}
-    if (['message', 'call', 'missedcall'].includes(data.kind) && data.matchId) navigate(`/Chat?matchId=${data.matchId}`)
+    if (['message', 'call', 'missedcall', 'keep', 'kept', 'expiring'].includes(data.kind) && data.matchId) navigate(`/Chat?matchId=${data.matchId}`)
     else if (data.kind === 'superlike') navigate('/Matches')
     else navigate('/Messages')
   })

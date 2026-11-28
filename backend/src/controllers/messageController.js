@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabase.js'
 import { notifyUser } from '../services/push.js'
 import { containsPhoneNumber } from '../utils/phone.js'
+import { markOpened, isExpired, expireMatch, timerFor } from '../services/chatExpiry.js'
 import { MEDIA, baseType, kindForType, looksLike, newMediaPath, uploadMedia, downloadMedia, removeMedia } from '../services/chatMedia.js'
 
 
@@ -11,20 +12,29 @@ export const getMessages = async (req, res) => {
     const userId = req.user.id
 
     // Verify user is part of this match
-    const { data: match } = await supabase
+    const { data: found } = await supabase
       .from('matches')
-      .select('id, user1_id, user2_id, status')
+      .select('*')
       .eq('id', matchId)
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
       .single()
 
-    if (!match) {
+    if (!found) {
       return res.status(404).json({ error: 'Match not found' })
     }
 
-    if (match.status === 'unmatched') {
+    if (found.status === 'unmatched') {
       return res.status(403).json({ error: 'This match no longer exists' })
     }
+
+    // Its 36 hours ran out: it's gone
+    if (isExpired(found)) {
+      await expireMatch(found, req.app.get('io'))
+      return res.status(404).json({ error: 'This chat disappeared', code: 'CHAT_EXPIRED' })
+    }
+
+    // Opening the chat: once you've both opened it, its 36 hours start
+    const match = await markOpened(found, userId, req.app.get('io'))
 
     // Get all messages
     const { data: messages, error } = await supabase
@@ -55,7 +65,7 @@ export const getMessages = async (req, res) => {
       isMine: m.sender_id === userId
     }))
 
-    res.json({ messages: enriched })
+    res.json({ messages: enriched, timer: timerFor(match, userId) })
 
   } catch (error) {
     console.error('Get messages error:', error)

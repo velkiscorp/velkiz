@@ -62,7 +62,14 @@ create table public.matches (
   user1_id uuid not null,
   user2_id uuid not null,
   status text default 'matched'::text,
-  matched_at timestamp with time zone default now()
+  matched_at timestamp with time zone default now(),
+  -- Disappearing chats: the timer starts once both have opened the chat
+  user1_opened_at timestamp with time zone,
+  user2_opened_at timestamp with time zone,
+  expires_at timestamp with time zone, -- null until both opened, and again once both keep it
+  user1_keeps boolean not null default false,
+  user2_keeps boolean not null default false,
+  expiry_warned_at timestamp with time zone
 );
 
 create table public.messages (
@@ -175,6 +182,7 @@ create index swipes_swiper_id_idx on public.swipes using btree (swiper_id);
 create index swipes_target_id_idx on public.swipes using btree (target_id);
 create index matches_user1_id_idx on public.matches using btree (user1_id);
 create index matches_user2_id_idx on public.matches using btree (user2_id);
+create index matches_expires_at_idx on public.matches using btree (expires_at) where expires_at is not null;
 create index messages_match_id_idx on public.messages using btree (match_id);
 create index messages_sender_id_idx on public.messages using btree (sender_id);
 create index profiles_looking_for_idx on public.profiles (looking_for);
