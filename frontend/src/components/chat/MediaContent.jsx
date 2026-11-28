@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Play, Pause, ImageOff, Eye, EyeOff, X } from 'lucide-react';
 import { useChatMedia, formatSeconds } from '@/lib/chatMedia';
 import { messagesApi } from '@/api/messages';
@@ -185,7 +186,7 @@ function ViewOnce({ message, isMine }) {
   return (
     <>
       {body}
-      {src && (
+      {src && createPortal(
         <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center pt-safe pb-safe" onContextMenu={(e) => e.preventDefault()}>
           <button onClick={close} aria-label="Close" className="absolute top-0 right-0 p-4 text-white/80 z-10" style={{ marginTop: 'env(safe-area-inset-top)' }}>
             <X className="w-7 h-7" />
@@ -208,7 +209,8 @@ function ViewOnce({ message, isMine }) {
           <p className="absolute bottom-0 inset-x-0 pb-6 text-center text-[11px] text-white/60" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
             Opens once. Gone when you close it.
           </p>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

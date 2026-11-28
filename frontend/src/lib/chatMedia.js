@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { messagesApi } from '@/api/messages'
 import { supabase } from '@/lib/supabase'
+import { Capacitor, registerPlugin } from '@capacitor/core'
 
 // Photos, videos and voice messages in chats. Files are private: the app
 // downloads each one with your login and keeps it only as a temporary blob:
@@ -119,34 +120,22 @@ export const formatSeconds = (secs) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-// Pick one photo or video. In the iPhone app this opens the system picker
-// and returns as soon as something is tapped (no extra "selected" screen).
-// Resolves a File, or null if they backed out. On the web, onWeb() opens a
-// normal file input instead.
+// Pick one photo or video. In the iPhone app this opens Apple's picker
+// (MediaPicker.swift): no permission prompt, and it closes as soon as
+// something is tapped. Resolves a File, or null if they backed out.
+// On the web, onWeb() opens a normal file input instead.
+const MediaPicker = registerPlugin('MediaPicker')
+
 export const pickPhotoOrVideo = async (onWeb) => {
-  const { isNativeApp } = await import('@/lib/native')
-  if (!isNativeApp()) { onWeb?.(); return null }
-  const { Camera, MediaType, MediaTypeSelection } = await import('@capacitor/camera')
-  let picked
-  try {
-    const { results } = await Camera.chooseFromGallery({
-      mediaType: MediaTypeSelection.All,
-      allowMultipleSelection: false,
-      editable: 'no',
-      quality: 90,
-    })
-    picked = results?.[0]
-  } catch {
-    return null // cancelled
-  }
-  if (!picked?.webPath) return null
+  if (!Capacitor.isNativePlatform()) { onWeb?.(); return null }
+  const picked = await MediaPicker.pick()
+  if (!picked || picked.cancelled || !picked.webPath) return null
   const blob = await (await fetch(picked.webPath)).blob()
-  const isVideo = picked.type === MediaType.Video
-  const ext = (picked.webPath.split('?')[0].split('.').pop() || '').toLowerCase()
-  const type = blob.type && blob.type !== 'application/octet-stream'
-    ? blob.type
-    : isVideo ? (ext === 'mov' ? 'video/quicktime' : 'video/mp4') : (ext === 'png' ? 'image/png' : ext === 'heic' ? 'image/heic' : 'image/jpeg')
-  return new File([blob], `media.${ext || (isVideo ? 'mp4' : 'jpg')}`, { type })
+  const ext = picked.ext || (picked.isVideo ? 'mov' : 'jpg')
+  const type = picked.isVideo
+    ? (ext === 'mp4' || ext === 'm4v' ? 'video/mp4' : 'video/quicktime')
+    : ({ png: 'image/png', gif: 'image/gif', webp: 'image/webp', heic: 'image/heic' }[ext] || 'image/jpeg')
+  return new File([blob], `media.${ext}`, { type })
 }
 
 // A tiny (32 px) JPEG of a photo or a video's first frame. It's sent along
