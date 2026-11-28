@@ -73,6 +73,7 @@ export default function Landing() {
           <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
           <Link to="/terms" className="hover:text-foreground">Terms of Service</Link>
           <Link to="/guidelines" className="hover:text-foreground">Community Guidelines</Link>
+          <Link to="/support" className="hover:text-foreground">Support</Link>
           <a href={CONTACT.support.href} className="hover:text-foreground">Contact</a>
           <a href={CONTACT.privacy.href} className="hover:text-foreground">Privacy requests</a>
           <a href={CONTACT.grievance.href} className="hover:text-foreground">Grievance Officer</a>

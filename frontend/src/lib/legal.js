@@ -482,4 +482,49 @@ export const GUIDELINES = {
   ],
 }
 
-export const LEGAL_DOCS = { privacy: PRIVACY_POLICY, terms: TERMS, guidelines: GUIDELINES }
+export const SUPPORT_PAGE = {
+  title: 'Support',
+  intro: `Need help with ${APP}? Most answers are below. If you can't find yours, email ${SUPPORT} and we'll get back to you, usually within a day.`,
+  sections: [
+    {
+      h: 'Contact us',
+      list: [
+        `Help with the app or your account: ${SUPPORT}`,
+        `Safety concerns or reporting someone: report them in the app, or email ${SUPPORT}`,
+        `Privacy and your data: ${PRIVACY}`,
+        `Complaints under Indian law: ${LEGAL.grievanceEmail} (Grievance Officer: ${LEGAL.grievanceOfficer})`,
+      ],
+      after: ['If you are in danger, contact your local emergency services first.'],
+    },
+    {
+      h: 'How do I report or block someone?',
+      p: ['Tap the menu on their profile, in your chat with them, or during a call, then choose Report or Block. The person is never told who reported them. We review reports, usually within 24 hours. You can see and unblock people in Settings > Blocked people.'],
+    },
+    {
+      h: 'Why did my chat disappear?',
+      p: ['Chats disappear 36 hours after you have both opened them, unless you both tap Keep chat. Once you both keep a chat, it stays for good.'],
+    },
+    {
+      h: 'How do one-time photos and videos work?',
+      p: ['Photos and videos are one-time view by default. A photo closes a few seconds after it is opened, and a video plays once. Before sending, tap the eye to turn one-time view off if you want it to stay in the chat.'],
+    },
+    {
+      h: 'I forgot my password',
+      p: [`On the sign-in screen, tap "Forgot password?" and we'll email you a reset link. If you signed up with Apple, use Sign in with Apple instead.`],
+    },
+    {
+      h: 'How do I change who I see?',
+      p: ['Open the filters in Discover to choose who you want to see, their age, distance and more. Your own details, like your orientation and what you are looking for, are in My Profile.'],
+    },
+    {
+      h: 'How do I pause or delete my account?',
+      p: ['To hide your profile for a while, turn on Settings > Pause my profile. To delete your account and all your data for good, go to Settings > Delete account. This can\'t be undone.'],
+    },
+    {
+      h: 'Something isn\'t working',
+      p: [`In the app, go to Settings > Report a problem, or email ${SUPPORT}. Tell us what happened and which iPhone and iOS version you use.`],
+    },
+  ],
+}
+
+export const LEGAL_DOCS = { privacy: PRIVACY_POLICY, terms: TERMS, guidelines: GUIDELINES, support: SUPPORT_PAGE }

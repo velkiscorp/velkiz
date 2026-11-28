@@ -10,7 +10,7 @@ const Linked = ({ text }) => text.split(EMAIL).map((part, i) =>
   i % 2 ? <a key={i} href={hrefForEmail(part)} className="text-gold underline underline-offset-2">{part}</a> : part
 );
 
-// /privacy, /terms and /guidelines. Open to everyone, signed in or not,
+// /privacy, /terms, /guidelines and /support. Open to everyone, signed in or not,
 // because Apple and the signup screen link to them.
 export default function LegalPage({ doc }) {
   const navigate = useNavigate();
@@ -49,6 +49,7 @@ export default function LegalPage({ doc }) {
           {doc !== 'privacy' && <Link to="/privacy" className="text-gold hover:underline">Privacy Policy</Link>}
           {doc !== 'terms' && <Link to="/terms" className="text-gold hover:underline">Terms of Service</Link>}
           {doc !== 'guidelines' && <Link to="/guidelines" className="text-gold hover:underline">Community Guidelines</Link>}
+          {doc !== 'support' && <Link to="/support" className="text-gold hover:underline">Support</Link>}
           <a href={hrefForEmail(LEGAL.supportEmail)} className="text-gold hover:underline">Contact us</a>
         </nav>
       </article>
