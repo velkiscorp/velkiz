@@ -62,9 +62,9 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Velkiz uses your photos so you can add pictures to your profile. Only the photos you pick are uploaded.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Velkiz uses the camera so you can take a profile photo and make video calls with your matches. Video calls are never recorded.</string>
+	<string>Velkiz uses the camera so you can take a profile photo, send photos and videos in chats, and make video calls with your matches. Video calls are never recorded.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Velkiz uses the microphone for voice and video calls with your matches. Calls are never recorded.</string>
+	<string>Velkiz uses the microphone for voice messages, videos you record in chats, and voice and video calls with your matches. Calls are never recorded.</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 </dict>
