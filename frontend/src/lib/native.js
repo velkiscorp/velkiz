@@ -58,15 +58,27 @@ const handleAppLinks = async () => {
 // Screenshots come out blank in the app (the PrivacyScreen plugin, set up in
 // capacitor.config.json), and the app switcher shows the splash instead of
 // the screen. This tells you when someone tried. Returns an unsubscribe.
+// One listener on the plugin for the whole app, shared by every screen that
+// cares. iOS can report a single screenshot more than once, so repeats within
+// a couple of seconds are ignored.
+const screenshotSubscribers = new Set()
+let screenshotListening = false
+let lastScreenshotAt = 0
+const SCREENSHOT_REPEAT_MS = 2000
+
 export const onScreenshot = (callback) => {
   if (!isNativeApp()) return () => {}
-  let handle = null
-  let cancelled = false
-  import('@capacitor-community/privacy-screen').then(({ PrivacyScreen }) =>
-    PrivacyScreen.addListener('screenshotTaken', callback)
-  ).then((h) => {
-    if (cancelled) h.remove()
-    else handle = h
-  }).catch(() => {})
-  return () => { cancelled = true; handle?.remove() }
+  screenshotSubscribers.add(callback)
+  if (!screenshotListening) {
+    screenshotListening = true
+    import('@capacitor-community/privacy-screen').then(({ PrivacyScreen }) =>
+      PrivacyScreen.addListener('screenshotTaken', () => {
+        const now = Date.now()
+        if (now - lastScreenshotAt < SCREENSHOT_REPEAT_MS) return
+        lastScreenshotAt = now
+        screenshotSubscribers.forEach(cb => { try { cb() } catch { /* one bad screen shouldn't stop the rest */ } })
+      })
+    ).catch(() => { screenshotListening = false })
+  }
+  return () => { screenshotSubscribers.delete(callback) }
 }

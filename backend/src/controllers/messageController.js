@@ -157,6 +157,8 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ error: 'Failed to send message' })
   }
 }
+const SCREENSHOT_REPEAT_MS = 5000
+
 // POST /api/messages/:matchId/screenshot
 // The iPhone app calls this when someone screenshots a chat. Screenshots come
 // out blank, but the other person still deserves to know someone tried.
@@ -175,6 +177,20 @@ export const reportScreenshot = async (req, res) => {
     if (!match || match.status !== 'matched') {
       return res.status(404).json({ error: 'Match not found' })
     }
+
+    // One screenshot can be reported more than once (iOS sometimes repeats
+    // it). Within a few seconds, reuse the notice already in the chat.
+    const { data: recent } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('match_id', matchId)
+      .eq('sender_id', userId)
+      .eq('kind', 'screenshot')
+      .gte('created_at', new Date(Date.now() - SCREENSHOT_REPEAT_MS).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (recent?.id) return res.json({ message: { ...recent, isMine: true } })
 
     const { data: message, error } = await supabase
       .from('messages')

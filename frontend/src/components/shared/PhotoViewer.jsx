@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import SecureImage from '@/components/shared/SecureImage';
 
 // Full-screen photo viewer. photos: [{ url, is_nsfw }], startIndex: number.
 // NSFW photos start blurred and are revealed with a tap.
+// Drawn on <body> so a blurred or moving parent (a chat bubble) can't trap it.
 export default function PhotoViewer({ photos, startIndex = 0, onClose }) {
   const [index, setIndex] = useState(startIndex);
   const [revealed, setRevealed] = useState({});
@@ -25,7 +27,7 @@ export default function PhotoViewer({ photos, startIndex = 0, onClose }) {
   if (!photo) return null;
   const blurred = photo.is_nsfw && !revealed[index];
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center pt-safe pb-safe" onClick={onClose}>
       <SecureImage
         src={photo.url}
@@ -69,6 +71,7 @@ export default function PhotoViewer({ photos, startIndex = 0, onClose }) {
           <p className="absolute bottom-[calc(env(safe-area-inset-bottom)+1.5rem)] text-white/70 text-xs">{index + 1} / {photos.length}</p>
         </>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }

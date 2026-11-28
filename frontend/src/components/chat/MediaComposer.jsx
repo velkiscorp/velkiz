@@ -1,15 +1,18 @@
 import React, { useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { X, Eye, EyeOff, ArrowUp } from 'lucide-react';
 
 // Full-screen preview of a photo or video before sending it.
 // The eye button switches view-once on (red) or off (keeps it in the chat).
+// Drawn on <body>: inside the chat it would be trapped by the text bar's
+// blur, which pins "fixed" elements to the bar instead of the screen.
 export default function MediaComposer({ file, viewOnce, onToggleViewOnce, onSend, onClose, sending }) {
   const url = useMemo(() => URL.createObjectURL(file), [file]);
   useEffect(() => () => URL.revokeObjectURL(url), [url]);
   const isVideo = file.type.startsWith('video/');
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -56,6 +59,7 @@ export default function MediaComposer({ file, viewOnce, onToggleViewOnce, onSend
           <ArrowUp className="w-6 h-6 text-white" />
         </button>
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
