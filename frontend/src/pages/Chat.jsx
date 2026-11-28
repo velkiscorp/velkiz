@@ -29,7 +29,7 @@ import { getAccessToken } from '@/api/client';
 import { onScreenshot } from '@/lib/native';
 import { useMatches, useChatMessages, queryKeys } from '@/api/queries';
 import { useCalls } from '@/lib/calls';
-import { preparePhoto, videoDuration, primeChatMedia, forgetChatMedia, MAX_VIDEO_BYTES } from '@/lib/chatMedia';
+import { preparePhoto, videoDuration, primeChatMedia, makePreview, forgetChatMedia, MAX_VIDEO_BYTES } from '@/lib/chatMedia';
 
 export default function Chat() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -244,7 +244,8 @@ export default function Chat() {
         mediaError('You can send photos, videos and voice messages.');
         return;
       }
-      const { message } = await messagesApi.sendMedia(matchId, blob, { replyToId, duration: length, keep });
+      const preview = blob.type.startsWith('audio/') ? null : await makePreview(blob);
+      const { message } = await messagesApi.sendMedia(matchId, blob, { replyToId, duration: length, keep, preview });
       // A view-once photo or video doesn't open for you after sending
       if (!message.view_once) primeChatMedia(message.id, blob);
       setReplyingTo(null);

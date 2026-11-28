@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { startVoiceRecording, formatSeconds, MAX_VOICE_SECONDS } from '@/lib/chatMedia';
+import { startVoiceRecording, formatSeconds, MAX_VOICE_SECONDS, pickPhotoOrVideo } from '@/lib/chatMedia';
+import { AnimatePresence } from 'framer-motion';
+import MediaComposer from './MediaComposer';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from '@/components/ui/switch';
-import { Send, X, Reply, Plus, Mic, Trash2, Eye } from 'lucide-react';
+import { Send, X, Reply, Plus, Mic, Trash2 } from 'lucide-react';
 
 // replyingTo: the message being answered (shown above the box), or null
 // onSendMedia(file, { duration, keep }): a photo or video picked (keep: stays in
@@ -16,11 +17,9 @@ export default function ChatInput({ onSend, onSendMedia, sendingMedia, replyingT
   const recording = useRef(null);
   const [recordingSince, setRecordingSince] = useState(null);
   const [now, setNow] = useState(Date.now());
-  // A photo or video picked, waiting for Send: { file, url, isVideo }
+  // A photo or video picked, shown full screen until sent or dismissed
   const [pending, setPending] = useState(null);
-  const [keep, setKeep] = useState(false);
-
-  useEffect(() => () => { if (pending) URL.revokeObjectURL(pending.url); }, [pending]);
+  const [viewOnce, setViewOnce] = useState(true);
 
   useEffect(() => {
     if (!recordingSince) return;
@@ -63,14 +62,26 @@ export default function ChatInput({ onSend, onSendMedia, sendingMedia, replyingT
   const pickFile = (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file) return;
-    setKeep(false);
-    setPending({ file, url: URL.createObjectURL(file), isVideo: file.type.startsWith('video/') });
+    if (file) openComposer(file);
+  };
+
+  const openComposer = (file) => {
+    setViewOnce(true);
+    setPending(file);
+  };
+
+  const choose = async () => {
+    try {
+      const file = await pickPhotoOrVideo(() => fileRef.current?.click());
+      if (file) openComposer(file);
+    } catch {
+      onError?.("Couldn't open that. Try another one.");
+    }
   };
 
   const sendPending = () => {
     if (!pending) return;
-    onSendMedia?.(pending.file, { keep });
+    onSendMedia?.(pending, { keep: !viewOnce });
     setPending(null);
   };
 
@@ -113,36 +124,18 @@ export default function ChatInput({ onSend, onSendMedia, sendingMedia, replyingT
           </button>
         </div>
       )}
-      {pending && (
-        <div className="flex items-center gap-3 px-4 pt-3">
-          {pending.isVideo ? (
-            <video src={pending.url} muted playsInline className="w-14 h-14 rounded-md object-cover bg-black shrink-0" />
-          ) : (
-            <img src={pending.url} alt="" className="w-14 h-14 rounded-md object-cover shrink-0" />
-          )}
-          <label className="flex-1 min-w-0 flex items-center gap-2.5">
-            <Switch checked={keep} onCheckedChange={setKeep} aria-label="Keep in chat" />
-            <span className="min-w-0">
-              <span className="block text-sm font-medium">Keep in chat</span>
-              <span className="block text-[11px] text-muted-foreground leading-tight">
-                {keep ? 'Stays in the chat like a normal message' : 'Opens once for them, then disappears'}
-              </span>
-            </span>
-          </label>
-          <button onClick={() => setPending(null)} aria-label="Don't send" className="p-1.5 text-muted-foreground shrink-0">
-            <X className="w-5 h-5" />
-          </button>
-          <Button
-            size="icon"
-            onClick={sendPending}
-            disabled={sendingMedia}
-            aria-label={`Send ${pending.isVideo ? 'video' : 'photo'}`}
-            className="shrink-0 w-10 h-10 rounded-full bg-gradient-to-b from-primary to-accent"
-          >
-            {keep ? <Send className="w-4 h-4 text-white" /> : <Eye className="w-4 h-4 text-white" />}
-          </Button>
-        </div>
-      )}
+      <AnimatePresence>
+        {pending && (
+          <MediaComposer
+            file={pending}
+            viewOnce={viewOnce}
+            onToggleViewOnce={() => setViewOnce(v => !v)}
+            onSend={sendPending}
+            onClose={() => setPending(null)}
+            sending={sendingMedia}
+          />
+        )}
+      </AnimatePresence>
       {sendingMedia && (
         <p className="px-4 pt-2 text-[11px] text-muted-foreground animate-pulse">Sending…</p>
       )}
@@ -171,7 +164,7 @@ export default function ChatInput({ onSend, onSendMedia, sendingMedia, replyingT
         {onSendMedia && (
           <button
             onPointerDown={(e) => e.preventDefault()}
-            onClick={() => fileRef.current?.click()}
+            onClick={choose}
             disabled={sendingMedia}
             aria-label="Send a photo or video"
             className="shrink-0 w-9 h-10 flex items-center justify-center text-gold disabled:opacity-40"

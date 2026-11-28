@@ -10,9 +10,9 @@ export const messagesApi = {
   },
 
   // A photo, video or voice message. file: a Blob/File with its type set.
-  sendMedia: async (matchId, file, { replyToId, duration, keep } = {}) => {
+  sendMedia: async (matchId, file, { replyToId, duration, keep, preview } = {}) => {
     return await apiClient.post(`/api/messages/${matchId}/media`, file, {
-      headers: { 'Content-Type': file.type },
+      headers: { 'Content-Type': file.type, ...(preview ? { 'X-Media-Preview': preview } : {}) },
       params: { replyToId, duration: duration ? Math.round(duration * 10) / 10 : undefined, keep: keep ? 'true' : undefined },
       timeout: 120000,
     })

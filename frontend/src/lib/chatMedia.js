@@ -118,3 +118,68 @@ export const formatSeconds = (secs) => {
   const s = Math.max(0, Math.round(secs || 0))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
+
+// Pick one photo or video. In the iPhone app this opens the system picker
+// and returns as soon as something is tapped (no extra "selected" screen).
+// Resolves a File, or null if they backed out. On the web, onWeb() opens a
+// normal file input instead.
+export const pickPhotoOrVideo = async (onWeb) => {
+  const { isNativeApp } = await import('@/lib/native')
+  if (!isNativeApp()) { onWeb?.(); return null }
+  const { Camera, MediaType, MediaTypeSelection } = await import('@capacitor/camera')
+  let picked
+  try {
+    const { results } = await Camera.chooseFromGallery({
+      mediaType: MediaTypeSelection.All,
+      allowMultipleSelection: false,
+      editable: 'no',
+      quality: 90,
+    })
+    picked = results?.[0]
+  } catch {
+    return null // cancelled
+  }
+  if (!picked?.webPath) return null
+  const blob = await (await fetch(picked.webPath)).blob()
+  const isVideo = picked.type === MediaType.Video
+  const ext = (picked.webPath.split('?')[0].split('.').pop() || '').toLowerCase()
+  const type = blob.type && blob.type !== 'application/octet-stream'
+    ? blob.type
+    : isVideo ? (ext === 'mov' ? 'video/quicktime' : 'video/mp4') : (ext === 'png' ? 'image/png' : ext === 'heic' ? 'image/heic' : 'image/jpeg')
+  return new File([blob], `media.${ext || (isVideo ? 'mp4' : 'jpg')}`, { type })
+}
+
+// A tiny (32 px) JPEG of a photo or a video's first frame. It's sent along
+// with the file and shown heavily blurred on view-once messages, so the
+// other person gets a hint of colour without seeing anything.
+export const makePreview = (blob) => new Promise((resolve) => {
+  const url = URL.createObjectURL(blob)
+  const done = (value) => { URL.revokeObjectURL(url); resolve(value) }
+  const draw = (el, w, h) => {
+    try {
+      if (!w || !h) return done(null)
+      const scale = 32 / Math.max(w, h)
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(w * scale))
+      canvas.height = Math.max(1, Math.round(h * scale))
+      canvas.getContext('2d').drawImage(el, 0, 0, canvas.width, canvas.height)
+      done(canvas.toDataURL('image/jpeg', 0.6))
+    } catch { done(null) }
+  }
+  const timer = setTimeout(() => done(null), 5000)
+  if (blob.type.startsWith('video/')) {
+    const v = document.createElement('video')
+    v.muted = true
+    v.playsInline = true
+    v.preload = 'auto'
+    v.onloadeddata = () => { v.currentTime = Math.min(0.1, v.duration || 0) }
+    v.onseeked = () => { clearTimeout(timer); draw(v, v.videoWidth, v.videoHeight) }
+    v.onerror = () => { clearTimeout(timer); done(null) }
+    v.src = url
+  } else {
+    const img = new Image()
+    img.onload = () => { clearTimeout(timer); draw(img, img.naturalWidth, img.naturalHeight) }
+    img.onerror = () => { clearTimeout(timer); done(null) }
+    img.src = url
+  }
+})

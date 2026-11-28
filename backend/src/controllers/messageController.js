@@ -178,7 +178,7 @@ export const reportScreenshot = async (req, res) => {
 
     const { data: message, error } = await supabase
       .from('messages')
-      .insert({ match_id: matchId, sender_id: userId, content: 'Took a screenshot', kind: 'screenshot' })
+      .insert({ match_id: matchId, sender_id: userId, content: 'Tried to take a screenshot', kind: 'screenshot' })
       .select()
       .single()
 
@@ -324,10 +324,14 @@ export const sendMedia = async (req, res) => {
       ...(replyToId ? { reply_to_id: replyToId } : {}),
     }
     const viewOnce = kind !== 'audio' && keep !== 'true'
+    // A tiny blurry preview made by the app (X-Media-Preview header), shown
+    // blurred over a view-once message until it's opened
+    const preview = kind !== 'audio' ? validPreview(req.get('x-media-preview')) : null
     const insert = (r) => supabase.from('messages').insert(r).select().single()
-    let { data: message, error } = await insert(viewOnce ? { ...row, view_once: true } : row)
-    // Before the view-once SQL has run there's no such column: send it as a normal one
-    if (error && viewOnce && /view_once/.test(error.message || '')) {
+    const full = { ...row, ...(viewOnce ? { view_once: true } : {}), ...(preview ? { media_preview: preview } : {}) }
+    let { data: message, error } = await insert(full)
+    // Before the newer SQL has run those columns don't exist: send it as a normal one
+    if (error && full !== row && /view_once|media_preview/.test(error.message || '')) {
       ({ data: message, error } = await insert(row))
     }
 
@@ -347,6 +351,11 @@ export const sendMedia = async (req, res) => {
     res.status(500).json({ error: 'Failed to send' })
   }
 }
+
+// Previews are tiny JPEGs as data URLs; anything else is ignored
+const MAX_PREVIEW_CHARS = 6000
+const validPreview = (v) =>
+  typeof v === 'string' && v.length <= MAX_PREVIEW_CHARS && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(v) ? v : null
 
 // GET /api/messages/:matchId/media/:messageId
 // The file for a photo, video or voice message, only for the two people in
@@ -387,7 +396,7 @@ export const getMedia = async (req, res) => {
       const viewedAt = new Date().toISOString()
       const { data: claimed } = await supabase
         .from('messages')
-        .update({ viewed_at: viewedAt, media_path: null })
+        .update({ viewed_at: viewedAt, media_path: null, ...('media_preview' in message ? { media_preview: null } : {}) })
         .eq('id', messageId)
         .is('viewed_at', null)
         .select('id')

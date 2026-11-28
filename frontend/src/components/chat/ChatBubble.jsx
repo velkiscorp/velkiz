@@ -19,9 +19,11 @@ export default function ChatBubble({ message, isMine, replyTo, onReply, onHold }
   if (message.kind === 'screenshot') {
     return (
       <div className="flex justify-center mb-3">
-        <p className="flex items-center gap-1.5 text-[11px] text-gold/70 px-3 py-1 rounded-full border border-gold/20 bg-gold/5">
+        <p className="flex items-center gap-1.5 text-[11px] text-gold/70 px-3 py-1.5 rounded-2xl border border-gold/20 bg-gold/5 max-w-[85%] text-center">
           <Camera className="w-3 h-3" />
-          {isMine ? 'You took a screenshot' : 'They took a screenshot'}
+          {isMine
+            ? 'You tried to take a screenshot. Velkiz kept the chat hidden.'
+            : 'They tried to take a screenshot. Velkiz kept you hidden.'}
           {message.created_at && <span className="text-muted-foreground/60">· {units.time(message.created_at)}</span>}
         </p>
       </div>

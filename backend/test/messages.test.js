@@ -37,7 +37,8 @@ const call = async (handler, params, body = {}, extra = {}) => {
   let status = 200, json
   let sent = null
   const res = { status(s) { status = s; return this }, json(j) { json = j; return this }, set() { return this }, send(b) { sent = b; return this } }
-  await handler({ user: { id: ME }, params, body, app: { get: () => io }, get: () => extra.type, validatedQuery: extra.query || {} }, res)
+  const headers = { 'content-type': extra.type, ...(extra.headers || {}) }
+  await handler({ user: { id: ME }, params, body, app: { get: () => io }, get: (h) => headers[h.toLowerCase()], validatedQuery: extra.query || {} }, res)
   return { status, json, sent }
 }
 
@@ -157,4 +158,14 @@ test('a view-once photo already opened is gone, and the sender cannot open it', 
   assert.equal(r.status, 410)
   assert.equal(r.sent, null)
   assert.equal(storage.removed.length, 0)
+})
+
+test('a photo can carry a tiny preview; anything that is not a small JPEG data URL is dropped', async () => {
+  const preview = 'data:image/jpeg;base64,' + 'A'.repeat(200)
+  await call(sendMedia, { matchId: MATCH }, JPEG, { type: 'image/jpeg', headers: { 'x-media-preview': preview } })
+  assert.equal(db.inserted[0].media_preview, preview)
+  await call(sendMedia, { matchId: MATCH }, JPEG, { type: 'image/jpeg', headers: { 'x-media-preview': 'javascript:alert(1)' } })
+  assert.equal(db.inserted[1].media_preview, undefined)
+  await call(sendMedia, { matchId: MATCH }, JPEG, { type: 'image/jpeg', headers: { 'x-media-preview': 'data:image/jpeg;base64,' + 'A'.repeat(7000) } })
+  assert.equal(db.inserted[2].media_preview, undefined)
 })

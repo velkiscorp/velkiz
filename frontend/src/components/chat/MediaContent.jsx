@@ -143,29 +143,44 @@ function ViewOnce({ message, isMine }) {
   };
   const close = () => setSrc(null);
 
-  const chip = 'flex items-center gap-2 px-4 py-3 rounded-md text-xs border';
-  let body;
-  if (isMine) {
-    body = (
-      <div className={`${chip} border-primary/40 bg-primary/10 text-foreground/80`}>
-        {opened ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-gold" />}
-        {opened ? `Opened` : `View-once ${what}`}
-      </div>
-    );
-  } else if (opened && !src) {
-    body = (
-      <div className={`${chip} border-border/60 bg-card/60 text-muted-foreground`}>
-        <EyeOff className="w-4 h-4" /> Opened
-      </div>
-    );
-  } else {
-    body = (
-      <button onClick={open} disabled={loading} className={`${chip} border-gold/40 bg-gold/10 text-gold disabled:opacity-60`}>
-        <Eye className="w-4 h-4" />
-        {loading ? 'Opening…' : failed ? `Couldn't open. Tap to try again` : `Tap to view ${what}`}
-      </button>
-    );
-  }
+  // A blurred, full-size card: the tiny preview stretched and blurred, so
+  // there's a hint of colour and some anticipation, nothing more
+  const canOpen = !isMine && !opened;
+  const label = opened ? 'Opened' : isMine ? 'One-time view' : loading ? 'Opening…' : failed ? "Couldn't open. Tap to try again" : 'One-time view';
+  const body = (
+    <button
+      onClick={canOpen ? open : undefined}
+      disabled={!canOpen || loading}
+      aria-label={canOpen ? `Open one-time ${what}` : `One-time ${what}, ${opened ? 'opened' : 'not opened yet'}`}
+      className="relative w-56 h-72 rounded-xl overflow-hidden border border-border/50 bg-gradient-to-br from-primary/40 via-card to-black text-left"
+    >
+      {message.media_preview && !opened && (
+        <img
+          src={message.media_preview}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover scale-125 blur-xl"
+        />
+      )}
+      <span className={`absolute inset-0 ${opened ? 'bg-black/70' : 'bg-black/25'}`} />
+      <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white px-4 text-center">
+        <span className={`w-12 h-12 rounded-full flex items-center justify-center ${opened ? 'bg-white/10' : 'bg-primary/90 shadow-[0_0_20px_hsl(346_75%_36%/0.6)]'}`}>
+          {opened ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+        </span>
+        <span className="text-sm font-medium drop-shadow">{label}</span>
+        {!opened && (
+          <span className="text-[11px] text-white/75 drop-shadow">
+            {isMine ? 'They can open it once' : `Tap to view ${what}`}
+          </span>
+        )}
+      </span>
+      {message.kind === 'video' && (
+        <span className="absolute bottom-2.5 left-2.5 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white">
+          <Play className="w-4 h-4 ml-0.5" />
+        </span>
+      )}
+    </button>
+  );
 
   return (
     <>
