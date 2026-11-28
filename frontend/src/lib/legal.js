@@ -1,331 +1,483 @@
-// Velkiz Privacy Policy, Terms of Service and Community Guidelines.
+// Velkiz Terms of Service, Privacy Policy and Community Guidelines.
 //
-// DRAFTS. These are a starting point written to match how the app actually
-// works today. They are not legal advice: have a lawyer in your country read
-// them before launch, especially the sections on sensitive data, governing
-// law and liability.
+// Written by the Velkiz team, then checked line by line against how the app
+// actually works (disappearing chats, one-time media, screenshot notices,
+// city-based location, calls). If a feature changes, change the matching
+// sentence here too, because Apple and users hold us to what these say.
 //
-// Velkiz is run by a small team of independent developers in India, not a
-// registered company. If that changes (a company is registered), update
-// `operator` and the governing law here. Indian law asks apps to publish a
-// Grievance Officer: change `grievanceOfficer` if that person changes.
-//
-// Open questions for whoever writes the final version:
-// - GDPR Art. 27 / UK GDPR: a non-EU app with EU or UK users usually needs a
-//   representative in the EU and the UK. Name them in the GDPR section.
-// - Which Indian city's courts handle disputes ("the courts there" for now).
-// - Confirm the email provider named under "Who we share it with".
+// Still open:
+// - GDPR Art. 27 / UK GDPR: a non-EU operator with EU or UK users usually
+//   needs a representative in the EU and the UK. Name them in the GDPR section
+//   once appointed.
 
 export const LEGAL = {
   appName: 'Velkiz',
+  operatorName: 'Anshika Pant',
   // How the policies name who runs Velkiz
-  operator: 'a small team of independent developers based in India',
+  operator: 'Anshika Pant, an individual based in Bengaluru, Karnataka, India',
+  operatingLocation: 'Bengaluru, Karnataka, India',
   governingLaw: 'India',
+  courts: 'Bengaluru, Karnataka, India',
   grievanceOfficer: 'Anshika Pant',
   grievanceEmail: 'grievance@velkiz.com',
   supportEmail: 'support@velkiz.com',
   privacyEmail: 'privacy@velkiz.com',
   website: 'https://velkiz.com',
-  lastUpdated: 'November 26, 2026',
+  lastUpdated: 'November 28, 2026',
 }
 
-const { appName: APP, operator: OP, governingLaw: LAW, supportEmail: SUPPORT, privacyEmail: PRIVACY } = LEGAL
+const { appName: APP, operator: OP, operatorName: NAME, supportEmail: SUPPORT, privacyEmail: PRIVACY } = LEGAL
+const GRIEVANCE = `Grievance Officer: ${LEGAL.grievanceOfficer}, ${LEGAL.grievanceEmail}, ${LEGAL.operatingLocation}.`
+const NOT_A_COMPANY = `${APP} is independently operated by ${NAME} and is not a separately incorporated company.`
 
 // Each document: a title, a short intro, and sections of paragraphs (p),
 // then bullet lists (list), then paragraphs after the list (after).
-export const PRIVACY_POLICY = {
-  title: 'Privacy Policy',
-  intro: `${APP} is an anonymous dating app run by ${OP} ("we", "us"), not a registered company. Anonymity is the point of ${APP}, so we collect as little as we can, never sell your data, and never show other people your email or exact location. This policy explains what we collect, why, and the choices you have.`,
+
+export const TERMS = {
+  title: 'Terms of Service',
+  intro: `These Terms of Service ("Terms") govern your use of ${APP} ("${APP}", "we", "us" or "our"), including our iOS app and related services. ${APP} is independently operated by ${OP} (the "Operator"), and is not a separately incorporated company. By creating an account or using ${APP}, you agree to these Terms, our Privacy Policy and our Community Guidelines. If you do not agree, do not use ${APP}.`,
   sections: [
     {
-      h: 'What we collect',
-      p: ['Information you give us:'],
+      h: '1. Who can use Velkiz',
+      p: [`You may use ${APP} only if:`],
       list: [
-        'Account details: your email address and password (the password is stored only as a secure hash by our login provider). If you use Sign in with Apple, we get an email address from Apple instead, which can be a private relay address if you choose "Hide My Email", and no password.',
-        'Date of birth, used to confirm you are 18 or older and to show your age if you choose. We never show your date of birth itself.',
-        'Profile details you choose to add: username, gender, sexual orientation, what you are looking for, height, whether you are a couple, bio, interests, prompt answers and photos.',
-        'Messages, photos, videos and voice messages you send to your matches. Photos are re-saved on your phone before sending, which removes hidden details like where they were taken.',
-        'Voice and video calls with your matches: when a call happened, whether it was answered and how long it lasted. We never record calls, and the sound and video are not stored anywhere.',
-        'Your likes, passes, matches, blocks and any reports you make.',
-        'Messages you send to our support team.',
+        'You are at least 18 years old.',
+        'You can legally enter into a binding agreement.',
+        'You are not barred by law from using the service.',
+        'You create and keep only one account, for yourself.',
+        'The information you give us is accurate and not misleading.',
       ],
+      after: ['We may restrict or close accounts where we have reasonable grounds to believe these requirements are not met.'],
     },
     {
-      p: ['Information collected when you use the app:'],
+      h: '2. Zero tolerance for abuse',
+      p: [`There is no tolerance on ${APP} for objectionable content or abusive users. The following are banned:`],
       list: [
-        'Approximate location. If you allow it, we use your location to show you people nearby. We store it rounded to about 1 km, and other people only ever see an approximate distance and, unless you hide it, your city.',
-        'When you were last active.',
-        'Technical information such as your IP address, device type and app version, kept in server logs to keep the service secure and to stop abuse such as spam and bulk sign-ups.',
-        'If you turn on push notifications, a device token that lets us send notifications to your phone.',
-        'If you buy Super Likes, a record of the purchase (which pack, when, and a transaction number). Payment is handled entirely by Apple: we never see your card or payment details.',
+        'Harassment, threats, bullying, intimidation or stalking.',
+        'Hate speech or targeted abuse.',
+        'Sexual content involving minors, and child sexual exploitation or grooming.',
+        'Non-consensual intimate images or videos, or sharing intimate content without the consent of the person shown.',
+        'Sexual coercion, blackmail or extortion.',
+        'Fraud, scams, impersonation or deceptive activity.',
+        'Illegal content or activity.',
+        'Any attempt to exploit, harm or endanger other users.',
       ],
+      after: ['We review reports, usually within 24 hours, remove content that breaks these rules, and restrict, suspend or permanently ban the accounts responsible. We may report serious matters to the appropriate authorities where the law requires or permits it.'],
     },
     {
-      h: 'Sensitive information',
-      p: [`Your sexual orientation, and details about your sex life that you choose to share, are sensitive information. We use your orientation only to decide who you see in Discover and who sees you. By adding it to your profile you agree to us using it this way. You can change or remove it at any time by editing your profile or deleting your account.`],
-    },
-    {
-      h: 'How we use your information',
+      h: '3. Your account',
+      p: ['You are responsible for keeping your login details private and for what happens on your account. You agree to:'],
       list: [
-        'To run the app: create your account, show your profile to people who may see it, suggest people to you, and deliver messages.',
-        'To keep people safe: confirm everyone is 18+, enforce blocks, review reports, and find and remove fake, abusive or illegal accounts.',
-        'To keep the service secure, prevent spam and fix problems.',
-        'To send you service emails, such as verifying your email or resetting your password, and, if you allow it, notifications about new matches and messages.',
-        'To meet our legal obligations.',
+        'Give accurate registration information.',
+        'Keep your login details secure, and tell us straight away if you think someone else has used your account.',
+        'Not share your account with anyone.',
+        'Not create more accounts to get around restrictions, blocks or bans.',
       ],
-      after: ['We do not sell your personal information, we do not share it for advertising, and we do not use it to build advertising profiles.'],
+      after: ['We may suspend or restrict accounts where we reasonably suspect fraud, impersonation, a security risk or a breach of these Terms.'],
     },
     {
-      h: 'What other people can see',
-      list: [
-        'Anyone who can see you in Discover sees your username, age (if you show it), bio, first photo, interests, what you are looking for, height, couple tag, country, your city (unless you hide it) and an approximate distance.',
-        'People you match with can also see all your photos, your gender, orientation, prompt answers and when you were last active.',
-        'Other people never see your email address, date of birth, exact location or any reports you made.',
-        'Your matches can read the messages you send them. Phone numbers in messages are hidden until tapped.',
+      h: '4. Your content',
+      p: [
+        `You keep ownership of the photos, videos, voice messages, profile information, messages and other content you create or upload to ${APP} ("User Content"), subject to the rights of other people.`,
+        'By uploading or sharing User Content, you give the Operator a worldwide, non-exclusive, royalty-free licence to host, store, reproduce, display, transmit and process it only as reasonably needed to:',
       ],
-    },
-    {
-      h: 'Who we share it with',
-      p: ['We share information only with companies that help us run the app, under contracts that limit what they can do with it:'],
       list: [
-        'Supabase, which hosts our database, logins and photo storage.',
-        'Resend, which sends our emails.',
-        'LiveKit, which carries voice and video calls between matches. Calls pass through LiveKit so neither person sees the other\'s IP address; they are not recorded or stored.',
-        'Render, which runs our servers, and Netlify, which hosts our website.',
-        'Apple, to deliver push notifications if you turn them on, to process in-app purchases, and for Sign in with Apple if you use it.',
-        'RevenueCat, which confirms in-app purchases with Apple for us. It receives your account ID (a random number, not your name or email) and your purchase history.',
-      ],
-    },
-    {
-      p: [`We may also share information if the law requires it, to protect someone from serious harm, or if ${APP} is transferred to a new owner or becomes a company (in which case this policy will still apply to your information).`],
-    },
-    {
-      h: 'How long we keep it',
-      p: [`We keep your information while your account is open. Chats disappear on their own: 36 hours after you have both opened a chat, the match, its messages, photos, videos and voice messages are permanently deleted, unless you both choose to keep the chat. Unsent messages and deleted chats are deleted for both of you straight away. When you delete your account in Settings, we permanently delete your profile, photos, matches, messages, likes, blocks and login straight away. Copies may remain in encrypted backups for up to 30 days before they are overwritten. We may keep limited records longer where the law requires it or to deal with a safety report about your account.`],
-    },
-    {
-      h: 'Your choices and rights',
-      list: [
-        'Edit or remove profile details at any time from My Profile.',
-        'Hide your city, hide your age, or turn location off.',
-        'Turn notifications on or off in Settings or in your phone\'s settings.',
-        'Block anyone, and report anyone who breaks our rules.',
-        'Delete your account and all your data from Settings.',
-        `Ask for a copy of your data, or ask us to correct it, by emailing ${PRIVACY}.`,
-      ],
-      after: [`Depending on where you live (for example India, the EU, the UK or California), you may have further rights, such as to object to how we use your data or to complain to your data protection authority. Contact us at ${PRIVACY} and we will respond within the time the law requires.`],
-    },
-    {
-      h: 'If you are in the EU, EEA or UK (GDPR)',
-      p: ['If you live in the European Union, the European Economic Area or the United Kingdom, the General Data Protection Regulation (GDPR, or the UK GDPR) gives you extra protections. We are the "controller" of your personal data. We rely on these legal bases:'],
-      list: [
-        'Contract: to create your account, show your profile, suggest matches, deliver messages and provide Super Likes you buy.',
-        'Explicit consent: to use your sexual orientation and anything about your sex life you choose to share, only to decide who you see and who sees you. You can withdraw this consent at any time by removing it from your profile or deleting your account.',
-        'Consent: for location and push notifications. You can turn these off at any time in the app or in your phone\'s settings.',
-        'Legitimate interests: to keep Velkiz safe and secure, prevent fraud, spam and abuse, and enforce our rules. We have balanced these against your rights.',
-        'Legal obligation: where the law requires us to keep or share information.',
+        `Run and provide ${APP}, including showing your profile and content to the people allowed to see it.`,
+        'Deliver messages and media between users.',
+        'Provide safety, moderation and reporting.',
+        'Maintain, secure and fix the service.',
+        'Meet our legal obligations.',
       ],
       after: [
-        `You have the right to access your data, correct it, delete it, restrict or object to how we use it, receive a copy in a portable format, and withdraw consent at any time without affecting what we did before. Email ${PRIVACY} and we will reply within one month. We will not discriminate against you for using these rights.`,
-        `You also have the right to complain to your local data protection authority (in the UK, the Information Commissioner\'s Office). We would appreciate the chance to sort it out first, so please contact us at ${PRIVACY}.`,
-        'We do not make decisions about you based solely on automated processing that have legal or similarly significant effects. Who appears in Discover is decided by the filters you set and the information on your profile.',
+        'This licence ends when you delete the content or your account, except for copies kept for a limited time as our Privacy Policy describes.',
+        'You confirm that you own the content you upload or have permission to use it, that you have consent from anyone else shown in it, and that it does not break these Terms, the law or anyone else\'s privacy, publicity or intellectual property rights.',
       ],
     },
     {
-      h: 'If you are in California or another US state',
-      p: [`If you live in California, the California Consumer Privacy Act (as amended by the CPRA) gives you specific rights. Other US states such as Virginia, Colorado, Connecticut, Texas and Oregon give similar rights, and we honour them the same way. In the last 12 months we have collected these categories of personal information, for the purposes described in this policy:`],
+      h: '5. Rules of conduct',
+      p: [`When using ${APP}, you agree not to:`],
       list: [
-        'Identifiers: email address, account ID, IP address and device token.',
-        'Personal characteristics: age, gender and, if you add it, sexual orientation.',
-        'Commercial information: Super Like purchases.',
-        'Internet activity: how you use the app, such as likes, passes, matches and when you were last active.',
-        'Approximate geolocation.',
-        'Photos and other content you upload, and your messages.',
-        'Sensitive personal information: your account login, your approximate location, your sexual orientation and the content of your messages. We use these only to provide the service you asked for and to keep it safe, and never to infer things about you.',
+        'Pretend to be someone else, or create a fake or misleading profile.',
+        'Harass, threaten, stalk, bully or intimidate anyone.',
+        'Share hateful, violent, exploitative or illegal content.',
+        'Share intimate photos or videos without consent.',
+        'Try to uncover or reveal another user\'s real identity, location or personal information without their permission.',
+        'Record, screenshot, download, redistribute or publish another user\'s private content, calls or messages without their permission.',
+        `Use ${APP} to ask for money, run scams, or promote any commercial activity.`,
+        `Use ${APP} for sex trafficking, exploitation or commercial sexual activity.`,
+        'Use bots, scrapers or other automated means to access the service.',
+        `Reverse engineer, interfere with or try to compromise ${APP}.`,
+        'Get around account restrictions, blocks, reporting or security.',
+        'Manipulate matches, likes, purchases or other features.',
+      ],
+      after: ['Respect other users\' boundaries, consent and privacy at all times.'],
+    },
+    {
+      h: '6. Disappearing chats, one-time media and calls',
+      list: [
+        'Chats disappear. Once both people have opened a chat, it is deleted 36 hours later, with all its messages, photos, videos and voice messages, unless you both tap Keep chat.',
+        'Photos and videos are one-time view by default. A one-time photo closes a few seconds after it is opened, and a one-time video plays once. The sender can turn one-time view off before sending, and then the media stays in the chat until the chat ends.',
+        'Voice and video calls are never recorded by us.',
+        'Screenshots and screen recordings of chats are blocked where iOS allows it, and the other person is told when we detect an attempt.',
       ],
       after: [
-        'We do not sell your personal information and we do not "share" it for cross-context behavioural advertising, and we have not done so in the last 12 months. We do not knowingly sell or share information about anyone under 16.',
-        `You have the right to know what personal information we collect, use and disclose, to get a copy of it, to have it corrected or deleted, and not to be treated differently for using these rights. To make a request, email ${PRIVACY} from the email address on your account, or delete your account in Settings. We may need to confirm it is really you before acting. You can also have an authorised agent make a request for you, with your written permission. If we turn down your request, you can appeal by replying to our answer, and we will respond within 45 days.`,
+        'Disappearing content and screenshot protection do not guarantee that content cannot be kept. Someone can still photograph their screen with another device. Think about that risk before sharing anything sensitive or intimate.',
+        'You must never share another person\'s intimate content without their explicit consent.',
       ],
     },
     {
-      h: 'Security',
-      p: ['Photos are stored privately and only load for people allowed to see them. Data is encrypted in transit, and access to our systems is limited. No service is perfectly secure, so please do not share anything in a message you could not afford to have leaked.'],
+      h: '7. Safety',
+      p: [
+        `${APP} helps people discover and talk to each other. We do not guarantee that users are who they say they are, that profiles are accurate, or that any interaction will be safe. We do not run criminal background checks or verify every user\'s identity.`,
+        'Be careful when talking to or meeting anyone:',
+      ],
+      list: [
+        'Don\'t share sensitive personal information too quickly.',
+        'Never send money to someone you have only met through the app.',
+        'Meet in public the first time, and tell someone you trust where you are going.',
+        'Report suspicious, threatening or abusive behaviour.',
+      ],
+      after: ['If you are in immediate danger, contact local emergency services first.'],
     },
     {
-      h: 'Age limit',
-      p: [`${APP} is only for adults aged 18 and over. We do not knowingly collect information from anyone under 18. If you believe someone under 18 is using ${APP}, please report their profile or email ${SUPPORT}.`],
+      h: '8. Reporting, moderation and appeals',
+      p: ['You can report profiles, messages or other content you believe break these Terms or our Community Guidelines, and block anyone at any time. We review reports and may:'],
+      list: [
+        'Remove content.',
+        'Restrict features.',
+        'Issue warnings.',
+        'Suspend accounts temporarily.',
+        'Close accounts permanently.',
+        'Report serious violations to the authorities where appropriate.',
+      ],
+      after: [
+        'We may act with or without notice where needed to protect users, comply with the law or prevent harm. Where reasonably possible, we will explain significant enforcement decisions, unless the law, someone\'s safety or an investigation prevents it.',
+        `Appeals: if you think a suspension, account closure or content removal was wrong, email ${SUPPORT} with your username, the decision, and why it should be reconsidered. Where practicable, someone who was not involved in the original decision will review it.`,
+      ],
     },
     {
-      h: 'International transfers',
-      p: [`Our service providers may store and process data outside your country, including in the United States and the European Union. Where the law requires, we use safeguards such as standard contractual clauses.`],
+      h: '9. Deleting your account',
+      p: [
+        'You can delete your account at any time in Settings. We then delete your information as our Privacy Policy describes. Some information may be kept for longer where needed for legal compliance, fraud prevention, security, resolving disputes, enforcing these Terms or responding to lawful requests.',
+        'We may suspend or close your access if you break these Terms, put other users at risk, misuse the service, or expose us to legal or security risk.',
+      ],
     },
     {
-      h: 'Changes',
-      p: ['If we change this policy in a way that matters, we will tell you in the app before the change takes effect.'],
+      h: '10. Paid features and Super Likes',
+      p: [
+        `${APP} is free to use. Everyone gets one free Super Like every 24 hours, and you can buy packs of extra Super Likes in the iOS app. Purchases are made through Apple\'s App Store, and Apple\'s payment terms apply to billing and refunds. We never see or store your card details.`,
+        'Unless the law or Apple\'s policies say otherwise:',
+      ],
+      list: [
+        'Purchased Super Likes do not expire, have no cash value and cannot be transferred to another account.',
+        'A Super Like is used up when you send it, even if you later undo it.',
+        'If Apple refunds a purchase, the unused Super Likes from it are removed.',
+        'Unused Super Likes are lost when you delete your account.',
+      ],
+      after: ['Nothing here affects your rights under mandatory consumer protection laws.'],
     },
     {
-      h: 'Contact',
-      p: [`Email ${PRIVACY} for anything about your privacy or your data.`],
+      h: '11. Intellectual property',
+      p: [`${APP} and its software, branding, logos, designs and features are owned by or licensed to the Operator. You may not copy, reproduce, distribute, modify, reverse engineer or commercially exploit any part of ${APP} without written permission, except where the law allows. Nothing in these Terms transfers ownership of ${APP}\'s intellectual property to you.`],
     },
     {
-      h: 'Grievance Officer (India)',
-      p: [`Under India's Information Technology Rules and Digital Personal Data Protection Act, you can raise a complaint with our Grievance Officer, ${LEGAL.grievanceOfficer}, at ${LEGAL.grievanceEmail}. We acknowledge complaints within 24 hours and resolve them within 15 days.`],
+      h: '12. Third-party services',
+      p: [`${APP} relies on third-party services, including Apple, hosting, login, email, calling and purchase services. Their own terms and privacy policies may also apply to you. We are not responsible for services run independently by third parties, except where the law says otherwise.`],
+    },
+    {
+      h: '13. Disclaimers',
+      p: [`To the fullest extent the law allows, ${APP} is provided "as is" and "as available". We do not promise that the service will always be available or error-free, that every profile is accurate, that every report will lead to removal or a ban, that you will find a match, or that every interaction will be safe. We may change, suspend or stop features when reasonably needed. Nothing in this section excludes warranties or consumer rights that cannot legally be excluded.`],
+    },
+    {
+      h: '14. Limitation of liability',
+      p: [
+        'To the fullest extent the law allows, the Operator is not liable for indirect, incidental, special, punitive or consequential losses arising from your use of Velkiz, including losses from interactions with or conduct of other users, user content, service interruptions, loss of data, or unauthorised access beyond our reasonable control.',
+        'Our total liability to you is limited to the greater of the amount you paid us in the 12 months before the claim arose and ₹10,000. This does not limit any liability that cannot legally be limited, including mandatory consumer protection rights.',
+      ],
+    },
+    {
+      h: '15. Apple App Store',
+      p: [`If you downloaded ${APP} from the Apple App Store:`],
+      list: [
+        `These Terms are between you and the Operator, not Apple. Apple is not responsible for ${APP} or its content.`,
+        `Apple has no obligation to provide maintenance or support for ${APP}.`,
+        `If ${APP} fails to meet any applicable warranty, you may notify Apple, and Apple may refund the purchase price (if any). Apple has no other warranty obligation for ${APP}.`,
+        `Apple is not responsible for any claims relating to ${APP}, including product liability claims, claims that it fails to meet legal requirements, and consumer protection or privacy claims.`,
+        `Apple is not responsible for investigating, defending, settling or discharging any claim that ${APP} infringes someone else\'s intellectual property.`,
+        'You confirm you are not in a country subject to a US government embargo and are not on any US government list of prohibited or restricted parties.',
+        'Apple and its subsidiaries are third-party beneficiaries of these Terms and may enforce them against you.',
+      ],
+    },
+    {
+      h: '16. Privacy',
+      p: [`Our Privacy Policy explains how we collect, use, store, share and protect personal information, including profile information, location, photos, videos, calls and private messages. Our processing remains subject to applicable data protection laws, including India\'s Digital Personal Data Protection Act, 2023, as its provisions come into force.`],
+    },
+    {
+      h: '17. Changes to these Terms',
+      p: [`We may update these Terms. If a change is material, we will tell you in the app before it takes effect and, where the law requires, ask for your consent. If you keep using ${APP} after the change takes effect, you accept the new Terms. If you do not agree, stop using ${APP} and delete your account.`],
+    },
+    {
+      h: '18. Complaints and disputes',
+      p: [
+        `If you have a complaint, email ${SUPPORT} and tell us what happened and what outcome you want. We acknowledge complaints within 24 hours and aim to resolve them within 7 days, or sooner where the law requires.`,
+        `For complaints under Indian law: ${GRIEVANCE}`,
+        'Nothing here stops you from going to a consumer protection authority, a court or a data protection authority.',
+      ],
+    },
+    {
+      h: '19. Governing law',
+      p: [
+        `These Terms are governed by the laws of ${LEGAL.governingLaw}, and, subject to applicable law, disputes may be brought before the competent courts in ${LEGAL.courts}.`,
+        'If you live in the EU, the EEA or the UK, you keep the protection of the mandatory consumer laws of the country where you live and can bring proceedings there.',
+        'If you live in the United States, you can bring a qualifying claim in your local small claims court.',
+      ],
+    },
+    {
+      h: '20. Severability and entire agreement',
+      p: [`If any part of these Terms is found invalid or unenforceable, it is limited or removed only as far as necessary, and the rest still applies. These Terms, with our Privacy Policy and Community Guidelines, are the whole agreement between you and the Operator about ${APP}.`],
+    },
+    {
+      h: '21. Contact',
+      p: [
+        `Support, account issues and complaints: ${SUPPORT}. Privacy: ${PRIVACY}.`,
+        GRIEVANCE,
+        `Operator: ${NAME}, ${LEGAL.operatingLocation}. ${NOT_A_COMPANY}`,
+      ],
     },
   ],
 }
 
-export const TERMS = {
-  title: 'Terms of Service',
-  intro: `These terms are an agreement between you and ${OP} ("we", "us"), not a registered company, about your use of ${APP}. By creating an account you agree to them, to our Privacy Policy and to our Community Guidelines. Please read them.`,
+export const PRIVACY_POLICY = {
+  title: 'Privacy Policy',
+  intro: `${APP} ("${APP}", "we", "us" or "our") is a dating app independently operated by ${OP} (the "Operator"). ${APP} lets adults create profiles, discover each other, match, chat, call and share photos and videos. You choose how much of yourself to reveal to other people. That does not make your information invisible to us or to the service providers that help us run the app. This policy explains what we collect, how we use and share it, how long we keep it, and your choices and rights. Where the law requires your consent, we ask for it before processing.`,
   sections: [
     {
-      h: 'Who can use Velkiz',
+      h: '1. Information you give us',
       list: [
-        'You must be at least 18 years old.',
-        'You must be legally able to agree to these terms, and not be barred from using the service by law.',
-        'You must not have been convicted of a sexual or violent crime, and must not be required to register as a sex offender anywhere.',
-        'You may only have one account, and it must be yours.',
+        'Account details: your email address and password. The password is stored only as a secure hash by our login provider. If you use Sign in with Apple, we get the email address Apple provides instead, which can be a private relay address if you choose "Hide My Email", and no password.',
+        'Date of birth, used to confirm you are 18 or older and to show your age if you choose. Your date of birth itself is never shown.',
+        'Profile details you choose to add: username, gender, sexual orientation, what you are looking for, height, whether you are a couple, bio, interests, prompt answers and photos.',
+        'Your city and country, which you choose during sign-up.',
+        'Messages, photos, videos and voice messages you send to your matches. Photos are re-saved on your phone before sending, which removes hidden details such as where they were taken.',
+        'Voice and video calls: when a call happened, whether it was answered and how long it lasted. We never record calls, and the sound and video are not stored.',
+        'Your likes, passes, matches, keep-chat choices, blocks and reports.',
+        'Messages you send to our support team.',
       ],
     },
     {
-      h: 'Zero tolerance for abuse',
-      p: [`There is no tolerance on ${APP} for objectionable content or abusive users. Harassment, threats, hate speech, sexual content involving minors, non-consensual intimate images, scams and illegal content are banned. We review reports, usually within 24 hours, remove content that breaks these rules, and ban the accounts responsible. Serious cases may be reported to the police.`],
-    },
-    {
-      h: 'Your account',
-      p: ['Keep your password private. You are responsible for what happens on your account. Tell us straight away if you think someone else has used it.'],
-    },
-    {
-      h: 'Your content',
-      p: [
-        'You own the photos, text and messages you post. You give us a worldwide, non-exclusive, royalty-free licence to host, store, display and process that content only to run and improve the service. This licence ends when you delete the content or your account, except for copies kept as our Privacy Policy describes.',
-        'You promise that you have the right to post your content, that photos of you are of you, and that you have consent from anyone else shown.',
-      ],
-    },
-    {
-      h: 'Rules of conduct',
-      p: ['You agree to follow our Community Guidelines. In particular, you will not:'],
+      h: '2. Information collected when you use Velkiz',
       list: [
-        'Pretend to be someone else, or create a fake or misleading profile.',
-        'Harass, threaten, stalk, bully or intimidate anyone.',
-        'Post or send content that is hateful, violent, illegal, or sexual content of anyone without their consent.',
-        'Try to uncover or reveal another user\'s real identity, location or other personal details without their permission.',
-        'Record, screenshot or share other people\'s photos or messages outside the app without their permission.',
-        'Ask for money, promote anything, or use Velkiz for sex work or any commercial purpose.',
-        'Use bots, scrapers or other automated means, or try to get around blocks, limits or security.',
+        'Approximate location: we look up the centre of the city you chose, to show approximate distances. We do not use your phone\'s GPS. Other people only see an approximate distance and, unless you hide it, your city.',
+        'When you were last active.',
+        'Technical information such as your IP address, device type, operating system and app version, kept in server logs to keep the service secure and stop spam, abuse and bulk sign-ups.',
+        'If you turn on push notifications, a device token that lets us send notifications to your phone.',
+        'Screenshot notices: when the app detects a screenshot in a chat, it records that one happened so the other person can be told.',
+        'If you buy Super Likes, a record of the purchase (which pack, when, and a transaction reference). Payment is handled by Apple, and we never see your card details.',
       ],
     },
     {
-      h: 'Safety',
-      p: [`We do not run criminal background checks or verify the identity of our users, and we are not responsible for how other users behave. Be careful when talking to or meeting anyone. Meet in public, tell a friend where you are going, and never send money. If you feel unsafe, contact local emergency services, then report the person in the app.`],
-    },
-    {
-      h: 'Moderation and ending your account',
+      h: '3. Sensitive information',
       p: [
-        'We may remove content, limit features or suspend or close accounts that break these terms or put others at risk, with or without notice.',
-        'If we remove your content or restrict, suspend or close your account, we will tell you why, unless the law or someone\'s safety stops us.',
-        `If you think we got it wrong, you can appeal within 6 months by emailing ${SUPPORT} with your username and why. A person who was not involved in the first decision will review it, and we will let you know the outcome, usually within 14 days.`,
-        'You can delete your account at any time in Settings.',
+        'Some information you choose to share may be sensitive under privacy laws: your sexual orientation, gender or relationship details, details about your sex life, and the content of your messages, photos and videos.',
+        'We use your orientation and what you are looking for only to decide who you see in Discover and who sees you. You do not have to fill in every detail, and you can change or remove optional details at any time in My Profile. Where the law requires consent for this, adding the detail to your profile is that consent, and removing it withdraws it.',
       ],
     },
     {
-      h: 'Paid features',
-      p: [
-        `${APP} is free to use. Everyone gets one free Super Like every 24 hours, and you can buy packs of extra Super Likes in the iPhone app.`,
-        `Purchases are made through the App Store, and Apple's terms apply to payment and refunds. Bought Super Likes don't expire, have no cash value, can't be transferred to another account, and are used up when you send them, even if you later undo that Super Like. If Apple refunds a purchase, the Super Likes from it that you haven't used are removed. If you delete your account, any unused Super Likes are lost.`,
-      ],
-    },
-    {
-      h: 'Disclaimers',
-      p: [`${APP} is provided "as is" and "as available". To the fullest extent the law allows, we make no promises that it will be uninterrupted, error-free or secure, or that you will find a match.`],
-    },
-    {
-      h: 'Limitation of liability',
-      p: [`To the fullest extent the law allows, we are not liable for indirect, incidental, special or consequential losses, or for anything another user does, on or off the app. Our total liability to you is limited to the greater of the amount you paid us in the last 12 months and ₹10,000. Nothing in these terms limits liability that cannot be limited by law.`],
-    },
-    {
-      h: 'Apple App Store',
-      p: ['If you downloaded Velkiz from the Apple App Store:'],
+      h: '4. How we use your information',
       list: [
-        'These terms are between you and us, not Apple. Apple is not responsible for Velkiz or its content.',
-        'Apple has no obligation to provide maintenance or support for Velkiz.',
-        'If Velkiz fails to meet any applicable warranty, you may notify Apple, and Apple may refund the purchase price (if any). Apple has no other warranty obligation for Velkiz.',
-        'Apple is not responsible for any claims relating to Velkiz, including product liability claims, claims that it fails to meet legal requirements, and consumer protection or privacy claims.',
-        'Apple is not responsible for any claim that Velkiz infringes someone else\'s intellectual property.',
-        'You confirm you are not in a country subject to a US government embargo or listed as a terrorist-supporting country, and are not on any US government list of prohibited or restricted parties.',
-        'Apple and its subsidiaries are third-party beneficiaries of these terms and may enforce them against you.',
+        'To create, run and secure your account.',
+        'To show your profile to the people allowed to see it, and suggest people to you.',
+        'To deliver messages, photos, videos, voice messages and calls.',
+        'To make chats disappear on time, make one-time media disappear after viewing, and tell people about screenshot attempts.',
+        'To confirm everyone is 18 or older.',
+        'To review reports, enforce blocks and our rules, and find fake, spam or abusive accounts.',
+        'To send service emails (such as verifying your email or resetting your password) and, if you allow it, notifications.',
+        'To process Super Like purchases.',
+        'To fix problems, keep the service reliable and meet our legal obligations.',
+      ],
+      after: [
+        'We do not sell your personal information, share it for advertising, or use it to build advertising profiles.',
+        `AI: ${APP} does not offer AI-generated profiles, photos, videos or messages. Users create their own profiles and content.`,
       ],
     },
     {
-      h: 'Changes to these terms',
-      p: ['We may update these terms. If a change matters, we will tell you in the app before it takes effect. If you keep using Velkiz after that, you accept the new terms.'],
+      h: '5. What other people can see',
+      list: [
+        'In Discover: your username, age (if you show it), bio, first photo, interests, what you are looking for, height, couple tag, country, your city (unless you hide it) and an approximate distance.',
+        'People you match with can also see all your photos, your gender, orientation, prompt answers and when you were last active.',
+        'Other people never see your email address, date of birth, exact location, or the reports you make.',
+        'Your matches see the messages and media you send them. Phone numbers in chats are hidden until tapped.',
+      ],
+      after: ['Using a pseudonym or sharing little does not guarantee complete anonymity. Others may recognise you from photos, videos or messages you choose to share.'],
     },
     {
-      h: 'Resolving problems and disputes',
+      h: '6. Disappearing chats and one-time media',
       p: [
-        `Most problems can be sorted out quickly. If you have a complaint about ${APP}, please email ${SUPPORT} first and tell us what happened and what you would like us to do. We will reply within 14 days and try to fix it within 30 days.`,
-        `If you are in India, you can also go to our Grievance Officer, ${LEGAL.grievanceOfficer}, at ${LEGAL.grievanceEmail}. We acknowledge complaints within 24 hours and resolve them within 15 days.`,
-        'If we still cannot agree, either of us can take the dispute to the courts described below. Nothing in these terms stops you from going to a consumer court, a consumer protection authority or a data protection authority where you live.',
+        'Chats disappear: once both people have opened a chat, it is permanently deleted 36 hours later, with all its messages, photos, videos and voice messages, unless you both tap Keep chat. Unsent messages and deleted chats are removed for both people straight away.',
+        'Photos and videos are one-time view by default. When the recipient opens one, the file is deleted from our storage. A one-time photo you haven\'t opened stays until you open it or the chat ends. The sender can turn one-time view off, in which case the media stays until the chat ends.',
+        'Deleted content may remain in encrypted backups for up to 30 days before it is overwritten. Recipients can still remember what they saw, or photograph their screen with another device, so only share what you are comfortable with them keeping.',
       ],
     },
     {
-      h: 'Governing law',
+      h: '7. Screenshot protection',
+      p: ['Where iOS allows it, the app tries to block screenshots and screen recordings of chats, and hides the screen in the app switcher. When we detect a screenshot attempt, we tell the other person. These protections depend on Apple\'s iOS and your device, and we cannot guarantee that every capture is prevented.'],
+    },
+    {
+      h: '8. Who we share it with',
+      p: [`We share information only with service providers that help us run ${APP}:`],
+      list: [
+        'Supabase: database, login and photo and media storage.',
+        'Resend: email delivery.',
+        'LiveKit: carries voice and video calls between matches, so neither person sees the other\'s IP address. Calls are not recorded or stored.',
+        'Render: server hosting. Netlify: website hosting.',
+        'Apple: Sign in with Apple, push notifications and in-app purchases.',
+        'RevenueCat: confirms in-app purchases with Apple. It receives your account ID (a random identifier, not your name or email) and your purchase history.',
+      ],
+      after: [`We may also share information when the law, a court order or a lawful government request requires it; to investigate fraud, security incidents, abuse or illegal activity; to protect the safety of our users or others; or if ${APP} is merged, sold or transferred, in which case this policy still applies to your information.`],
+    },
+    {
+      h: '9. How long we keep it',
       p: [
-        `These terms are governed by the laws of ${LAW}, and disputes will be handled by the courts there.`,
-        'If you live in the EU, the EEA or the UK, you also keep the protection of the mandatory consumer laws of the country where you live, and you can bring a claim in your local courts.',
-        'If you live in the United States, you can bring a claim in your local small claims court if it qualifies.',
+        'We keep your information while your account is open, except for chats and media, which disappear as described above.',
+        'When you delete your account in Settings, we permanently delete your profile, photos, matches, messages, likes, blocks and login straight away. Copies may remain in encrypted backups for up to 30 days. We may keep limited records longer where the law requires it, to deal with a safety report, to prevent fraud or abuse, or to resolve disputes.',
       ],
     },
     {
-      h: 'Contact',
-      p: [`Email ${SUPPORT}. For complaints under Indian law, write to our Grievance Officer, ${LEGAL.grievanceOfficer}, at ${LEGAL.grievanceEmail}.`],
+      h: '10. Your choices and rights',
+      list: [
+        'Edit or remove profile details at any time in My Profile.',
+        'Hide your city or your age.',
+        'Turn notifications on or off in Settings or your phone\'s settings.',
+        'Choose whether each photo or video is one-time view.',
+        'Block anyone, and report anyone who breaks our rules.',
+        'Delete your account and your data in Settings.',
+        `Ask for a copy of your data, or for it to be corrected, by emailing ${PRIVACY}. We may need to confirm it\'s really you first.`,
+      ],
+    },
+    {
+      h: '11. If you are in the EU, EEA or UK (GDPR)',
+      p: [`Under the GDPR or UK GDPR, the Operator is the controller of your personal data. We rely on these legal bases:`],
+      list: [
+        'Contract: to create your account, show your profile, suggest matches, deliver messages and calls, and provide Super Likes you buy.',
+        'Explicit consent: to use your sexual orientation and anything about your sex life you choose to share, only to decide who you see and who sees you. You can withdraw it at any time by removing it from your profile or deleting your account.',
+        'Consent: for push notifications, which you can turn off at any time.',
+        'Legitimate interests: to keep the service safe and secure, prevent fraud, spam and abuse, and enforce our rules, where your rights do not outweigh these interests.',
+        'Legal obligation: where the law requires us to keep or share information.',
+      ],
+      after: [
+        `You have the right to access, correct or delete your data, to restrict or object to how we use it, to receive a portable copy, and to withdraw consent at any time without affecting earlier processing. Email ${PRIVACY} and we will reply within one month.`,
+        'You can also complain to your local data protection authority (in the UK, the Information Commissioner\'s Office).',
+        'We do not make decisions about you based solely on automated processing that have legal or similarly significant effects. Who appears in Discover depends on the filters you set and the information on your profile.',
+      ],
+    },
+    {
+      h: '12. If you are in California or another US state',
+      p: ['Depending on where you live, US state privacy laws (such as California\'s CCPA as amended by the CPRA) may give you specific rights. We collect these categories of personal information, for the purposes in this policy:'],
+      list: [
+        'Identifiers: email address, account ID, IP address and device token.',
+        'Personal characteristics: age, gender and, if you add it, sexual orientation.',
+        'Commercial information: Super Like purchases.',
+        'App activity: likes, passes, matches and when you were last active.',
+        'Approximate location: the city you choose.',
+        'User content: photos, videos, voice messages, profile information and messages.',
+        'Sensitive personal information: your login, sexual orientation and the content of your messages, used only to provide and protect the service.',
+      ],
+      after: [
+        'We do not sell personal information or share it for cross-context behavioural advertising, and we do not knowingly sell or share information about anyone under 16.',
+        `You can ask to know what we collect and how we use it, get a copy, have it corrected or deleted, and appeal a decision on your request, without being treated differently for doing so. Email ${PRIVACY} from the email address on your account, or delete your account in Settings. An authorised agent can make a request for you with your written permission. We respond within the time the law requires.`,
+      ],
+    },
+    {
+      h: '13. Security',
+      p: ['Photos and media are stored privately and only load for people allowed to see them. Data is encrypted in transit, and access to our systems is restricted. No service is perfectly secure, so avoid sharing anything you would not want someone else to keep or disclose.'],
+    },
+    {
+      h: '14. Age limit',
+      p: [`${APP} is only for adults aged 18 and over. Everyone enters their date of birth when signing up. This is a declaration, not an identity or age verification. We do not knowingly allow anyone under 18 to use ${APP}. If you believe a minor is using it, report their profile or email ${SUPPORT}, and we will investigate and remove underage accounts.`],
+    },
+    {
+      h: '15. International transfers',
+      p: [`${APP} is run from India, and our service providers may store and process data in other countries, including the United States and the European Union. Where the law requires, we use safeguards such as standard contractual clauses.`],
+    },
+    {
+      h: '16. Changes to this policy',
+      p: ['If we make a material change, we will tell you in the app before it takes effect, and the "Last updated" date above will change.'],
+    },
+    {
+      h: '17. Contact and Grievance Officer (India)',
+      p: [
+        `Privacy: ${PRIVACY}. Support: ${SUPPORT}.`,
+        `${GRIEVANCE} We acknowledge grievances within 24 hours and aim to resolve them within 7 days, or sooner where the law requires. Nothing here stops you from approaching a consumer protection authority, court or data protection authority.`,
+        `Operator: ${NAME}, ${LEGAL.operatingLocation}. ${NOT_A_COMPANY}`,
+      ],
     },
   ],
 }
 
 export const GUIDELINES = {
   title: 'Community Guidelines',
-  intro: `${APP} lets people be open about what they want without giving up who they are. That only works if everyone respects each other. Break these rules and we may remove your content or ban your account.`,
+  intro: `${APP} is a place to meet people and connect on your own terms. You decide how much of your identity you share, and you treat everyone else with respect. These guidelines apply to everything on ${APP}: profiles, photos, videos, voice messages, calls and chats. Break them and we may remove content, restrict features, or suspend or permanently ban your account. Serious violations may be reported to the authorities.`,
   sections: [
     {
-      h: 'Respect anonymity',
+      h: '1. Respect privacy and anonymity',
       list: [
-        'Never try to find out who someone really is, where they live or work, unless they choose to tell you.',
-        'Never screenshot, record or share someone\'s photos, messages or calls outside Velkiz.',
-        'Never share another person\'s personal details.',
+        'Respect each person\'s choice about how much of their identity they reveal.',
+        'Never pressure anyone into sharing their real name, phone number, address, workplace or social media.',
+        'Never try to identify, track, locate or expose someone without their consent.',
+        `Never share someone\'s private information, chats, photos, videos or calls outside ${APP}.`,
+        'Never use something shared in private to threaten, embarrass, blackmail or harass someone.',
+      ],
+      after: ['Screenshot protection does not make it okay to try. The other person is told when we detect a screenshot.'],
+    },
+    {
+      h: '2. Consent comes first',
+      list: [
+        'Don\'t send sexual or intimate content to anyone who hasn\'t clearly said they want it.',
+        'Respect boundaries straight away. If someone says no, asks you to stop, stops replying or blocks you, stop.',
+        'Never pressure, threaten or manipulate anyone into sending photos, videos, personal details or meeting up.',
+        'Never share or threaten to share anyone\'s intimate images without their explicit consent.',
+        'Consent to one thing is not consent to anything else.',
       ],
     },
     {
-      h: 'Consent, always',
+      h: '3. Be real',
       list: [
-        'Don\'t send explicit content to anyone who hasn\'t clearly said they want it.',
-        'No means no. Stop when someone asks you to, or stops replying.',
-        'Never share intimate images of anyone without their consent.',
-      ],
-    },
-    {
-      h: 'Be real',
-      list: [
-        'Use photos of yourself. No celebrities, stolen photos or AI fakes of real people.',
+        'Use real photos of yourself. No stolen photos, celebrities, or AI images that impersonate a real person.',
         'Couples must tag their profile as a couple.',
-        'One account per person.',
+        'One account per person. No new accounts to get around restrictions, bans or blocks.',
+        'Don\'t lie about your age or other important details.',
       ],
     },
     {
-      h: 'Never allowed',
+      h: '4. Never allowed',
       list: [
-        'Anyone under 18, or any sexual content involving minors. We report this to the authorities.',
-        'Harassment, threats, stalking or bullying.',
-        'Hate speech, or attacks on anyone for their race, religion, gender, sexuality, disability or anything else about who they are.',
-        'Violence, or encouraging self-harm.',
-        'Scams, asking for money, selling, advertising or sex work.',
-        'Anything illegal.',
+        'Anyone under 18, or any sexual, exploitative or suggestive content involving minors, including grooming. We remove it, preserve evidence, and report it to the authorities.',
+        'Harassment, bullying, stalking, threats or repeated unwanted contact.',
+        'Hate speech, or attacks on anyone for their race, ethnicity, nationality, religion, gender, sexuality, disability or anything else about who they are.',
+        'Doxxing, blackmail or extortion.',
+        'Pornographic or sexually explicit photos or videos, non-consensual intimate imagery, sexual exploitation, prostitution or trafficking.',
+        'Scams, phishing, asking for money or gifts, selling, advertising, spam, or sending people to suspicious sites or payment channels.',
+        'Violence, encouraging self-harm, or anything illegal.',
       ],
     },
     {
-      h: 'If something is wrong',
-      p: [`Tap Report on their profile or in the chat. Reports are anonymous and we review every one, usually within 24 hours. You can also block anyone at any time. If you are in danger, contact local emergency services first. You can also email ${SUPPORT}.`],
+      h: '5. Reporting and blocking',
+      p: [
+        `If someone makes you uncomfortable or breaks these rules, tap Report on their profile, in the chat or during a call, or block them at any time. You can also email ${SUPPORT}.`,
+        'The person you report is never told who reported them. We review every report, usually within 24 hours, and act based on how serious it is: removing content, restricting or suspending the account, or banning it permanently.',
+        'If you are in danger, contact local emergency services first. In-app reports are not an emergency service.',
+      ],
+    },
+    {
+      h: '6. How we enforce these guidelines',
+      p: ['We consider how serious the behaviour is, whether it is repeated, and the harm it caused. Trying to get around enforcement, with a new account, someone else\'s account or another way of contacting people, leads to further restrictions.'],
+    },
+    {
+      h: '7. Our commitment',
+      p: [
+        `${APP} is built around choice, privacy and respect. Anonymity never excuses harmful behaviour, and being open about what you want never removes the need for consent. By using ${APP}, you agree to follow these guidelines and our Terms of Service.`,
+        `Support: ${SUPPORT}. Privacy: ${PRIVACY}. Operator: ${NAME}, ${LEGAL.operatingLocation}.`,
+      ],
     },
   ],
 }
