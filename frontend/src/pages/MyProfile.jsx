@@ -64,8 +64,13 @@ export default function MyProfile() {
 
   const profile = profileData?.profile;
 
+  // Fill the form once. Later reloads (after a pick saves itself, say)
+  // mustn't wipe what you're still typing in the bio or prompts.
+  const filledFor = useRef(null);
   useEffect(() => {
-    if (profile) setEditData(profile);
+    if (!profile || filledFor.current === profile.user_id) return;
+    filledFor.current = profile.user_id;
+    setEditData(profile);
   }, [profile]);
 
   const updateMutation = useMutation({
@@ -106,6 +111,19 @@ export default function MyProfile() {
     const newPhotos = (editData.photos || []).map((p, i) => i === idx ? { ...p, is_nsfw: !p.is_nsfw } : p);
     setEditData(d => ({ ...d, photos: newPhotos }));
     updateMutation.mutate({ photos: newPhotos });
+  };
+
+  // Picks and switches save the moment you tap them, like photos do,
+  // so leaving the page without pressing Save never loses them
+  const saveNow = (field, value) => {
+    const before = editData[field];
+    setEditData(d => ({ ...d, [field]: value }));
+    updateMutation.mutate({ [field]: value }, {
+      onError: (err) => {
+        setEditData(d => ({ ...d, [field]: before }));
+        toast({ variant: 'destructive', title: "Couldn't save", description: errorMessage(err) });
+      },
+    });
   };
 
   const toggleInterest = (tag) => {
@@ -266,7 +284,7 @@ export default function MyProfile() {
               {LOOKING_FOR_OPTIONS.map(opt => (
                 <button
                   key={opt.value}
-                  onClick={() => setEditData(d => ({ ...d, looking_for: opt.value }))}
+                  onClick={() => saveNow('looking_for', opt.value)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
                     editData.looking_for === opt.value
                       ? 'bg-gradient-to-r from-primary to-accent border-transparent text-white'
@@ -299,7 +317,7 @@ export default function MyProfile() {
             </div>
             <Switch
               checked={!!editData.is_couple}
-              onCheckedChange={(v) => setEditData(d => ({ ...d, is_couple: v }))}
+              onCheckedChange={(v) => saveNow('is_couple', v)}
             />
           </div>
 
@@ -310,7 +328,7 @@ export default function MyProfile() {
             </div>
             <Switch
               checked={!!editData.hide_city}
-              onCheckedChange={(v) => setEditData(d => ({ ...d, hide_city: v }))}
+              onCheckedChange={(v) => saveNow('hide_city', v)}
             />
           </div>
 
@@ -396,7 +414,7 @@ export default function MyProfile() {
             {orientationOptions.map(opt => (
               <button
                 key={opt.value}
-                onClick={() => setEditData(d => ({ ...d, orientation: opt.value }))}
+                onClick={() => saveNow('orientation', opt.value)}
                 className={`px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 ${
                   editData.orientation === opt.value
                     ? 'bg-gradient-to-r from-primary to-accent border-transparent text-white'
@@ -461,7 +479,7 @@ export default function MyProfile() {
                 <p className="text-xs text-muted-foreground">Display your age on your profile</p>
               </div>
             </div>
-            <Switch checked={!!editData.show_age} onCheckedChange={(v) => setEditData(d => ({ ...d, show_age: v }))} />
+            <Switch checked={!!editData.show_age} onCheckedChange={(v) => saveNow('show_age', v)} />
           </div>
         </section>
 

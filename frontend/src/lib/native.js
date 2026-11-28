@@ -8,12 +8,15 @@ export const isNativeApp = () => Capacitor.isNativePlatform()
 // website doesn't download them.
 export const setupNativeApp = async () => {
   if (!isNativeApp()) return
-  const [{ StatusBar, Style }, { SplashScreen }] = await Promise.all([
+  const [{ StatusBar, Style }, { SplashScreen }, { Keyboard }] = await Promise.all([
     import('@capacitor/status-bar'),
     import('@capacitor/splash-screen'),
+    import('@capacitor/keyboard'),
   ])
   StatusBar.setStyle({ style: Style.Dark }).catch(() => {})
   SplashScreen.hide().catch(() => {})
+  // No "< > Done" bar above the keyboard, like other chat apps
+  Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {})
   handleAppLinks()
 }
 
