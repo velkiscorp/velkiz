@@ -283,15 +283,27 @@ export default function Chat() {
   };
 
   const timer = messagesData?.timer ?? match?.timer ?? null;
-  const keepChat = async () => {
+  // Keep-chat: send or accept an invite, take yours back, or say not now.
+  // Each one also posts a line in the chat (it arrives over the socket).
+  const keepAction = (call, failed) => async () => {
     try {
-      const { timer: next } = await matchesApi.keepChat(matchId);
+      const { timer: next } = await call(matchId);
       queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => old && ({ ...old, timer: next }));
       queryClient.invalidateQueries({ queryKey: ['matches'] });
     } catch (err) {
-      toast({ variant: 'destructive', title: "Couldn't keep the chat", description: err?.error || 'Please try again.' });
+      toast({ variant: 'destructive', title: failed, description: err?.error || 'Please try again.' });
     }
   };
+  const keepChat = keepAction(matchesApi.keepChat, "Couldn't keep the chat");
+  const cancelKeep = keepAction(matchesApi.cancelKeep, "Couldn't take back the invite");
+  const declineKeep = keepAction(matchesApi.declineKeep, "Couldn't answer the invite");
+
+  // Only their newest invite, still waiting on you, gets Keep / Not now
+  const openInviteId = React.useMemo(() => {
+    if (!timer?.theyKeep || timer.iKeep || timer.kept) return null;
+    const last = [...messages].reverse().find(m => m.kind === 'keep');
+    return last && last.content === 'requested' && !last.isMine ? last.id : null;
+  }, [messages, timer]);
 
   const byId = React.useMemo(() => new Map(messages.map(m => [m.id, m])), [messages]);
 
@@ -406,7 +418,7 @@ export default function Chat() {
         </DropdownMenu>
       </div>
 
-      <ChatTimerBar timer={timer} onKeep={keepChat} />
+      <ChatTimerBar timer={timer} onKeep={keepChat} onCancel={cancelKeep} />
 
       {/* Messages */}
       <div
@@ -434,6 +446,7 @@ export default function Chat() {
             replyTo={msg.reply_to_id ? (byId.get(msg.reply_to_id) || null) : undefined}
             onReply={setReplyingTo}
             onHold={setActionsFor}
+            keep={msg.kind === 'keep' ? { actionable: msg.id === openInviteId, onKeep: keepChat, onDecline: declineKeep } : undefined}
           />
         ))}
         <div ref={messagesEndRef} />

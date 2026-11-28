@@ -10,6 +10,7 @@ const fake = createFakeSupabase((q) => {
   if (q.table === 'matches' && q.op === 'update') { db.updates.push(q.payload); return { error: null } }
   if (q.table === 'matches' && q.op === 'delete') { db.deletedMatches += 1; return { error: null } }
   if (q.table === 'swipes' && q.op === 'delete') { db.deletedSwipes.push(q.filters); return { error: null } }
+  if (q.table === 'messages' && q.op === 'insert') { db.lines.push(q.payload); return { data: { id: 'l' + db.lines.length, ...q.payload }, error: null } }
   if (q.table === 'messages') return { data: [{ media_path: 'm1/a.jpg' }], error: null }
   if (q.table === 'matches') return { data: db.due, error: null }
   return { data: null, error: null }
@@ -18,7 +19,7 @@ mock.module('../src/config/supabase.js', { namedExports: { supabase: fake.client
 mock.module('../src/services/push.js', { namedExports: { notifyUser: (...a) => db.pushes.push(a) } })
 mock.module('../src/services/chatMedia.js', { namedExports: { removeMedia: (p) => db.removed.push(...p) } })
 mock.module('../src/services/calls.js', { namedExports: { endCallsForMatches: () => {} } })
-const { markOpened, keepChat, isExpired, timerFor, expireMatch, EXPIRY_MS } = await import('../src/services/chatExpiry.js')
+const { markOpened, keepChat, cancelKeep, declineKeep, isExpired, timerFor, expireMatch, EXPIRY_MS } = await import('../src/services/chatExpiry.js')
 
 const emitted = []
 const io = { to: (room) => ({ emit: (ev, data) => emitted.push([room, ev, data]) }), in: () => ({ socketsLeave() {} }) }
@@ -29,7 +30,7 @@ const match = (extra = {}) => ({
 })
 
 beforeEach(() => {
-  db = { updates: [], deletedMatches: 0, deletedSwipes: [], pushes: [], removed: [], due: [] }
+  db = { lines: [], updates: [], deletedMatches: 0, deletedSwipes: [], pushes: [], removed: [], due: [] }
   emitted.length = 0
 })
 
@@ -76,4 +77,34 @@ test('when time is up, the match, messages, files and both swipes go', async () 
 test('older matches without the new columns never expire', () => {
   assert.equal(isExpired({ id: 'x', user1_id: A, user2_id: B }), false)
   assert.equal(timerFor({ id: 'x', user1_id: A, user2_id: B }, A), null)
+})
+
+test('a keep invite, a cancel, a "not now" and a keep each leave a line in the chat', async () => {
+  const asked = await keepChat(match({ expires_at: new Date(Date.now() + 1000).toISOString() }), A, io)
+  assert.deepEqual(db.lines.at(-1), { match_id: 'm1', sender_id: A, kind: 'keep', content: 'requested' })
+  assert.deepEqual(db.pushes.at(-1), [B, 'keep', { matchId: 'm1' }])
+  assert.ok(emitted.some(([, ev, m]) => ev === 'receive_message' && m.content === 'requested'))
+
+  const cancelled = await cancelKeep(asked, A, io)
+  assert.equal(cancelled.user1_keeps, false)
+  assert.equal(db.lines.at(-1).content, 'cancelled')
+
+  const again = await keepChat(cancelled, A, io)
+  const declined = await declineKeep(again, B, io)
+  assert.equal(declined.user1_keeps, false)
+  assert.deepEqual(db.lines.at(-1), { match_id: 'm1', sender_id: B, kind: 'keep', content: 'declined' })
+
+  const third = await keepChat(declined, A, io)
+  const kept = await keepChat(third, B, io)
+  assert.equal(timerFor(kept, A).kept, true)
+  assert.equal(db.lines.at(-1).content, 'kept')
+})
+
+test("you can't cancel once it's kept, or decline when nothing was asked", async () => {
+  const kept = match({ user1_keeps: true, user2_keeps: true })
+  assert.equal(await cancelKeep(kept, A, io), kept)
+  const fresh = match()
+  assert.equal(await declineKeep(fresh, B, io), fresh)
+  assert.equal(db.lines.length, 0)
+  assert.equal(db.updates.length, 0)
 })

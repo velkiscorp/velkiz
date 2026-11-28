@@ -4,7 +4,7 @@ import { useNow, timeLeft, hoursLeft } from '@/lib/chatTimer';
 
 // Under the chat header: how long until this chat disappears, and the
 // "Keep chat" button. Nothing shows until you've both opened the chat.
-export default function ChatTimerBar({ timer, onKeep }) {
+export default function ChatTimerBar({ timer, onKeep, onCancel }) {
   const now = useNow(15_000);
   const [sending, setSending] = useState(false);
   if (!timer || !timer.started) return null;
@@ -19,9 +19,10 @@ export default function ChatTimerBar({ timer, onKeep }) {
   if (!timer.expiresAt) return null;
 
   const urgent = hoursLeft(timer.expiresAt, now) < 3;
-  const keep = async () => {
+  const run = (fn) => async () => {
+    if (!fn) return;
     setSending(true);
-    try { await onKeep(); } finally { setSending(false); }
+    try { await fn(); } finally { setSending(false); }
   };
 
   return (
@@ -33,20 +34,31 @@ export default function ChatTimerBar({ timer, onKeep }) {
         </span>
         <span className="block text-[11px] text-muted-foreground">
           {timer.iKeep
-            ? 'Waiting for them to keep it too'
+            ? 'Waiting for them to accept'
             : timer.theyKeep
               ? 'They want to keep this chat'
               : 'Keep it if you both want to stay in touch'}
         </span>
       </p>
       {timer.iKeep ? (
-        <span className="flex items-center gap-1 text-[11px] text-gold shrink-0"><Check className="w-3.5 h-3.5" /> Kept</span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold bg-black text-gold border border-gold/70">
+            <Check className="w-3.5 h-3.5" /> Invite sent
+          </span>
+          <button
+            onClick={run(onCancel)}
+            disabled={sending}
+            className="rounded-full px-2.5 py-1.5 text-[11px] text-muted-foreground border border-border/60 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+        </div>
       ) : (
         <button
-          onClick={keep}
+          onClick={run(onKeep)}
           disabled={sending}
-          className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50 ${
-            timer.theyKeep ? 'bg-gradient-to-b from-gold to-[hsl(37_40%_60%)] text-primary animate-pulse' : 'border border-gold/50 text-gold'
+          className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold bg-gradient-to-b from-gold to-[hsl(37_40%_60%)] text-primary disabled:opacity-50 ${
+            timer.theyKeep ? 'animate-pulse' : ''
           }`}
         >
           Keep chat
