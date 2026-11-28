@@ -129,7 +129,10 @@ export const sendMessageBody = z.object({
   content: z.string().trim()
     .min(1, 'Message cannot be empty')
     .max(2000, 'Message is too long (2000 characters max)'),
+  replyToId: uuid.optional(),
 })
+
+export const messageIdParams = z.object({ matchId: uuid, messageId: uuid })
 
 // ---- calls ----
 export const callIdParams = z.object({ callId: uuid })

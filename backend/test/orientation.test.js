@@ -77,3 +77,22 @@ test('showMe is read from the URL and checked', () => {
   assert.deepEqual(discoverQuery.parse({ showMe: 'male,female' }).showMe, ['male', 'female'])
   assert.equal(discoverQuery.safeParse({ showMe: 'robots' }).success, false)
 })
+
+test('two straight men who both pick "everyone" in Filters can see each other', async () => {
+  const { wantsToSeeWithShowMeFilter, showMeToStore } = await import('../src/services/orientation.js')
+  const f = wantsToSeeWithShowMeFilter('male')
+  // The other person chose everyone: they're matched on that choice
+  assert.match(f, /^show_me\.cs\.\{male\},/)
+  // and anyone who hasn't chosen still follows their orientation
+  assert.ok(f.includes(`and(show_me.is.null,or(${wantsToSeeFilter('male')}))`))
+  assert.equal(showMeToStore([]), null)
+  assert.deepEqual(showMeToStore(['male', 'female', 'male']), ['female', 'male'])
+
+  const { q, calls } = recorder()
+  applyOrientationFilter(q, { gender: 'male', orientation: 'heterosexual' }, ALL, { hasShowMeColumn: true })
+  assert.deepEqual(calls, [['or', f]])
+  // Before the SQL has run, the old check is used
+  const old = recorder()
+  applyOrientationFilter(old.q, { gender: 'male', orientation: 'heterosexual' }, ALL)
+  assert.deepEqual(old.calls, [['or', wantsToSeeFilter('male')]])
+})

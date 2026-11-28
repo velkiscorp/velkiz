@@ -30,6 +30,7 @@ create table public.profiles (
   -- looking_for: long_term | short_term | casual | online | friends | open
   gender text,
   orientation text,
+  show_me text[], -- genders picked in Discover Filters; null = follow orientation
   looking_for text,
   interests text[],
   photos jsonb default '[]'::jsonb,  -- [{ url, is_nsfw }], url names a file in the private photos bucket
@@ -70,6 +71,7 @@ create table public.messages (
   content text not null,
   is_filtered boolean default false,
   kind text not null default 'text', -- 'text', 'screenshot' for a screenshot alert, or 'call' for a call line
+  reply_to_id uuid, -- the message this one replies to, if any
   read_at timestamp with time zone,
   created_at timestamp with time zone default now()
 );
@@ -154,6 +156,7 @@ alter table public.matches add constraint matches_user1_id_fkey foreign key (use
 alter table public.matches add constraint matches_user2_id_fkey foreign key (user2_id) references auth.users(id) on delete cascade;
 alter table public.messages add constraint messages_match_id_fkey foreign key (match_id) references public.matches(id) on delete cascade;
 alter table public.messages add constraint messages_sender_id_fkey foreign key (sender_id) references auth.users(id) on delete cascade;
+alter table public.messages add constraint messages_reply_to_id_fkey foreign key (reply_to_id) references public.messages(id) on delete set null;
 alter table public.blocked_users add constraint blocked_users_blocker_id_fkey foreign key (blocker_id) references auth.users(id) on delete cascade;
 alter table public.blocked_users add constraint blocked_users_blocked_id_fkey foreign key (blocked_id) references auth.users(id) on delete cascade;
 alter table public.device_tokens add constraint device_tokens_user_id_fkey foreign key (user_id) references auth.users(id) on delete cascade;

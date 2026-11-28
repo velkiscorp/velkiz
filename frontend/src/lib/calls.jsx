@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import IncomingCall from '@/components/call/IncomingCall';
 import CallScreen from '@/components/call/CallScreen';
 import ReportDialog from '@/components/safety/ReportDialog';
+import { playRingtone, stopRingtone } from '@/lib/ringtone';
 
 // Voice and video calls between matches.
 //
@@ -268,6 +269,14 @@ export function CallProvider({ children }) {
 
     return () => { socket.disconnect(); };
   }, [user?.id, enabled, queryClient, cleanup, toast]);
+
+  // Ring while a call is coming in; ringback while waiting for them to answer
+  useEffect(() => {
+    if (status === 'incoming') playRingtone('incoming');
+    else if (status === 'outgoing') playRingtone('outgoing');
+    else stopRingtone();
+  }, [status]);
+  useEffect(() => stopRingtone, []);
 
   // Signing out hangs up
   useEffect(() => { if (!user?.id) cleanup(); }, [user?.id, cleanup]);

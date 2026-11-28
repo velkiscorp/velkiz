@@ -37,11 +37,22 @@ export const wantsToSeeFilter = (myGender) => {
   return clauses.join(',')
 }
 
+// Same, but people who picked genders in Filters ("Show me") are matched on
+// that choice instead of their orientation. Their choice is saved in
+// profiles.show_me (null = follow their orientation).
+export const wantsToSeeWithShowMeFilter = (myGender) =>
+  `show_me.cs.{${myGender}},and(show_me.is.null,or(${wantsToSeeFilter(myGender)}))`
+
 // Adds the "who you see" rules to a Discover query.
 // showMe: genders the person picked in Filters; empty means use their orientation.
-export const applyOrientationFilter = (query, me, showMe) => {
+// hasShowMeColumn: false until the show_me SQL has run.
+export const applyOrientationFilter = (query, me, showMe, { hasShowMeColumn = false } = {}) => {
   const wanted = showMe?.length ? showMe : gendersWantedBy(me?.gender ?? null, me?.orientation ?? null)
   if (wanted.length < GENDERS.length) query = query.in('gender', wanted)
-  if (me?.gender) query = query.or(wantsToSeeFilter(me.gender))
+  if (me?.gender) query = query.or(hasShowMeColumn ? wantsToSeeWithShowMeFilter(me.gender) : wantsToSeeFilter(me.gender))
   return query
 }
+
+// What to store in profiles.show_me for this Filters choice: null when it
+// just follows your orientation, otherwise the genders, sorted
+export const showMeToStore = (showMe) => (showMe?.length ? [...new Set(showMe)].sort() : null)

@@ -5,7 +5,7 @@ import { getBlockedUserIds, isBlockedBetween } from '../services/blocks.js'
 import { ageFromDob, MIN_AGE, MAX_AGE } from '../utils/age.js'
 import { photoAllowedForUser } from '../services/photos.js'
 import { applyDiscoverFilters } from '../services/discoverFilters.js'
-import { applyOrientationFilter } from '../services/orientation.js'
+import { applyOrientationFilter, showMeToStore } from '../services/orientation.js'
 import { distanceKm, roundedDistance } from '../utils/geo.js'
 
 export const getProfiles = async (req, res) => {
@@ -18,11 +18,22 @@ export const getProfiles = async (req, res) => {
 
     // Your own country and rough location, for "Near me" and distance,
     // and your gender and orientation, for who you see by default
+    // select('*') so this still works before the show_me column exists
     const { data: me } = await supabase
       .from('profiles')
-      .select('country, location_lat, location_lng, gender, orientation')
+      .select('*')
       .eq('user_id', currentUserId)
       .maybeSingle()
+
+    // Remember who you chose to see, so the two-way check below lets you
+    // show up for other people who picked "everyone" too
+    const hasShowMeColumn = !!me && 'show_me' in me
+    if (hasShowMeColumn) {
+      const wanted = showMeToStore(filters.showMe)
+      if (JSON.stringify(wanted) !== JSON.stringify(me.show_me ?? null)) {
+        await supabase.from('profiles').update({ show_me: wanted }).eq('user_id', currentUserId)
+      }
+    }
 
     const { data: mySwipes } = await supabase
       .from('swipes')
@@ -54,7 +65,7 @@ export const getProfiles = async (req, res) => {
     }
 
     query = applyDiscoverFilters(query, filters, me)
-    query = applyOrientationFilter(query, me, filters.showMe)
+    query = applyOrientationFilter(query, me, filters.showMe, { hasShowMeColumn })
 
     const { data: profiles, error } = await query
 
