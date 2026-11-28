@@ -142,7 +142,7 @@ function ViewOnce({ message, isMine }) {
       setLoading(false);
     }
   };
-  const close = () => setSrc(null);
+  const close = React.useCallback(() => setSrc(null), []);
 
   // A blurred, full-size card: the tiny preview stretched and blurred, so
   // there's a hint of colour and some anticipation, nothing more
@@ -186,32 +186,64 @@ function ViewOnce({ message, isMine }) {
   return (
     <>
       {body}
-      {src && createPortal(
-        <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center pt-safe pb-safe" onContextMenu={(e) => e.preventDefault()}>
-          <button onClick={close} aria-label="Close" className="absolute top-0 right-0 p-4 text-white/80 z-10" style={{ marginTop: 'env(safe-area-inset-top)' }}>
-            <X className="w-7 h-7" />
-          </button>
-          {message.kind === 'video' ? (
-            <video
-              src={src}
-              autoPlay
-              playsInline
-              controls
-              controlsList="nodownload"
-              disablePictureInPicture
-              onEnded={close}
-              style={noSave}
-              className="max-w-full max-h-full"
-            />
-          ) : (
-            <img src={src} alt="Photo" draggable={false} onClick={close} style={noSave} className="max-w-full max-h-full object-contain" />
-          )}
-          <p className="absolute bottom-0 inset-x-0 pb-6 text-center text-[11px] text-white/60" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
-            Opens once. Gone when you close it.
-          </p>
-        </div>,
-        document.body
-      )}
+      {src && <OneTimeViewer src={src} isVideo={message.kind === 'video'} onDone={close} />}
     </>
+  );
+}
+
+// A photo shows for this long, then closes for good
+const PHOTO_SECONDS = 5;
+
+// Full-screen, one look only. A photo closes itself after 5 seconds; a
+// video plays through once with no controls and closes when it ends.
+// A bar across the top shows how much time is left, like a story.
+function OneTimeViewer({ src, isVideo, onDone }) {
+  const [progress, setProgress] = useState(0);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (isVideo) return;
+    const started = Date.now();
+    const tick = setInterval(() => {
+      const p = (Date.now() - started) / (PHOTO_SECONDS * 1000);
+      if (p >= 1) { clearInterval(tick); onDone(); } else setProgress(p);
+    }, 50);
+    return () => clearInterval(tick);
+  }, [isVideo, onDone]);
+
+  const onTime = () => {
+    const v = videoRef.current;
+    if (v?.duration) setProgress(v.currentTime / v.duration);
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center pt-safe pb-safe" onContextMenu={(e) => e.preventDefault()}>
+      <div className="absolute inset-x-3 h-0.5 rounded-full bg-white/25 z-10 overflow-hidden" style={{ top: 'calc(env(safe-area-inset-top) + 10px)' }}>
+        <div className="h-full bg-white" style={{ width: `${Math.min(1, progress) * 100}%` }} />
+      </div>
+      <button onClick={onDone} aria-label="Close" className="absolute top-0 right-0 p-4 text-white/80 z-10" style={{ marginTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
+        <X className="w-7 h-7" />
+      </button>
+      {isVideo ? (
+        <video
+          ref={videoRef}
+          src={src}
+          autoPlay
+          playsInline
+          disablePictureInPicture
+          onTimeUpdate={onTime}
+          onEnded={onDone}
+          onError={onDone}
+          style={noSave}
+          className="max-w-full max-h-full"
+        />
+      ) : (
+        <img src={src} alt="Photo" draggable={false} style={noSave} className="max-w-full max-h-full object-contain" />
+      )}
+      <p className="absolute bottom-0 inset-x-0 pb-6 text-center text-[11px] text-white/60" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
+        {isVideo ? 'Plays once, then it’s gone.' : `Gone in ${Math.max(1, Math.ceil(PHOTO_SECONDS * (1 - progress)))}s`}
+      </p>
+    </div>,
+    document.body
   );
 }

@@ -126,9 +126,10 @@ export const formatSeconds = (secs) => {
 // On the web, onWeb() opens a normal file input instead.
 const MediaPicker = registerPlugin('MediaPicker')
 
-export const pickPhotoOrVideo = async (onWeb) => {
+// source: 'library' (default) or 'camera' (take a photo or record a video)
+export const pickPhotoOrVideo = async (onWeb, source = 'library') => {
   if (!Capacitor.isNativePlatform()) { onWeb?.(); return null }
-  const picked = await MediaPicker.pick()
+  const picked = source === 'camera' ? await MediaPicker.capture() : await MediaPicker.pick()
   if (!picked || picked.cancelled || !picked.webPath) return null
   const blob = await (await fetch(picked.webPath)).blob()
   const ext = picked.ext || (picked.isVideo ? 'mov' : 'jpg')

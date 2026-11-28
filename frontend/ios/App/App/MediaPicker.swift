@@ -14,12 +14,15 @@ class VelkizBridgeViewController: CAPBridgeViewController {
 // It needs no access to the photo library (no permission prompt), and with a
 // limit of one it closes as soon as something is tapped.
 // JS: MediaPicker.pick() -> { webPath, isVideo, ext } or { cancelled: true }
+//     MediaPicker.capture() -> the same, from the camera (photo or video, up to a minute)
 @objc(MediaPickerPlugin)
-public class MediaPickerPlugin: CAPPlugin, CAPBridgedPlugin, PHPickerViewControllerDelegate {
+public class MediaPickerPlugin: CAPPlugin, CAPBridgedPlugin, PHPickerViewControllerDelegate,
+    UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     public let identifier = "MediaPickerPlugin"
     public let jsName = "MediaPicker"
     public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "pick", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "pick", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "capture", returnType: CAPPluginReturnPromise)
     ]
 
     private var pending: CAPPluginCall?
@@ -76,6 +79,75 @@ public class MediaPickerPlugin: CAPPlugin, CAPBridgedPlugin, PHPickerViewControl
                 let webPath = self.bridge?.portablePath(fromLocalURL: copy)?.absoluteString ?? ""
                 self.finish(["webPath": webPath, "isVideo": isVideo, "ext": ext])
             }
+        }
+    }
+
+    // Camera: take a photo or record a video, then hand it back like a pick.
+    // iOS asks for camera (and, for video, microphone) access the first time.
+    @objc func capture(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            self.pending?.resolve(["cancelled": true])
+            self.pending = call
+            guard UIImagePickerController.isSourceTypeAvailable(.camera),
+                  let presenter = self.bridge?.viewController else {
+                self.fail("This phone has no camera available.")
+                return
+            }
+            let camera = UIImagePickerController()
+            camera.sourceType = .camera
+            camera.mediaTypes = [UTType.image.identifier, UTType.movie.identifier]
+            camera.videoMaximumDuration = 60
+            camera.videoQuality = .typeHigh
+            camera.cameraDevice = .rear
+            camera.delegate = self
+            camera.modalPresentationStyle = .fullScreen
+            presenter.present(camera, animated: true)
+        }
+    }
+
+    public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
+        finish(["cancelled": true])
+    }
+
+    public func imagePickerController(_ picker: UIImagePickerController,
+                                      didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        picker.dismiss(animated: true)
+        if let video = info[.mediaURL] as? URL {
+            let ext = video.pathExtension.isEmpty ? "mov" : video.pathExtension.lowercased()
+            let copy = tempURL(ext)
+            do {
+                try FileManager.default.copyItem(at: video, to: copy)
+                hand(copy, isVideo: true, ext: ext)
+            } catch {
+                fail("Couldn't save that video. Try again.")
+            }
+            return
+        }
+        guard let image = info[.originalImage] as? UIImage,
+              let data = image.jpegData(compressionQuality: 0.9) else {
+            fail("Couldn't save that photo. Try again.")
+            return
+        }
+        let copy = tempURL("jpg")
+        do {
+            try data.write(to: copy)
+            hand(copy, isVideo: false, ext: "jpg")
+        } catch {
+            fail("Couldn't save that photo. Try again.")
+        }
+    }
+
+    private func tempURL(_ ext: String) -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("pick-\(UUID().uuidString)")
+            .appendingPathExtension(ext)
+    }
+
+    private func hand(_ file: URL, isVideo: Bool, ext: String) {
+        DispatchQueue.main.async {
+            let webPath = self.bridge?.portablePath(fromLocalURL: file)?.absoluteString ?? ""
+            self.finish(["webPath": webPath, "isVideo": isVideo, "ext": ext])
         }
     }
 

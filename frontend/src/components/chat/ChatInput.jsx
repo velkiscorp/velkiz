@@ -4,7 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import MediaComposer from './MediaComposer';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, X, Reply, Plus, Mic, Trash2 } from 'lucide-react';
+import { Send, X, Reply, Plus, Mic, Trash2, Camera, Images } from 'lucide-react';
 
 // replyingTo: the message being answered (shown above the box), or null
 // onSendMedia(file, { duration, keep }): a photo or video picked (keep: stays in
@@ -14,6 +14,9 @@ export default function ChatInput({ onSend, onSendMedia, sendingMedia, replyingT
   const [text, setText] = useState('');
   const inputRef = useRef(null);
   const fileRef = useRef(null);
+  const cameraRef = useRef(null);
+  const attachRef = useRef(null);
+  const [attachOpen, setAttachOpen] = useState(false);
   const recording = useRef(null);
   const [recordingSince, setRecordingSince] = useState(null);
   const [now, setNow] = useState(Date.now());
@@ -70,9 +73,20 @@ export default function ChatInput({ onSend, onSendMedia, sendingMedia, replyingT
     setPending(file);
   };
 
-  const choose = async () => {
+  // Tapping anywhere else closes the + menu
+  useEffect(() => {
+    if (!attachOpen) return;
+    const away = (e) => { if (!attachRef.current?.contains(e.target)) setAttachOpen(false); };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, [attachOpen]);
+
+  // source: 'library' or 'camera'
+  const choose = async (source) => {
+    setAttachOpen(false);
     try {
-      const file = await pickPhotoOrVideo(() => fileRef.current?.click());
+      const webInput = source === 'camera' ? cameraRef : fileRef;
+      const file = await pickPhotoOrVideo(() => webInput.current?.click(), source);
       if (file) openComposer(file);
     } catch {
       onError?.("Couldn't open that. Try another one.");
@@ -106,7 +120,7 @@ export default function ChatInput({ onSend, onSendMedia, sendingMedia, replyingT
   };
 
   return (
-    <div className="border-t border-border/50 bg-background/80 backdrop-blur-xl pb-safe">
+    <div className="relative border-t border-border/50 bg-background/80 backdrop-blur-xl pb-safe">
       {replyingTo && (
         <div className="flex items-center gap-2 px-4 pt-2.5 text-xs">
           <Reply className="w-3.5 h-3.5 text-gold shrink-0" />
@@ -161,16 +175,39 @@ export default function ChatInput({ onSend, onSendMedia, sendingMedia, replyingT
       ) : (
       <div className="flex items-center gap-1.5 p-3">
         <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={pickFile} />
+        <input ref={cameraRef} type="file" accept="image/*,video/*" capture="environment" className="hidden" onChange={pickFile} />
         {onSendMedia && (
-          <button
-            onPointerDown={(e) => e.preventDefault()}
-            onClick={choose}
-            disabled={sendingMedia}
-            aria-label="Send a photo or video"
-            className="shrink-0 w-9 h-10 flex items-center justify-center text-gold disabled:opacity-40"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
+          <div ref={attachRef} className="relative shrink-0">
+            <button
+              onPointerDown={(e) => e.preventDefault()}
+              onClick={() => setAttachOpen(o => !o)}
+              disabled={sendingMedia}
+              aria-label="Send a photo or video"
+              aria-expanded={attachOpen}
+              className="w-9 h-10 flex items-center justify-center text-gold disabled:opacity-40"
+            >
+              <Plus className={`w-6 h-6 transition-transform duration-200 ${attachOpen ? 'rotate-45' : ''}`} />
+            </button>
+            {attachOpen && (
+              <div className="absolute bottom-full left-0 mb-3 w-56 rounded-xl border border-border bg-card shadow-2xl overflow-hidden z-20">
+                <button
+                  onPointerDown={(e) => e.preventDefault()}
+                  onClick={() => choose('camera')}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-secondary"
+                >
+                  <Camera className="w-5 h-5 text-gold" /> Camera
+                </button>
+                <div className="h-px bg-border/60" />
+                <button
+                  onPointerDown={(e) => e.preventDefault()}
+                  onClick={() => choose('library')}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-secondary"
+                >
+                  <Images className="w-5 h-5 text-gold" /> Photos &amp; videos
+                </button>
+              </div>
+            )}
+          </div>
         )}
         <Input
           ref={inputRef}
