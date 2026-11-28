@@ -78,11 +78,15 @@ export const videoDuration = (file) => new Promise((resolve) => {
 })
 
 // Voice recording. iPhones record AAC in an .m4a (audio/mp4).
+// 48 kHz mono at 128 kbps, with the phone cleaning up echo and background
+// noise: much clearer than the browser default, and still only ~1 MB a minute.
 export const startVoiceRecording = async () => {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 },
+  })
   const mimeType = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm']
     .find(t => window.MediaRecorder?.isTypeSupported?.(t))
-  const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+  const recorder = new MediaRecorder(stream, { ...(mimeType ? { mimeType } : {}), audioBitsPerSecond: 128000 })
   const chunks = []
   recorder.ondataavailable = (e) => { if (e.data?.size) chunks.push(e.data) }
   const startedAt = Date.now()

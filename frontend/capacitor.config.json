@@ -32,7 +32,7 @@
       "contentMode": "scaleAspectFill"
     },
     "Keyboard": {
-      "resize": "none"
+      "resize": "native"
     }
   }
 }

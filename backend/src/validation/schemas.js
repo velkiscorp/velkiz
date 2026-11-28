@@ -144,6 +144,8 @@ export const sendMediaQuery = z.object({
   replyToId: uuid.optional(),
   // Seconds, for videos and voice messages
   duration: z.coerce.number().min(0).max(600).optional(),
+  // Photos and videos open once for the other person unless this is 'true'
+  keep: z.enum(['true', 'false']).optional(),
 })
 
 // ---- calls ----

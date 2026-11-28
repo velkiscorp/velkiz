@@ -17,6 +17,14 @@ export const setupNativeApp = async () => {
   SplashScreen.hide().catch(() => {})
   // No "< > Done" bar above the keyboard, like other chat apps
   Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => {})
+  // The app shrinks to fit above the keyboard ("resize": "native" in
+  // capacitor.config.json), so nothing needs to scroll. iOS still nudges the
+  // page up to show the text box; put it back so headers stay where they are.
+  Keyboard.addListener('keyboardDidShow', () => window.scrollTo(0, 0))
+  // While it's up, the home-bar space at the bottom isn't needed (see .pb-safe)
+  const root = document.documentElement
+  Keyboard.addListener('keyboardWillShow', () => root.classList.add('keyboard-open'))
+  Keyboard.addListener('keyboardWillHide', () => root.classList.remove('keyboard-open'))
   handleAppLinks()
 }
 

@@ -68,6 +68,8 @@
      nothing on the web. */
   .pt-safe { padding-top: env(safe-area-inset-top); }
   .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  /* The keyboard covers the home bar, so no gap above it */
+  html.keyboard-open .pb-safe { padding-bottom: 0; }
   /* Full screen height that follows the iOS toolbar / keyboard */
   .h-dvh-screen { height: 100vh; height: 100dvh; }
   /* A tab page between the app header and bottom nav */
