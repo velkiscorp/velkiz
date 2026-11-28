@@ -1,3 +1,4 @@
+import { withOldNames } from '../utils/interests.js'
 import { boundingBox } from '../utils/geo.js'
 
 // Date that someone born on it turns `years` old today, as YYYY-MM-DD
@@ -12,7 +13,7 @@ export const applyDiscoverFilters = (query, filters, me, today = new Date()) => 
   const { lookingFor, interests, minAge, maxAge, minHeight, maxHeight, maxDistanceKm, sameRegion } = filters
 
   if (lookingFor?.length) query = query.in('looking_for', lookingFor)
-  if (interests?.length) query = query.overlaps('interests', interests)
+  if (interests?.length) query = query.overlaps('interests', withOldNames(interests))
 
   if (minHeight) query = query.gte('height_cm', minHeight)
   if (maxHeight) query = query.lte('height_cm', maxHeight)

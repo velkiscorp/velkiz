@@ -23,8 +23,7 @@ export const HEIGHT_OPTIONS = Array.from({ length: 211 - 140 + 1 }, (_, i) => 14
 // One interests list for onboarding, My Profile and the Discover filter.
 // (Casual isn't here on purpose: it's a "looking for" choice now.)
 export const INTEREST_OPTIONS = [
-  'Flirting', 'Romantic', 'Romance', 'Sexting', 'Roleplay', 'Kink Friendly', 'BDSM',
-  'Dominant', 'Submissive', 'Switch', 'Voyeur', 'Exhibitionist', 'Oral',
+  'Flirting', 'Romantic', 'Romance', 'Playful', 'Bold', 'Confident', 'Passionate',
   'Late Night Talks', 'Netflix & Chill', 'Spontaneous', 'Open Minded', 'Adventure',
   'Outdoors', 'Travel', 'Music', 'Dancing', 'Art', 'Photography', 'Fitness', 'Foodie',
 ];

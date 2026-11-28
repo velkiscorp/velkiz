@@ -7,6 +7,7 @@ import { photoAllowedForUser } from '../services/photos.js'
 import { applyDiscoverFilters } from '../services/discoverFilters.js'
 import { applyOrientationFilter, showMeToStore } from '../services/orientation.js'
 import { distanceKm, roundedDistance } from '../utils/geo.js'
+import { normalizeInterests } from '../utils/interests.js'
 
 export const getProfiles = async (req, res) => {
   try {
@@ -200,7 +201,7 @@ export const updateMyProfile = async (req, res) => {
     if (gender !== undefined) updates.gender = gender
     if (orientation !== undefined) updates.orientation = orientation
     if (looking_for !== undefined) updates.looking_for = looking_for
-    if (interests !== undefined) updates.interests = interests
+    if (interests !== undefined) updates.interests = normalizeInterests(interests)
     if (photos !== undefined) updates.photos = photos
     if (photo_url !== undefined) updates.photo_url = photo_url
     if (country !== undefined) updates.country = country
