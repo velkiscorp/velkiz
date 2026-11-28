@@ -19,7 +19,7 @@ import { supabase } from '../config/supabase.js'
 export const MESSAGES = {
   match: { title: 'Velkiz', body: 'You have a new match' },
   message: { title: 'Velkiz', body: 'You have a new message' },
-  screenshot: { title: 'Velkiz', body: 'A match took a screenshot of your chat' },
+  screenshot: { title: 'Velkiz', body: 'A match tried to screenshot your chat. Velkiz kept it hidden.' },
   superlike: { title: 'Velkiz', body: 'Someone Super Liked you' },
   call: { title: 'Velkiz', body: 'A match is calling you' },
   missedcall: { title: 'Velkiz', body: 'You missed a call from a match' },
