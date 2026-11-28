@@ -1,10 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Play, Pause, ImageOff } from 'lucide-react';
+import { Play, Pause, ImageOff, Eye, EyeOff, X } from 'lucide-react';
 import { useChatMedia, formatSeconds } from '@/lib/chatMedia';
+import { messagesApi } from '@/api/messages';
 import PhotoViewer from '@/components/shared/PhotoViewer';
 
 // The inside of a photo, video or voice message bubble
 export default function MediaContent({ message, isMine }) {
+  if (message.view_once && message.kind !== 'audio') return <ViewOnce message={message} isMine={isMine} />;
+  return <SavedMedia message={message} isMine={isMine} />;
+}
+
+function SavedMedia({ message, isMine }) {
   const { src, failed } = useChatMedia(message.match_id, message.id);
 
   if (failed) {
@@ -104,5 +110,91 @@ function VoiceMessage({ src, duration, isMine }) {
         <p className="text-[11px] mt-1 tabular-nums opacity-80">{formatSeconds(playing || time ? time : length)}</p>
       </div>
     </div>
+  );
+}
+
+// A view-once photo or video: the other person taps to open it full screen,
+// one time. The file is deleted on the server as it's handed over, so
+// closing it (or the video ending) is the last anyone sees of it.
+function ViewOnce({ message, isMine }) {
+  const [openedHere, setOpenedHere] = useState(false);
+  const [src, setSrc] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const what = message.kind === 'video' ? 'video' : 'photo';
+  const opened = !!message.viewed_at || openedHere;
+
+  useEffect(() => () => { if (src) URL.revokeObjectURL(src); }, [src]);
+
+  const open = async () => {
+    if (loading) return;
+    setLoading(true);
+    setFailed(false);
+    try {
+      const blob = await messagesApi.getMedia(message.match_id, message.id);
+      setOpenedHere(true);
+      setSrc(URL.createObjectURL(blob));
+    } catch (err) {
+      if (err?.code === 'VIEWED') setOpenedHere(true);
+      else setFailed(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const close = () => setSrc(null);
+
+  const chip = 'flex items-center gap-2 px-4 py-3 rounded-md text-xs border';
+  let body;
+  if (isMine) {
+    body = (
+      <div className={`${chip} border-primary/40 bg-primary/10 text-foreground/80`}>
+        {opened ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-gold" />}
+        {opened ? `Opened` : `View-once ${what}`}
+      </div>
+    );
+  } else if (opened && !src) {
+    body = (
+      <div className={`${chip} border-border/60 bg-card/60 text-muted-foreground`}>
+        <EyeOff className="w-4 h-4" /> Opened
+      </div>
+    );
+  } else {
+    body = (
+      <button onClick={open} disabled={loading} className={`${chip} border-gold/40 bg-gold/10 text-gold disabled:opacity-60`}>
+        <Eye className="w-4 h-4" />
+        {loading ? 'Opening…' : failed ? `Couldn't open. Tap to try again` : `Tap to view ${what}`}
+      </button>
+    );
+  }
+
+  return (
+    <>
+      {body}
+      {src && (
+        <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center pt-safe pb-safe" onContextMenu={(e) => e.preventDefault()}>
+          <button onClick={close} aria-label="Close" className="absolute top-0 right-0 p-4 text-white/80 z-10" style={{ marginTop: 'env(safe-area-inset-top)' }}>
+            <X className="w-7 h-7" />
+          </button>
+          {message.kind === 'video' ? (
+            <video
+              src={src}
+              autoPlay
+              playsInline
+              controls
+              controlsList="nodownload"
+              disablePictureInPicture
+              onEnded={close}
+              style={noSave}
+              className="max-w-full max-h-full"
+            />
+          ) : (
+            <img src={src} alt="Photo" draggable={false} onClick={close} style={noSave} className="max-w-full max-h-full object-contain" />
+          )}
+          <p className="absolute bottom-0 inset-x-0 pb-6 text-center text-[11px] text-white/60" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
+            Opens once. Gone when you close it.
+          </p>
+        </div>
+      )}
+    </>
   );
 }

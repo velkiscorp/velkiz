@@ -94,8 +94,23 @@ export function CallProvider({ children }) {
 
   // Join the LiveKit room and turn on the mic (and camera for video calls)
   const connect = useCallback(async ({ url, token, video }) => {
-    const { Room, RoomEvent, Track } = await import('livekit-client');
-    const room = new Room({ adaptiveStream: true, dynacast: true });
+    const { Room, RoomEvent, Track, VideoPresets } = await import('livekit-client');
+    const room = new Room({
+      adaptiveStream: true,
+      dynacast: true,
+      // Clearer sound: mono voice at up to 64 kbps (LiveKit's default is 48),
+      // with echo, noise and level handled by the phone
+      audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
+      // Sharper video: 720p at 30 fps, up to 2.5 Mbps when the connection allows
+      videoCaptureDefaults: { resolution: VideoPresets.h720.resolution },
+      publishDefaults: {
+        audioPreset: { maxBitrate: 64_000 },
+        dtx: true,
+        red: true,
+        videoEncoding: { maxBitrate: 2_500_000, maxFramerate: 30 },
+        simulcast: true,
+      },
+    });
     roomRef.current = room;
 
     const refreshRemote = () => {

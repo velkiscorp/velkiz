@@ -277,13 +277,14 @@ export const clearChat = async (req, res) => {
   }
 }
 
-// POST /api/messages/:matchId/media?replyToId=&duration=
+// POST /api/messages/:matchId/media?replyToId=&duration=&keep=
 // Body: the file itself (a photo, video or voice message), with its
-// Content-Type. Saved privately; both of you see it in the chat.
+// Content-Type. Saved privately. Photos and videos are view-once (the
+// other person can open it one time, then it's deleted) unless keep=true.
 export const sendMedia = async (req, res) => {
   try {
     const { matchId } = req.params
-    const { replyToId, duration } = req.validatedQuery || {}
+    const { replyToId, duration, keep } = req.validatedQuery || {}
     const userId = req.user.id
 
     const type = baseType(req.get('content-type'))
@@ -311,21 +312,24 @@ export const sendMedia = async (req, res) => {
     const path = newMediaPath(matchId, type)
     await uploadMedia(path, buf, type)
 
-    const { data: message, error } = await supabase
-      .from('messages')
-      .insert({
-        match_id: matchId,
-        sender_id: userId,
-        kind,
-        // Shown in the Messages list and anywhere the file can't be
-        content: MEDIA[kind].label,
-        media_path: path,
-        media_type: type,
-        ...(duration ? { media_duration: duration } : {}),
-        ...(replyToId ? { reply_to_id: replyToId } : {}),
-      })
-      .select()
-      .single()
+    const row = {
+      match_id: matchId,
+      sender_id: userId,
+      kind,
+      // Shown in the Messages list and anywhere the file can't be
+      content: MEDIA[kind].label,
+      media_path: path,
+      media_type: type,
+      ...(duration ? { media_duration: duration } : {}),
+      ...(replyToId ? { reply_to_id: replyToId } : {}),
+    }
+    const viewOnce = kind !== 'audio' && keep !== 'true'
+    const insert = (r) => supabase.from('messages').insert(r).select().single()
+    let { data: message, error } = await insert(viewOnce ? { ...row, view_once: true } : row)
+    // Before the view-once SQL has run there's no such column: send it as a normal one
+    if (error && viewOnce && /view_once/.test(error.message || '')) {
+      ({ data: message, error } = await insert(row))
+    }
 
     if (error) {
       removeMedia([path])
@@ -345,30 +349,60 @@ export const sendMedia = async (req, res) => {
 }
 
 // GET /api/messages/:matchId/media/:messageId
-// The file for a photo, video or voice message, only for the two people in the chat
+// The file for a photo, video or voice message, only for the two people in
+// the chat. A view-once file is handed to the other person a single time and
+// deleted straight after; the sender can't open it again either.
 export const getMedia = async (req, res) => {
   try {
     const { matchId, messageId } = req.params
+    const userId = req.user.id
     const notFound = () => res.status(404).json({ error: 'Not found' })
 
-    if (!await findMyMatch(matchId, req.user.id)) return notFound()
+    if (!await findMyMatch(matchId, userId)) return notFound()
 
     const { data: message } = await supabase
       .from('messages')
-      .select('media_path, media_type')
+      .select('*')
       .eq('id', messageId)
       .eq('match_id', matchId)
       .maybeSingle()
-    if (!message?.media_path) return notFound()
+    if (!message) return notFound()
+
+    const viewOnce = message.view_once === true
+    if (viewOnce) {
+      if (message.sender_id === userId) {
+        return res.status(403).json({ error: 'View-once photos and videos only open for the other person', code: 'VIEW_ONCE' })
+      }
+      if (message.viewed_at || !message.media_path) {
+        return res.status(410).json({ error: 'Already opened', code: 'VIEWED' })
+      }
+    }
+    if (!message.media_path) return notFound()
 
     const buf = await downloadMedia(message.media_path)
     if (!buf) return notFound()
+
+    if (viewOnce) {
+      // Claim the one view. Two requests at once: only one gets the file.
+      const viewedAt = new Date().toISOString()
+      const { data: claimed } = await supabase
+        .from('messages')
+        .update({ viewed_at: viewedAt, media_path: null })
+        .eq('id', messageId)
+        .is('viewed_at', null)
+        .select('id')
+      if (!Array.isArray(claimed) || claimed.length === 0) {
+        return res.status(410).json({ error: 'Already opened', code: 'VIEWED' })
+      }
+      removeMedia([message.media_path])
+      req.app.get('io')?.to(matchId).emit('message_viewed', { matchId, messageId, viewedAt })
+    }
 
     res.set({
       'Content-Type': kindForType(message.media_type) ? message.media_type : 'application/octet-stream',
       'Content-Disposition': 'inline',
       'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'private, max-age=300',
+      'Cache-Control': viewOnce ? 'no-store' : 'private, max-age=300',
     })
     res.send(buf)
   } catch (error) {

@@ -15,6 +15,7 @@ const fake = createFakeSupabase((q) => {
     const mine = filterValue(q, 'eq', 'sender_id')
     return { data: mine === undefined || mine === db.senderOfMsg ? [{ id: MSG, media_path: db.mediaPath ?? null }] : [], error: null }
   }
+  if (q.table === 'messages' && q.op === 'update') { db.updates.push(q); return { data: db.claimable ? [{ id: MSG }] : [], error: null } }
   if (q.table === 'messages' && q.op === 'select' && q.single) return { data: db.original, error: null }
   if (q.table === 'messages' && q.op === 'insert') { db.inserted.push(q.payload); return { data: { id: 'new', ...q.payload }, error: null } }
   return { data: null, error: null }
@@ -24,22 +25,24 @@ mock.module('../src/services/push.js', { namedExports: { notifyUser: () => {} } 
 const storage = { uploaded: [], removed: [] }
 fake.client.storage = { from: () => ({
   upload: async (path, buf, opts) => { storage.uploaded.push([path, opts.contentType]); return { error: null } },
+  download: async () => ({ data: new Blob([Buffer.from([0xff, 0xd8, 0xff, 0xe0])]), error: null }),
   remove: async (paths) => { storage.removed.push(...paths); return { error: null } },
 }) }
-const { unsendMessage, clearChat, sendMessage, sendMedia } = await import('../src/controllers/messageController.js')
+const { unsendMessage, clearChat, sendMessage, sendMedia, getMedia } = await import('../src/controllers/messageController.js')
 const { looksLike, kindForType, baseType } = await import('../src/services/chatMedia.js')
 
 const emitted = []
 const io = { to: (room) => ({ emit: (ev, data) => emitted.push([room, ev, data]) }) }
 const call = async (handler, params, body = {}, extra = {}) => {
   let status = 200, json
-  const res = { status(s) { status = s; return this }, json(j) { json = j; return this } }
+  let sent = null
+  const res = { status(s) { status = s; return this }, json(j) { json = j; return this }, set() { return this }, send(b) { sent = b; return this } }
   await handler({ user: { id: ME }, params, body, app: { get: () => io }, get: () => extra.type, validatedQuery: extra.query || {} }, res)
-  return { status, json }
+  return { status, json, sent }
 }
 
 beforeEach(() => {
-  db = { match: { id: MATCH, user1_id: ME, user2_id: THEM, status: 'matched' }, senderOfMsg: ME, deletes: [], inserted: [], original: { id: MSG } }
+  db = { match: { id: MATCH, user1_id: ME, user2_id: THEM, status: 'matched' }, senderOfMsg: ME, deletes: [], inserted: [], updates: [], claimable: true, original: { id: MSG } }
   emitted.length = 0
   storage.uploaded.length = 0
   storage.removed.length = 0
@@ -119,4 +122,39 @@ test('unsending a photo deletes the file too', async () => {
   db.mediaPath = `${MATCH}/x.jpg`
   await call(unsendMessage, { matchId: MATCH, messageId: MSG })
   assert.deepEqual(storage.removed, [`${MATCH}/x.jpg`])
+})
+
+test('photos and videos are view-once unless you keep them; voice messages never are', async () => {
+  await call(sendMedia, { matchId: MATCH }, JPEG, { type: 'image/jpeg' })
+  assert.equal(db.inserted[0].view_once, true)
+  await call(sendMedia, { matchId: MATCH }, JPEG, { type: 'image/jpeg', query: { keep: 'true' } })
+  assert.equal(db.inserted[1].view_once, undefined)
+  await call(sendMedia, { matchId: MATCH }, M4A, { type: 'audio/mp4' })
+  assert.equal(db.inserted[2].view_once, undefined)
+})
+
+const viewOncePhoto = (extra = {}) => ({ id: MSG, match_id: MATCH, sender_id: THEM, kind: 'image', media_type: 'image/jpeg', media_path: `${MATCH}/v.jpg`, view_once: true, viewed_at: null, ...extra })
+
+test('a view-once photo opens once for the other person, then the file is deleted', async () => {
+  db.original = viewOncePhoto()
+  const r = await call(getMedia, { matchId: MATCH, messageId: MSG })
+  assert.ok(r.sent)
+  assert.equal(db.updates[0].payload.media_path, null)
+  assert.ok(db.updates[0].payload.viewed_at)
+  assert.deepEqual(storage.removed, [`${MATCH}/v.jpg`])
+  assert.equal(emitted[0][1], 'message_viewed')
+})
+
+test('a view-once photo already opened is gone, and the sender cannot open it', async () => {
+  db.original = viewOncePhoto({ viewed_at: new Date().toISOString(), media_path: null })
+  assert.equal((await call(getMedia, { matchId: MATCH, messageId: MSG })).status, 410)
+  db.original = viewOncePhoto({ sender_id: ME })
+  assert.equal((await call(getMedia, { matchId: MATCH, messageId: MSG })).status, 403)
+  // Two opens at once: the one that loses the claim gets nothing
+  db.original = viewOncePhoto()
+  db.claimable = false
+  const r = await call(getMedia, { matchId: MATCH, messageId: MSG })
+  assert.equal(r.status, 410)
+  assert.equal(r.sent, null)
+  assert.equal(storage.removed.length, 0)
 })

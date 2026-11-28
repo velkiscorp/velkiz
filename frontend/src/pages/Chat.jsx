@@ -35,6 +35,7 @@ export default function Chat() {
   const urlParams = new URLSearchParams(window.location.search);
   const matchId = urlParams.get('matchId');
   const messagesEndRef = useRef(null);
+  const dragFrom = useRef(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -104,6 +105,15 @@ export default function Chat() {
     socket.on('message_deleted', (payload) => {
       if (payload?.matchId !== matchId) return;
       removeMessage(payload.messageId);
+    });
+
+    // A view-once photo or video was opened: it's gone for both of you
+    socket.on('message_viewed', (payload) => {
+      if (payload?.matchId !== matchId) return;
+      queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => old && ({
+        ...old,
+        messages: (old.messages || []).map(m => m.id === payload.messageId ? { ...m, viewed_at: payload.viewedAt, media_path: null } : m),
+      }));
     });
 
     // Whole chat deleted by either of you
@@ -216,7 +226,7 @@ export default function Chat() {
   const [sendingMedia, setSendingMedia] = useState(false);
   const mediaError = (description) => toast({ variant: 'destructive', title: "Couldn't send", description });
 
-  const sendMedia = async (file, { duration } = {}) => {
+  const sendMedia = async (file, { duration, keep } = {}) => {
     const replyToId = replyingTo?.id;
     setSendingMedia(true);
     try {
@@ -234,8 +244,9 @@ export default function Chat() {
         mediaError('You can send photos, videos and voice messages.');
         return;
       }
-      const { message } = await messagesApi.sendMedia(matchId, blob, { replyToId, duration: length });
-      primeChatMedia(message.id, blob);
+      const { message } = await messagesApi.sendMedia(matchId, blob, { replyToId, duration: length, keep });
+      // A view-once photo or video doesn't open for you after sending
+      if (!message.view_once) primeChatMedia(message.id, blob);
       setReplyingTo(null);
       queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => {
         const existing = old?.messages || [];
@@ -397,7 +408,18 @@ export default function Chat() {
       <ChatTimerBar timer={timer} onKeep={keepChat} />
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div
+        className="flex-1 overflow-y-auto px-4 py-4"
+        // Dragging the messages down closes the keyboard, like other chat apps
+        onTouchStart={(e) => { dragFrom.current = e.touches[0].clientY; }}
+        onTouchMove={(e) => {
+          if (dragFrom.current === null || e.touches[0].clientY - dragFrom.current < 30) return;
+          dragFrom.current = null;
+          const el = document.activeElement;
+          if (el && ['INPUT', 'TEXTAREA'].includes(el.tagName)) el.blur();
+        }}
+        onTouchEnd={() => { dragFrom.current = null; }}
+      >
         {messages.length === 0 && (
           <EmptyState drawing="letter" title="Say something they'll remember" className="h-full">
             Only the two of you can read this. Names stay hidden until you share them.
