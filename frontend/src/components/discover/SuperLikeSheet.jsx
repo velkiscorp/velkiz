@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useSuperLikes, useRefresh } from '@/api/queries';
 import { superLikesApi } from '@/api/superLikes';
 import { canBuy, getPacks, buyPack } from '@/lib/purchases';
+import { isNativeApp } from '@/lib/native';
 import { useUnits } from '@/lib/units';
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -115,10 +116,9 @@ export default function SuperLikeSheet({ onClose }) {
               Paid through your Apple ID. Super Likes don't expire and aren't refunded if you undo one.
             </p>
           </div>
-        ) : (
-          <p className="text-xs text-muted-foreground text-center">
-            {canBuy() ? "Packs aren't available right now. Please try again later." : 'More Super Likes can be bought in the Velkiz iPhone app.'}
-          </p>
+        ) : isNativeApp() ? null : (
+          // In the app with no packs on sale yet, say nothing about buying
+          <p className="text-xs text-muted-foreground text-center">More Super Likes can be bought in the Velkiz iPhone app.</p>
         )}
       </motion.div>
     </motion.div>
