@@ -112,7 +112,7 @@ export default function CallScreen({
       <div className="relative z-10 pb-safe bg-gradient-to-t from-black/80 to-transparent">
         <p className="flex items-center justify-center gap-1.5 text-[10px] text-white/50 pt-6 pb-3 px-6 text-center">
           <ShieldCheck className="w-3 h-3 shrink-0" />
-          Private call. Screenshots and screen recordings come out black.
+          Private call. Screenshots and screen recordings are blocked.
         </p>
         <div className="flex items-start justify-center gap-5 pb-8">
           <RoundButton onClick={onToggleMute} label={muted ? 'Unmute' : 'Mute'} active={!muted}>

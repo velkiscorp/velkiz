@@ -66,7 +66,7 @@ export const getMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const { matchId } = req.params
-    const { content } = req.body
+    const { content, replyToId } = req.body
     const userId = req.user.id
 
     if (!content || content.trim() === '') {
@@ -91,10 +91,24 @@ export const sendMessage = async (req, res) => {
 
 
 
+    // A reply must point at a message in this same chat
+    if (replyToId) {
+      const { data: original } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('id', replyToId)
+        .eq('match_id', matchId)
+        .maybeSingle()
+      if (!original) {
+        return res.status(400).json({ error: 'The message you replied to is gone' })
+      }
+    }
+
     // Save to database
     const { data: message, error } = await supabase
       .from('messages')
       .insert({
+        ...(replyToId ? { reply_to_id: replyToId } : {}),
         match_id: matchId,
         sender_id: userId,
         content: content.trim(),
@@ -170,5 +184,81 @@ export const reportScreenshot = async (req, res) => {
   } catch (error) {
     console.error('Screenshot alert error:', error)
     res.status(500).json({ error: 'Failed to record screenshot' })
+  }
+}
+
+// Shared by unsend and clear: you must be in this match, and it must still exist
+const findMyMatch = async (matchId, userId) => {
+  const { data: match } = await supabase
+    .from('matches')
+    .select('id, user1_id, user2_id, status')
+    .eq('id', matchId)
+    .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+    .single()
+  return match && match.status === 'matched' ? match : null
+}
+
+// DELETE /api/messages/:matchId/:messageId
+// Unsend: your own message disappears for both of you, like Instagram
+export const unsendMessage = async (req, res) => {
+  try {
+    const { matchId, messageId } = req.params
+    const userId = req.user.id
+
+    if (!await findMyMatch(matchId, userId)) {
+      return res.status(404).json({ error: 'Match not found' })
+    }
+
+    const { data: deleted, error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', messageId)
+      .eq('match_id', matchId)
+      .eq('sender_id', userId)
+      .eq('kind', 'text')
+      .select('id')
+
+    if (error) {
+      console.error('Unsend error:', error)
+      return res.status(500).json({ error: 'Failed to unsend' })
+    }
+    if (!deleted?.length) {
+      return res.status(404).json({ error: 'Message not found' })
+    }
+
+    req.app.get('io')?.to(matchId).emit('message_deleted', { matchId, messageId })
+    res.json({ ok: true })
+  } catch (error) {
+    console.error('Unsend error:', error)
+    res.status(500).json({ error: 'Failed to unsend' })
+  }
+}
+
+// DELETE /api/messages/:matchId
+// Delete the whole chat for both of you. The match stays, so you can keep talking.
+export const clearChat = async (req, res) => {
+  try {
+    const { matchId } = req.params
+    const userId = req.user.id
+
+    if (!await findMyMatch(matchId, userId)) {
+      return res.status(404).json({ error: 'Match not found' })
+    }
+
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('match_id', matchId)
+
+    if (error) {
+      console.error('Clear chat error:', error)
+      return res.status(500).json({ error: 'Failed to delete chat' })
+    }
+
+    req.app.get('io')?.to(matchId).emit('chat_cleared', { matchId })
+    res.json({ ok: true })
+  } catch (error) {
+    console.error('Clear chat error:', error)
+    res.status(500).json({ error: 'Failed to delete chat' })
   }
 }

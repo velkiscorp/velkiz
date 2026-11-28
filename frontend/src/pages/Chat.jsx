@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { io as ioClient } from 'socket.io-client';
-import { ArrowLeft, Shield, MoreVertical, LogOut, Ban, Flag, Phone, Video } from 'lucide-react';
+import { ArrowLeft, Shield, MoreVertical, LogOut, Ban, Flag, Phone, Video, Trash2 } from 'lucide-react';
+import { motion, useMotionValue, animate } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
@@ -10,6 +11,11 @@ import {
 import ChatBubble from '../components/chat/ChatBubble';
 import EmptyState from '@/components/shared/EmptyState';
 import ChatInput from '../components/chat/ChatInput';
+import MessageActions from '../components/chat/MessageActions';
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from '@/lib/AuthContext';
 import { messagesApi } from '@/api/messages';
 import { matchesApi } from '@/api/matches';
@@ -58,6 +64,13 @@ export default function Chat() {
     });
   }, [matchId, queryClient, toast]);
 
+  const removeMessage = React.useCallback((messageId) => {
+    queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => old && ({
+      ...old,
+      messages: (old.messages || []).filter(m => m.id !== messageId),
+    }));
+  }, [queryClient, matchId]);
+
   // Real-time: join this match's room and append pushed messages as they arrive
   useEffect(() => {
     if (!matchId || !user?.id) return;
@@ -85,6 +98,18 @@ export default function Chat() {
       });
     });
 
+    // Unsent by whoever wrote it: gone for both of you
+    socket.on('message_deleted', (payload) => {
+      if (payload?.matchId !== matchId) return;
+      removeMessage(payload.messageId);
+    });
+
+    // Whole chat deleted by either of you
+    socket.on('chat_cleared', (payload) => {
+      if (payload?.matchId !== matchId) return;
+      queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => ({ ...old, messages: [] }));
+    });
+
     // The other person left or blocked: this chat is gone
     socket.on('match_ended', (payload) => {
       if (payload?.matchId !== matchId) return;
@@ -99,7 +124,7 @@ export default function Chat() {
     return () => {
       socket.disconnect();
     };
-  }, [matchId, user?.id, queryClient, navigate]);
+  }, [matchId, user?.id, queryClient, navigate, removeMessage]);
 
   const { data: matchesData = {} } = useMatches();
 
@@ -159,20 +184,79 @@ export default function Chat() {
     },
   });
 
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [actionsFor, setActionsFor] = useState(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+
   const sendMutation = useMutation({
-    mutationFn: (content) => messagesApi.sendMessage(matchId, content),
+    mutationFn: ({ content, replyToId }) => messagesApi.sendMessage(matchId, content, replyToId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(matchId) });
     },
   });
 
-  const handleSend = async (content) => {
+  const handleSend = (content) => {
     if (!content?.trim()) return;
-    sendMutation.mutate(content);
+    sendMutation.mutate({ content, replyToId: replyingTo?.id });
+    setReplyingTo(null);
+  };
+
+  const unsend = async (message) => {
+    removeMessage(message.id);
+    try {
+      await messagesApi.unsend(matchId, message.id);
+    } catch {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chatMessages(matchId) });
+      toast({ variant: 'destructive', title: "Couldn't unsend", description: 'Please try again.' });
+    }
+  };
+
+  const clearChat = async () => {
+    try {
+      await messagesApi.clearChat(matchId);
+      queryClient.setQueryData(queryKeys.chatMessages(matchId), (old) => ({ ...old, messages: [] }));
+      queryClient.invalidateQueries({ queryKey: ['matches'] });
+    } catch {
+      toast({ variant: 'destructive', title: "Couldn't delete the chat", description: 'Please try again.' });
+    }
+  };
+
+  const byId = React.useMemo(() => new Map(messages.map(m => [m.id, m])), [messages]);
+
+  // Swipe in from the left edge to go back, like the rest of iOS
+  const pageX = useMotionValue(0);
+  const edge = useRef(null);
+  const edgeStart = (e) => { edge.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: false }; };
+  const edgeMove = (e) => {
+    const t = edge.current;
+    if (!t) return;
+    const dx = e.touches[0].clientX - t.x;
+    const dy = e.touches[0].clientY - t.y;
+    if (!t.active && Math.abs(dy) > Math.abs(dx)) { edge.current = null; return; }
+    t.active = true;
+    pageX.set(Math.max(0, dx));
+  };
+  const edgeEnd = () => {
+    const t = edge.current;
+    edge.current = null;
+    if (!t?.active) return;
+    if (pageX.get() > window.innerWidth * 0.3) {
+      animate(pageX, window.innerWidth, { duration: 0.18 }).then(() => navigate(-1));
+    } else {
+      animate(pageX, 0, { duration: 0.18 });
+    }
   };
 
   return (
-    <div className="h-dvh-screen flex flex-col bg-background">
+    <motion.div style={{ x: pageX }} className="h-dvh-screen flex flex-col bg-background relative">
+      <div
+        aria-hidden
+        className="fixed left-0 top-0 bottom-0 w-5 z-40"
+        onTouchStart={edgeStart}
+        onTouchMove={edgeMove}
+        onTouchEnd={edgeEnd}
+        onTouchCancel={edgeEnd}
+      />
       {/* Header */}
       <div className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50 px-4 h-16 box-content pt-safe flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -224,6 +308,14 @@ export default function Chat() {
               Leave chat
             </DropdownMenuItem>
             <DropdownMenuItem
+              onClick={() => setConfirmClear(true)}
+              disabled={messages.length === 0}
+              className="gap-2 text-muted-foreground"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete chat
+            </DropdownMenuItem>
+            <DropdownMenuItem
               onClick={() => setReportOpen(true)}
               disabled={!partnerUserId}
               className="gap-2 text-destructive focus:text-destructive"
@@ -254,12 +346,37 @@ export default function Chat() {
             key={msg.id}
             message={msg}
             isMine={msg.isMine}
+            replyTo={msg.reply_to_id ? (byId.get(msg.reply_to_id) || null) : undefined}
+            onReply={setReplyingTo}
+            onHold={setActionsFor}
           />
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      <ChatInput onSend={handleSend} />
+      <ChatInput onSend={handleSend} replyingTo={replyingTo} onCancelReply={() => setReplyingTo(null)} />
+
+      <MessageActions
+        message={actionsFor}
+        onClose={() => setActionsFor(null)}
+        onReply={(m) => setReplyingTo(m)}
+        onUnsend={unsend}
+      />
+
+      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this chat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Every message disappears for both of you. You stay matched and can keep talking.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={clearChat} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete for both</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {viewingProfile && (
         <ProfileViewModal
@@ -278,6 +395,6 @@ export default function Chat() {
         matchId={matchId}
         onDone={({ blocked }) => { if (blocked) leaveAfterBlock(); }}
       />
-    </div>
+    </motion.div>
   );
 }

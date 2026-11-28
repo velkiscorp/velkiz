@@ -40,6 +40,50 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
         parent.addSublayer(captureShield.layer)
         secureLayer.addSublayer(window.layer)
+        addCaptureCover(to: parent, below: captureShield.layer, size: window.bounds.size)
+    }
+
+    // What a screenshot or screen recording shows instead: the Velkiz logo on
+    // black. It sits behind the window, so people never see it in the app;
+    // captures leave the window out and show only this.
+    private func addCaptureCover(to parent: CALayer, below shield: CALayer, size: CGSize) {
+        let scale = UIScreen.main.scale
+        let gold = UIColor(red: 214 / 255, green: 186 / 255, blue: 140 / 255, alpha: 1).cgColor
+
+        let cover = CALayer()
+        cover.frame = CGRect(origin: .zero, size: size)
+        cover.backgroundColor = UIColor(red: 8 / 255, green: 6 / 255, blue: 10 / 255, alpha: 1).cgColor
+
+        let side: CGFloat = 88
+        if let logo = UIImage(named: "CaptureLogo")?.cgImage {
+            let logoLayer = CALayer()
+            logoLayer.frame = CGRect(x: (size.width - side) / 2, y: size.height / 2 - side - 8, width: side, height: side)
+            logoLayer.contents = logo
+            logoLayer.contentsGravity = .resizeAspect
+            logoLayer.contentsScale = scale
+            cover.addSublayer(logoLayer)
+        }
+
+        let title = CATextLayer()
+        title.string = "Velkiz"
+        title.font = "Georgia-Italic" as CFTypeRef
+        title.fontSize = 36
+        title.foregroundColor = gold
+        title.alignmentMode = .center
+        title.contentsScale = scale
+        title.frame = CGRect(x: 0, y: size.height / 2 + 6, width: size.width, height: 46)
+        cover.addSublayer(title)
+
+        let note = CATextLayer()
+        note.string = "Screenshots are private"
+        note.fontSize = 14
+        note.foregroundColor = UIColor(white: 1, alpha: 0.5).cgColor
+        note.alignmentMode = .center
+        note.contentsScale = scale
+        note.frame = CGRect(x: 0, y: size.height / 2 + 58, width: size.width, height: 20)
+        cover.addSublayer(note)
+
+        parent.insertSublayer(cover, below: shield)
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
