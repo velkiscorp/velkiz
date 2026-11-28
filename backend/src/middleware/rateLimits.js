@@ -58,6 +58,15 @@ export const callLimiter = rateLimit({
   message: json('Too many calls, please wait a moment'),
 })
 
+// Photos, videos and voice messages in chats, per user
+export const mediaLimiter = rateLimit({
+  ...base,
+  windowMs: 60 * 1000,
+  limit: 15,
+  keyGenerator: byUserOrIp,
+  message: json('You are sending files too fast'),
+})
+
 export const profileWriteLimiter = rateLimit({
   ...base,
   windowMs: 60 * 1000,

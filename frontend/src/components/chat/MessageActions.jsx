@@ -45,7 +45,9 @@ export default function MessageActions({ message, onClose, onReply, onUnsend }) 
             <p className="px-5 pt-4 pb-2 text-sm text-muted-foreground line-clamp-2">{message.content}</p>
             <div className="py-1">
               <ActionRow icon={Reply} label="Reply" onClick={run(onReply)} />
-              <ActionRow icon={Copy} label="Copy" onClick={run(copy)} />
+              {(!message.kind || message.kind === 'text') && (
+                <ActionRow icon={Copy} label="Copy" onClick={run(copy)} />
+              )}
               {message.isMine && (
                 <ActionRow icon={Undo2} label="Unsend for both" danger onClick={run(onUnsend)} />
               )}

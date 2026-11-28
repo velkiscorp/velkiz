@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabase.js'
 import { notifyUser } from '../services/push.js'
 import { containsPhoneNumber } from '../utils/phone.js'
+import { MEDIA, baseType, kindForType, looksLike, newMediaPath, uploadMedia, downloadMedia, removeMedia } from '../services/chatMedia.js'
 
 
 // GET ALL MESSAGES IN A MATCH
@@ -215,8 +216,8 @@ export const unsendMessage = async (req, res) => {
       .eq('id', messageId)
       .eq('match_id', matchId)
       .eq('sender_id', userId)
-      .eq('kind', 'text')
-      .select('id')
+      .in('kind', ['text', 'image', 'video', 'audio'])
+      .select('id, media_path')
 
     if (error) {
       console.error('Unsend error:', error)
@@ -226,6 +227,7 @@ export const unsendMessage = async (req, res) => {
       return res.status(404).json({ error: 'Message not found' })
     }
 
+    removeMedia(deleted.map(m => m.media_path))
     req.app.get('io')?.to(matchId).emit('message_deleted', { matchId, messageId })
     res.json({ ok: true })
   } catch (error) {
@@ -245,20 +247,122 @@ export const clearChat = async (req, res) => {
       return res.status(404).json({ error: 'Match not found' })
     }
 
-    const { error } = await supabase
+    const { data: deleted, error } = await supabase
       .from('messages')
       .delete()
       .eq('match_id', matchId)
+      .select('media_path')
 
     if (error) {
       console.error('Clear chat error:', error)
       return res.status(500).json({ error: 'Failed to delete chat' })
     }
 
+    removeMedia((deleted || []).map(m => m.media_path))
     req.app.get('io')?.to(matchId).emit('chat_cleared', { matchId })
     res.json({ ok: true })
   } catch (error) {
     console.error('Clear chat error:', error)
     res.status(500).json({ error: 'Failed to delete chat' })
+  }
+}
+
+// POST /api/messages/:matchId/media?replyToId=&duration=
+// Body: the file itself (a photo, video or voice message), with its
+// Content-Type. Saved privately; both of you see it in the chat.
+export const sendMedia = async (req, res) => {
+  try {
+    const { matchId } = req.params
+    const { replyToId, duration } = req.validatedQuery || {}
+    const userId = req.user.id
+
+    const type = baseType(req.get('content-type'))
+    const kind = kindForType(type)
+    const buf = req.body
+    if (!kind || !Buffer.isBuffer(buf) || buf.length === 0) {
+      return res.status(400).json({ error: 'Send a photo, video or voice message' })
+    }
+    if (buf.length > MEDIA[kind].max) {
+      return res.status(413).json({ error: `That ${MEDIA[kind].label.toLowerCase()} is too big` })
+    }
+    if (!looksLike(type, buf)) {
+      return res.status(400).json({ error: "That file doesn't look right. Try another one." })
+    }
+
+    const match = await findMyMatch(matchId, userId)
+    if (!match) return res.status(404).json({ error: 'Match not found' })
+
+    if (replyToId) {
+      const { data: original } = await supabase
+        .from('messages').select('id').eq('id', replyToId).eq('match_id', matchId).maybeSingle()
+      if (!original) return res.status(400).json({ error: 'The message you replied to is gone' })
+    }
+
+    const path = newMediaPath(matchId, type)
+    await uploadMedia(path, buf, type)
+
+    const { data: message, error } = await supabase
+      .from('messages')
+      .insert({
+        match_id: matchId,
+        sender_id: userId,
+        kind,
+        // Shown in the Messages list and anywhere the file can't be
+        content: MEDIA[kind].label,
+        media_path: path,
+        media_type: type,
+        ...(duration ? { media_duration: duration } : {}),
+        ...(replyToId ? { reply_to_id: replyToId } : {}),
+      })
+      .select()
+      .single()
+
+    if (error) {
+      removeMedia([path])
+      console.error('Send media error:', error)
+      return res.status(500).json({ error: 'Failed to send' })
+    }
+
+    req.app.get('io')?.to(matchId).emit('receive_message', message)
+    const recipientId = match.user1_id === userId ? match.user2_id : match.user1_id
+    notifyUser(recipientId, 'message', { matchId })
+
+    res.status(201).json({ message: { ...message, isMine: true } })
+  } catch (error) {
+    console.error('Send media error:', error)
+    res.status(500).json({ error: 'Failed to send' })
+  }
+}
+
+// GET /api/messages/:matchId/media/:messageId
+// The file for a photo, video or voice message, only for the two people in the chat
+export const getMedia = async (req, res) => {
+  try {
+    const { matchId, messageId } = req.params
+    const notFound = () => res.status(404).json({ error: 'Not found' })
+
+    if (!await findMyMatch(matchId, req.user.id)) return notFound()
+
+    const { data: message } = await supabase
+      .from('messages')
+      .select('media_path, media_type')
+      .eq('id', messageId)
+      .eq('match_id', matchId)
+      .maybeSingle()
+    if (!message?.media_path) return notFound()
+
+    const buf = await downloadMedia(message.media_path)
+    if (!buf) return notFound()
+
+    res.set({
+      'Content-Type': kindForType(message.media_type) ? message.media_type : 'application/octet-stream',
+      'Content-Disposition': 'inline',
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'private, max-age=300',
+    })
+    res.send(buf)
+  } catch (error) {
+    console.error('Get media error:', error)
+    res.status(500).json({ error: 'Failed to load' })
   }
 }

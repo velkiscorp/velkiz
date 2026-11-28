@@ -134,6 +134,12 @@ export const sendMessageBody = z.object({
 
 export const messageIdParams = z.object({ matchId: uuid, messageId: uuid })
 
+export const sendMediaQuery = z.object({
+  replyToId: uuid.optional(),
+  // Seconds, for videos and voice messages
+  duration: z.coerce.number().min(0).max(600).optional(),
+})
+
 // ---- calls ----
 export const callIdParams = z.object({ callId: uuid })
 export const startCallBody = z.object({ video: z.boolean().optional() })
