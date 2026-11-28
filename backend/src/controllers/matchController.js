@@ -122,7 +122,7 @@ export const getLikesReceived = async (req, res) => {
     // Get all right/super swipes targeting me
     const { data: inbound, error } = await supabase
       .from('swipes')
-      .select('swiper_id, direction, created_at')
+      .select('*')
       .eq('target_id', userId)
       .in('direction', ['right', 'super'])
 
@@ -155,10 +155,22 @@ export const getLikesReceived = async (req, res) => {
       .in('user_id', unrespondedLikers)
 
     // Super Likes stand out: flagged, and shown first
-    const superLikers = new Set(inbound.filter(s => s.direction === 'super').map(s => s.swiper_id))
+    // and the newest first within each group
+    const bySwiper = new Map(inbound.map(s => [s.swiper_id, s]))
     const likes = (profiles || [])
-      .map(p => ({ ...toPublicProfile(p), superLiked: superLikers.has(p.user_id) }))
-      .sort((a, b) => Number(b.superLiked) - Number(a.superLiked))
+      .map(p => {
+        const swipe = bySwiper.get(p.user_id)
+        const superLiked = swipe?.direction === 'super'
+        return {
+          ...toPublicProfile(p),
+          superLiked,
+          superLikeMessage: superLiked ? (swipe.message ?? null) : null,
+          likedAt: swipe?.created_at ?? null,
+        }
+      })
+      .sort((a, b) =>
+        Number(b.superLiked) - Number(a.superLiked) ||
+        new Date(b.likedAt || 0) - new Date(a.likedAt || 0))
 
     res.json({ likes })
 

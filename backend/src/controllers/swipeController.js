@@ -3,6 +3,7 @@ import { notifyUser } from '../services/push.js'
 import { isBlockedBetween } from '../services/blocks.js'
 import { toPublicProfile } from '../serializers/profile.js'
 import { useSuperLike, refundSuperLike, getBalance } from '../services/superLikes.js'
+import { containsPhoneNumber } from '../utils/phone.js'
 
 // One match per pair of people. The database has a unique rule on the pair
 // (matches_one_per_pair), so if both people swipe at the same moment, the
@@ -32,11 +33,45 @@ const findOrCreateMatch = async (swiperId, targetId) => {
     .select('id, status')
     .single()
 
-  if (!error && match) return match
+  if (!error && match) return { ...match, created: true }
   if (error?.code === '23505') return findMatch(swiperId, targetId)
 
   console.error('Match creation error:', error)
   return null
+}
+
+// A new match starts with any Super Like notes the two sent each other,
+// as if each had sent it in the chat
+// Never throws: a missing note must not stop the match.
+const postSuperLikeNotes = async (matchId, a, b, io) => {
+  try {
+    await postNotes(matchId, a, b, io)
+  } catch (err) {
+    console.error('Super Like note error:', err?.message || err)
+  }
+}
+
+const postNotes = async (matchId, a, b, io) => {
+  const { data: notes } = await supabase
+    .from('swipes')
+    .select('swiper_id, message, created_at')
+    .or(`and(swiper_id.eq.${a},target_id.eq.${b}),and(swiper_id.eq.${b},target_id.eq.${a})`)
+    .eq('direction', 'super')
+    .not('message', 'is', null)
+    .order('created_at', { ascending: true })
+  for (const note of Array.isArray(notes) ? notes : []) {
+    const { data: message } = await supabase
+      .from('messages')
+      .insert({
+        match_id: matchId,
+        sender_id: note.swiper_id,
+        content: note.message,
+        is_filtered: containsPhoneNumber(note.message),
+      })
+      .select()
+      .single()
+    if (message) io?.to(matchId).emit('receive_message', message)
+  }
 }
 
 const matchPayload = async (matchId, targetId) => {
@@ -56,6 +91,7 @@ export const createSwipe = async (req, res) => {
   try {
     const swiperId = req.user.id
     const { targetId, direction } = req.body
+    const message = direction === 'super' && req.body.message ? req.body.message : null
 
     // Validate direction
     if (!['left', 'right', 'super'].includes(direction)) {
@@ -102,7 +138,8 @@ if (!targetProfile) {
       .insert({
         swiper_id: swiperId,
         target_id: targetId,
-        direction
+        direction,
+        ...(message ? { message } : {}),
       })
       .select()
       .single()
@@ -134,6 +171,7 @@ if (!targetProfile) {
           return res.status(201).json({ swipe, matched: false })
         }
         if (match.status === 'matched') {
+          if (match.created) await postSuperLikeNotes(match.id, swiperId, targetId, req.app?.get?.('io'))
           // Tell the other person (they liked first, so they're not looking)
           notifyUser(targetId, 'match', { matchId: match.id })
           return res.status(201).json({

@@ -49,6 +49,44 @@ export const getProfiles = async (req, res) => {
 
     swipedIds.push(currentUserId)
 
+    // People who Super Liked you and you haven't answered yet: always at the
+    // top of Discover, whatever your filters. They're left out of the normal
+    // list (on every page, so paging stays right) and sent on the first page.
+    const { data: superSwipes } = await supabase
+      .from('swipes')
+      .select('*')
+      .eq('target_id', currentUserId)
+      .eq('direction', 'super')
+    const answered = new Set(swipedIds)
+    const pendingSupers = (Array.isArray(superSwipes) ? superSwipes : []).filter(s => !answered.has(s.swiper_id))
+    swipedIds.push(...pendingSupers.map(s => s.swiper_id))
+
+    let superLikers = []
+    if (offset === 0 && pendingSupers.length > 0) {
+      const { data: rows } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('user_id', pendingSupers.map(s => s.swiper_id))
+        .eq('onboarding_complete', true)
+        .not('is_active', 'is', false)
+      const bySwiper = new Map(pendingSupers.map(s => [s.swiper_id, s]))
+      superLikers = (rows || [])
+        .map(row => {
+          const km = me?.location_lat != null && me?.location_lng != null && row.location_lat != null && row.location_lng != null
+            ? distanceKm(me.location_lat, me.location_lng, row.location_lat, row.location_lng)
+            : null
+          const swipe = bySwiper.get(row.user_id)
+          return {
+            ...toPublicProfile(row),
+            distance_km: km === null ? null : roundedDistance(km),
+            superLikedYou: true,
+            superLikeMessage: swipe?.message ?? null,
+            superLikedAt: swipe?.created_at ?? null,
+          }
+        })
+        .sort((a, b) => new Date(b.superLikedAt || 0) - new Date(a.superLikedAt || 0))
+    }
+
     let query = supabase
       .from('profiles')
       .select('*')
@@ -95,6 +133,7 @@ export const getProfiles = async (req, res) => {
 
     // A full page suggests there may be more; a partial page means we hit the end
     res.json({
+      superLikers,
       profiles: sanitized,
       filteredOut: withDistance.length - kept.length,
       hasMore: profiles.length === limit,

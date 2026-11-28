@@ -16,7 +16,10 @@ const fake = createFakeSupabase((q) => {
       ? { data: null, error: { code: '23505' } }
       : { data: { id: 's1', ...q.payload }, error: null }
   }
+  // The Super Like notes between the two, oldest first
+  if (table === 'swipes' && q.filters.some(f => f[0] === 'not')) return { data: db.notes || [], error: null }
   if (table === 'swipes') return { data: db.theyLikedMe ? { id: 's0', direction: 'right' } : null, error: null }
+  if (table === 'messages' && op === 'insert') { (db.posted ||= []).push(q.payload); return { data: { id: 'msg', ...q.payload }, error: null } }
   if (table === 'matches' && op === 'insert') {
     db.matchInserts += 1
     // Someone else created the match a moment ago: the database rule refuses
@@ -96,4 +99,18 @@ test('you can\'t swipe yourself or swipe twice', async () => {
   assert.equal((await call({ targetId: ME, direction: 'right' })).status, 400)
   db.alreadySwiped = true
   assert.equal((await call({ targetId: THEM, direction: 'right' })).status, 400)
+})
+
+test('a Super Like note becomes the first chat message when they match', async () => {
+  db.theyLikedMe = true
+  db.notes = [{ swiper_id: THEM, message: 'love your playlist', created_at: '2026-11-27T10:00:00Z' }]
+  const r = await call({ targetId: THEM, direction: 'right' })
+  assert.equal(r.json.matched, true)
+  assert.deepEqual(db.posted, [{ match_id: 'm-new', sender_id: THEM, content: 'love your playlist', is_filtered: false }])
+})
+
+test('a Super Like keeps its note', async () => {
+  const r = await call({ targetId: THEM, direction: 'super', message: 'hi there' })
+  assert.equal(r.status, 201)
+  assert.equal(r.json.swipe.message, 'hi there')
 })

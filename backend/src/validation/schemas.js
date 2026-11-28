@@ -118,7 +118,9 @@ export const acceptTermsBody = z.object({
 export const swipeBody = z.object({
   targetId: uuid,
   direction: z.enum(['left', 'right', 'super']),
-})
+  // Only with a Super Like: a short note they see with it
+  message: z.string().trim().max(200, 'Keep it under 200 characters').optional(),
+}).refine(b => !b.message || b.direction === 'super', { message: 'Only a Super Like can carry a message', path: ['message'] })
 
 export const targetIdParams = z.object({ targetId: uuid })
 

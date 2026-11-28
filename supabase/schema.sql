@@ -53,6 +53,7 @@ create table public.swipes (
   swiper_id uuid not null,
   target_id uuid not null,
   direction text not null,
+  message text, -- optional note sent with a Super Like (200 characters max)
   created_at timestamp with time zone default now()
 );
 
@@ -128,6 +129,7 @@ create unique index profiles_username_lower_key on public.profiles using btree (
 -- swipes: one per person per target
 alter table public.swipes add constraint swipes_direction_check check (direction = any (array['left'::text, 'right'::text, 'super'::text]));
 alter table public.swipes add constraint swipes_swiper_id_target_id_key unique (swiper_id, target_id);
+alter table public.swipes add constraint swipes_message_check check (message is null or (direction = 'super' and char_length(message) <= 200));
 
 -- matches: one per pair, whichever order the two people are stored in
 alter table public.matches add constraint matches_status_check check (status = any (array['matched'::text, 'unmatched'::text]));
